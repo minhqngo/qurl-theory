@@ -1,0 +1,197 @@
+\section{Experiments on real stacks}\label{sec:experiments}
+
+All experiments run on one NVIDIA H100 NVL (94\,GB). \Cref{app:details} gives the full configurations. \todo{link an anonymized repository with code and raw outputs.}
+
+\subsection{UAQ leaves quantized rollouts unchanged}\label{sec:s1}
+
+\paragraph{Protocol.} We test \cref{thm:invariance} with the kernels QuRL would use on Hopper GPUs, served by vLLM 0.33 \citep{kwon2023vllm}.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Models:} Qwen2.5-0.5B-Instruct \citep{qwen2024qwen25}, and Qwen2.5-Math-1.5B and -7B \citep{yang2024qwen25math}.
+\item \emph{Checkpoints:} the original and a UAQ checkpoint, both stored in BF16 like the original.
+\item \emph{Rollout quantizers:} INT8 W8A8 with vLLM's CUTLASS INT8 GEMM, FP8 per-tensor, and FP8 with per-channel weights and per-token activations (both on CUTLASS FP8 GEMMs), plus unquantized BF16.
+\item \emph{Tokens:} 512 GSM8K \citep{cobbe2021gsm8k} responses sampled from the BF16 model at temperature 1. Every token (178{,}668, 193{,}103 and 216{,}979 for the three sizes) is teacher-forced under each configuration.
+\item \emph{Noise floor:} the same configuration re-run with shuffled batches.
+\item \emph{Reference policy:} because UAQ re-rounds $W/s$ and $s\gamma$ in BF16, each quantized checkpoint is compared with the BF16 policy of the \emph{same} checkpoint.
+\item \emph{Metrics:} the primary metric is the mean $|\log\mu-\log\pi|$ over sampled tokens; we also report the $k_3$ estimate of $\KL(\pi\|\mu)$. Confidence intervals come from a paired bootstrap over responses.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabularx}{\linewidth}{@{}L l l l l l@{}}
+\toprule
+& & \multicolumn{2}{c}{Identity, mean $|\Delta\log p|$; identical tokens} & \multicolumn{2}{c}{$s=1.5$: ratio UAQ / original, 95\% CI}\\
+\cmidrule(lr){3-4}\cmidrule(l){5-6}
+Rollout quantizer & Model & shuffled re-run & UAQ $s=2$ vs.\ original & mean $|\Delta\log p|$ & KL ($k_3$)\\
+\midrule
+\textbf{INT8 W8A8} (QuRL) & 0.5B & $1.4\times10^{-4}$; 99.69\% & \textbf{0}; 100\% & 0.994 [0.984, 1.004] & 0.978 [0.951, 1.007]\\
+ & 1.5B & $7.7\times10^{-5}$; 99.75\% & \textbf{0}; 100\% & 0.996 [0.988, 1.005] & 0.994 [0.966, 1.022]\\
+ & 7B & 0; 100\% & \textbf{0}; 100\% & 1.013 [1.004, 1.021] & 1.022 [0.995, 1.049]\\
+\midrule
+FP8 per-tensor & 0.5B & $1.2\times10^{-4}$; 99.78\% & \textbf{0}; 100\% & 1.004 [0.995, 1.014] & 1.013 [0.985, 1.043]\\
+ & 1.5B & $9.7\times10^{-5}$; 99.70\% & $2.7\times10^{-5}$; 99.95\%$^\dagger$ & 0.976 [0.968, 0.984] & 0.923 [0.888, 0.956]\\
+ & 7B & 0; 100\% & \textbf{0}; 100\% & 0.946 [0.939, 0.954] & 0.862 [0.830, 0.891]\\
+\midrule
+FP8 per-channel/token & 0.5B & $1.1\times10^{-4}$; 99.78\% & \textbf{0}; 100\% & 1.007 [0.999, 1.016] & 1.013 [0.989, 1.039]\\
+ & 1.5B & $6.1\times10^{-5}$; 99.75\% & $1.7\times10^{-4}$; 99.77\%$^\dagger$ & 0.968 [0.960, 0.976] & 0.888 [0.854, 0.921]\\
+ & 7B & 0; 100\% & \textbf{0}; 100\% & 0.943 [0.935, 0.951] & 0.964 [0.936, 0.997]\\
+\bottomrule
+\end{tabularx}
+\caption{UAQ on vLLM's quantized kernels. An $s$-fold error reduction, as claimed, would give ratios of 0.667 for mean $|\Delta\log p|$ and 0.444 for KL. $^\dagger$Run-to-run variation of vLLM's FP8 path at 1.5B: in same-order repeats an $s=2$ run reproduced an original run bit for bit.}\label{tab:s1}
+\end{table}
+
+\paragraph{Results} (\cref{tab:s1}).
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{At $s=2$ the invariance is exact on the hardware kernel.} QuRL's INT8 W8A8 rollout gives bit-identical log-probabilities at all three sizes, as does FP8 at 0.5B and 7B. No INT8 or FP8 code changes, and the stored INT8 scales are exactly halved.
+\item \textbf{At $s=1.5$, UAQ does not reduce QuRL's INT8 mismatch at any size.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The ratios are 0.994--1.013 for mean $|\Delta\log p|$ and 0.978--1.022 for KL, against 0.667 and 0.444 for the claimed reduction.
+  \item This holds although BF16 storage of $W/1.5$ re-rounds 4.0--4.3\% of the INT8 codes.
+  \end{itemize}
+\item \textbf{FP8 shows small changes at 1.5B and 7B (ratios 0.94--0.98), never near $s$-fold.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item \Cref{thm:invariance} predicts no systematic change. Both FP8 modes of a model share one BF16 re-rounding of $W$ and $\gamma$, so the table holds three draws, two of them favourable.
+  \item The per-token errors before and after UAQ correlate only 0.43--0.64, and $|\log\mu-\log\pi|$ shrinks on about as many tokens as it grows.
+  \end{itemize}
+\end{itemize}
+
+\paragraph{By-products that matter for rollout research} (not specific to UAQ).
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item vLLM's default engine is not batch-invariant at 0.5B and 1.5B: shuffled batching changes 0.22--0.31\% of tokens, BF16 included.
+\item The mismatch is heavy-tailed: the top 1\% of tokens carry 38--48\% of the KL.
+\item The INT8-to-FP8 KL ratio grows with model size, from 1.0--1.1$\times$ at 0.5B to 2.8--3.0$\times$ at 7B. This is consistent with emergent activation outliers \citep{dettmers2022llmint8}.
+\end{itemize}
+
+\subsection{Matched optimizer settings reproduce UAQ exactly}\label{sec:s2}
+
+\paragraph{Protocol.} We use $s=2$, where every rescaling is exact, so \cref{cor:pipeline} predicts bit-identical training. We run a QuRL-style loop in PyTorch on Qwen2.5-0.5B-Instruct and GSM8K.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Loop:} GRPO advantages \citep{shao2024deepseekmath}, the decoupled PPO loss with TIS ($C=2$) and ACR, and AdamW ($\lambda=0.01$, $\varepsilon=10^{-8}$) with global-norm clipping at $\tau=0.1$.
+\item \emph{Rollouts:} INT8 W8A8 rollouts, with per-channel weights and per-token activations, sampled from seeded uniforms.
+\item \emph{Training:} BF16 autocast with FP32 master weights, under deterministic kernels.
+\item \emph{Length:} 20 rollout batches of $8\times4$ responses with 4 updates each, 80 in all, at $\eta=10^{-6}$ and $10^{-5}$.
+\item \emph{Arms:} UAQ with plain AdamW (R4); an R4 repeat; the matched settings of \cref{thm:reparam}(b)--(c) without UAQ (R5); R5 with ordinary clipping (R5o); learning rates matched but not $\varepsilon$, weight decay or clipping (R5x); and plain QuRL (R3).
+\item \emph{Comparison:} each step is fingerprinted (SHA-256) on its sampled tokens, $\mu$, $\pi_{\mathrm{old}}$, and the weights mapped to original coordinates.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabularx}{\linewidth}{@{}l L l L l@{}}
+\toprule
+Arm & Differs from R4 in & Steps identical to R4 & First difference & Max.\ weight diff.\ after step 20\\
+\midrule
+R4 repeat & nothing & 20/20; 20/20 & none & 0; 0\\
+\textbf{R5} & coordinates only (\cref{thm:reparam}(b)--(c)) & \textbf{20/20; 20/20} & \textbf{none} & \textbf{0; 0}\\
+\midrule
+R5o & clipping norm in original coordinates & 0/20; 0/20 & weights after step 1 & $1.63\times10^{-4}$; $1.13\times10^{-3}$\\
+R5x & learning rates only & 0/20; 0/20 & weights after step 1 & $1.65\times10^{-4}$; $1.32\times10^{-3}$\\
+R3 & no UAQ, plain settings & 0/20; 0/20 & weights after step 1 & $1.36\times10^{-4}$; $1.12\times10^{-3}$\\
+\bottomrule
+\end{tabularx}
+\caption{Exact test of \cref{cor:pipeline} at $s=2$ ($\eta=10^{-6}$; $10^{-5}$). A step counts as identical when all four SHA-256 fingerprints equal R4's. Weight differences are in original coordinates.}\label{tab:s2}
+\end{table}
+
+\paragraph{Results} (\cref{tab:s2}).
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{R5 reproduces UAQ bit for bit.} It matched R4 in every fingerprint at every step, at both learning rates.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Its weights after steps 1 and 20 equal R4's mapped weights in every element, and so do the gradient norms that set the clip.
+  \item Clipping bound on every update with a nonzero gradient: 70 of 70 at $\eta=10^{-6}$ and 44 of 44 at $10^{-5}$.
+  \item Weight decay was active at $10^{-5}$. At $10^{-6}$ it changes no FP32 weight at all, since $\eta\lambda<2^{-25}$.
+  \end{itemize}
+\item \textbf{Rule (c) is necessary whenever clipping binds.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item On the first update, the gradient norm is 1.131 in UAQ coordinates and 0.874 in original coordinates. Ordinary clipping (R5o) therefore leaves the gradient $1.29\times$ larger than UAQ's clip does.
+  \item R5o diverged after the first update, as early as plain QuRL (R3). So did matching the learning rates alone (R5x).
+  \end{itemize}
+\item \textbf{The equivalence also holds in VeRL's training engine.} We implemented the matched settings and rule (c) for VeRL's FSDP2 actor (\cref{app:verl}) and ran the same comparison inside that engine on the H100: $s=2$, three updates on one GSM8K batch, $\eta=10^{-5}$, clipping at 0.1, BF16 mixed precision, strict deterministic algorithms.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item R5 and an R4 repeat were bit-identical to R4 in all 494M parameters, with identical gradient norms (3.859, 2.573, 3.110).
+  \item R5 with ordinary clipping differed in 99.98\% of the Q/K/V weights; its first gradient norm was 2.791 against 3.859.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Update capture on a real PPO step}\label{sec:capture}
+
+\Cref{prop:capture} predicts that a sub-grid update flips a code with probability $|d|/\Delta$. We checked this in VeRL with INT8 W8A8 rollouts that re-quantize the FP32 master weights at every weight sync (\cref{app:verl}). Before training, the codes and scales are bit-identical to an independent quantization of the checkpoint.
+
+After the first PPO step on Qwen2.5-0.5B-Instruct (four AdamW updates at $\eta=10^{-6}$), 0.21\% of layer~0's Q/K/V codes had flipped.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Prediction:} we estimate $|d|$ for each row from the move of its absmax element (median $2\times10^{-6}$). \Cref{prop:capture} then predicts 0.20\%, or 0.24\% when the shift of the grid itself is counted.
+\item \emph{By projection,} observed vs.\ predicted: Q 0.16\% vs.\ 0.15\%, K 0.29\% vs.\ 0.18\%, V 0.53\% vs.\ 0.58\%.
+\item \emph{Row by row} the agreement is loose (correlation 0.2--0.4), because $|d|$ is estimated from a single element per row.
+\end{itemize}
+This is an aggregate check on one layer and one step. It confirms the mechanism: re-quantization captures sub-grid updates at the predicted rate, so the rollout model is not frozen.
+
+\subsection{GSM8K PPO: a reproduction attempt and the UAQ experiment}\label{sec:s3}
+
+\paragraph{Setup.} We use QuRL's GSM8K PPO configuration in VeRL v0.9.1 \citep{sheng2025hybridflow}, with vLLM 0.24 rollouts and Qwen2.5-0.5B-Instruct.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{PPO:} a critic with GAE ($\gamma=\lambda=1$), batch 256, responses up to 512 tokens, and 15 epochs, i.e.\ 435 steps.
+\item \emph{Regularizers:} KL penalty 0.001 in the reward and entropy bonus 0.001, as in VeRL's documented PPO baseline for this model (56.7\% at actor learning rate $10^{-6}$). QuRL states neither.
+\item \emph{Validation:} greedy, on the 1{,}319 test problems, every 29 steps.
+\item \emph{QuRL arms:} INT8 W8A8 rollouts re-quantized at every sync, token-level TIS with $C=2$, and ACR.
+\end{itemize}
+
+\paragraph{QuRL's Table~1 does not reproduce at the stated learning rate.} QuRL reports 55.35\% for BF16 RL and 53.55\% for QuRL INT8 at ``the relatively high learning rate ($10^{-5}$)''. At actor learning rate $10^{-5}$ (critic $10^{-5}$), our BF16 and INT8 runs reached 0.0\% and 2.9\% after 435 steps; their best of 15 validations was 0.0\% and 3.4\%.
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Neither run learned the task.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The BF16 run answered only one more prompt correctly after step 4, and its responses shrank to 2--3 tokens.
+  \item The INT8 run settled on answers of about 9 tokens, and later on near-deterministic outputs that ran to the 512-token cap.
+  \end{itemize}
+\item \textbf{In our configuration, the learning rate alone separates learning from collapse.} Ten-step pilots in the same configuration at $10^{-6}$ isolate it. After 10 steps:
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item the KL from the reference model was $2.1\times10^{-3}$ per token at $10^{-6}$ against 0.15 at $10^{-5}$;
+  \item the PPO clip fraction was 0.001 against 0.010--0.022;
+  \item the entropy stayed at 0.44--0.53 at $10^{-6}$, but rose from 0.50 to 0.80 at $10^{-5}$.
+  \end{itemize}
+\item \textbf{Mechanism.} At step 1, the critic's newly initialized value head predicts values from $-20$ to $+33$ for returns in $[0,1]$, so the early advantages mostly reflect its error.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item At $10^{-5}$, the actor follows that error ten times as fast and loses the rare correctly formatted answers before the critic becomes useful.
+  \item Once no answer is rewarded, the per-token KL penalty is the only reward left, and it shortens the responses.
+  \end{itemize}
+\item \textbf{What the paper's run must have done differently.} QuRL does not state the critic's learning rate, warmup, KL penalty or entropy bonus. Two explanations fit:
+  \begin{enumerate}[leftmargin=*,itemsep=1pt]
+  \item the actor ran at $10^{-6}$ and $10^{-5}$ is the critic's rate, as in VeRL's baseline, from whose 56.7\% QuRL's 55.35\% differs by 1.4 points;
+  \item the run used a stabilizer the paper does not state.
+  \end{enumerate}
+  At $10^{-6}$ our configuration trains: QuRL INT8 with seed 1 reaches 41.4\% at step 29 and 50.1\% at step 435.
+\end{itemize}
+
+\paragraph{The INT8 mismatch grows although the weight error cannot.} In that run, the sampled-token mismatch ($k_3$) rose from $1.1\times10^{-2}$ at step 1 to window medians of $7.7$--$8.1\times10^{-2}$ over steps 60--175. It then fell to $3.6\times10^{-2}$, still about 65$\times$ the BF16 floor.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item It tracked neither the policy's entropy (Spearman 0.13) nor its KL from the reference model ($-0.22$).
+\item By \cref{prop:persistence}, the weight rounding error is stationary. The growth must therefore come from sensitivity, activations or contexts (\cref{sec:tracking}).
+\item Attributing it requires per-layer error and activation logging, which we leave to future work.
+\end{itemize}
+
+\paragraph{The UAQ experiment (pre-registered).} We compare six arms at $\eta=10^{-6}$ and $s=1.5$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Arms:}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item R1, BF16 rollouts; R2, BF16 rollouts with UAQ;
+  \item R3, QuRL INT8; R4, QuRL with UAQ;
+  \item R5, QuRL with the settings of \cref{thm:reparam}(b)--(c);
+  \item R6, QuRL with the global learning rate $\times1.5$, QuRL's own control.
+  \end{itemize}
+\item \emph{Implementation:} all arms share one FSDP2 code path and differ only in rollout precision, starting checkpoint and optimizer settings.
+\item \emph{Seeds:} 1--3 for R1, R2, R3 and R6, and 1--5 for R4 and R5. The arms of one seed share prompt order and sampling seed.
+\end{itemize}
+The hypotheses are:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \textbf{H1:} R4 and R5 are equal in distribution (\cref{cor:pipeline});
+\item \textbf{H2:} UAQ's effect is not specific to quantization, $(\text{R2}-\text{R1})\approx(\text{R4}-\text{R3})$;
+\item \textbf{H3:} QuRL's control does not match UAQ, $\text{R6}\neq\text{R4}$.
+\end{itemize}
+The primary endpoint is the mean test accuracy over the last five validations. H1 and H2 are equivalence claims, tested by two one-sided tests with a margin of $\pm2.0$ points. H3 is tested for a difference with a 95\% interval. Analyses, margins and decision rules were fixed and their scripts hashed before the relevant arms were seen (\cref{app:prereg}).
+
+\todo{Pre-registered results: verdicts for H1--H3, per-arm late accuracy with intervals, and training curves (figure).}
+
+\paragraph{\pending{Preliminary observation (seed 1 only; to be replaced by the pre-registered analysis).}}
+Training at $10^{-6}$ is not immune to the early drift seen at $10^{-5}$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item In R5 with seed 1, the few correct answers vanished within three steps, and no answer was rewarded until step 374.
+\item The KL penalty then pulled the policy back toward the reference model, and the run learned, reaching 46.6\% at step 435.
+\item R3 and R4 with the same seed had a correct answer in every batch.
+\end{itemize}
+By \cref{cor:pipeline}, R4 and R5 run the same algorithm. A single stall is therefore an outcome of the configuration, not evidence against H1. Stall counts per arm are part of the pre-registered exploratory analysis.

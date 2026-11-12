@@ -1,0 +1,94 @@
+\section{UAQ is a per-layer learning-rate change}\label{sec:reparam}
+
+\begin{lemma}[Gradients]\label{lem:gradients}
+Let $\mathcal L'=\mathcal L\circ\phi_s$. Then $\nabla_{W'}\mathcal L'=s\,\nabla_W\mathcal L$ and $\nabla_{\gamma'}\mathcal L'=s^{-1}\nabla_\gamma\mathcal L$. All other gradients are unchanged.
+\end{lemma}
+
+\begin{theorem}[Reparameterization]\label{thm:reparam}
+Run an optimizer on $\theta'=(W',\gamma',\mathrm{rest})$, in UAQ coordinates, with learning rate $\eta$, Adam constant $\varepsilon$ and decoupled weight decay $\lambda$. Run the same optimizer on $\theta=\phi_s(\theta')$ with the per-group settings below.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L l l l l@{}}
+\toprule
+& Optimizer & lr on $W$ & lr on $\gamma$ & $\varepsilon$ on $W$ / $\gamma$ & weight decay on $W$ ($\gamma$)\\
+\midrule
+(a) & SGD, heavy-ball, Nesterov & $s^2\eta$ & $\eta/s^2$ & --- & $\lambda/s^2$ \ ($s^2\lambda$)\\
+(b) & Adam, AdamW, RMSProp, Adagrad & $s\eta$ & $\eta/s$ & $\varepsilon/s$ / $s\varepsilon$ & $\lambda/s$ \ ($s\lambda$)\\
+(b$'$) & sign-SGD, Lion & $s\eta$ & $\eta/s$ & --- & $\lambda/s$ \ ($s\lambda$)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{enumerate}[(c),leftmargin=*,itemsep=1pt]
+\item \textbf{Clipping.} If global-norm gradient clipping is used, compute the norm in UAQ coordinates, that is, on $(s\,g_W,\ g_\gamma/s,\ g_{\mathrm{rest}})$.
+\end{enumerate}
+The weight decay in brackets matters only if $\gamma$ is decayed. Under these settings, $\theta_k=\phi_s(\theta'_k)$ for every step $k$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+By induction over steps, with optimizer states that correspond: $m'=s\,m$ and $v'=s^2v$ for $W$, and $m'=m/s$ and $v'=v/s^2$ for $\gamma$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Same data and gradients.} \Cref{cor:rollout} makes both runs see the same data, and \cref{lem:gradients} maps the gradients.
+\item \emph{Same clip.} Rule (c) makes the clipping factor the same number in both runs.
+\item \emph{The Adam step on $W$:}
+\[
+\Delta W'=-\eta\,\frac{s\,\hat m}{s\sqrt{\hat v}+\varepsilon}-\eta\lambda W'
+\quad\Longrightarrow\quad
+\Delta W=s\,\Delta W'=-s\eta\,\frac{\hat m}{\sqrt{\hat v}+\varepsilon/s}-\eta\lambda W .
+\]
+This is AdamW on $W$ with learning rate $s\eta$, constant $\varepsilon/s$ and decay $\lambda/s$, since $(s\eta)(\lambda/s)=\eta\lambda$. The step on $\gamma$ is analogous.
+\end{itemize}
+\Cref{app:proofs} gives the full proof.
+\end{proof}
+
+\begin{corollary}[The ``$s^2$ improvement'']\label{cor:ratio}
+Define the update-to-grid ratio $\nu_{ij}=|\Delta W_{ij}|/\Delta_i(W)$, where $\Delta_i$ is the grid step of row $i$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\nu$ is invariant under $\phi_s$, because its numerator and denominator both scale by $s$.
+\item So UAQ's $\nu$ equals that of the matched run in \cref{thm:reparam}, which is $s^p$ times that of the plain run: $p=2$ for SGD and $p=1$ for Adam-type optimizers. VeRL, and so QuRL, trains with AdamW, where the gain is $s$, not $s^2$.
+\item Raising a layer's update-to-grid ratio and raising that layer's learning rate are the same operation, the parameterization view of \citet{yang2021tp4,yang2022tp5}.
+\end{itemize}
+\end{corollary}
+
+\begin{corollary}[Equivalence of the whole pipeline]\label{cor:pipeline}
+\Cref{cor:rollout} applies at every iterate. Together with \cref{thm:reparam}, it makes QuRL with UAQ at learning rate $\eta$ identical to QuRL without UAQ under the per-group settings of \cref{thm:reparam}.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item ``Identical'' covers rollouts, rewards, TIS weights, the PPO and ACR clipping decisions, the KL-to-reference term, and every parameter.
+\item It holds for every rollout-correction rule that depends only on policy values, such as TIS, ACR, masked importance sampling or sequence-level masks.
+\end{itemize}
+\textbf{The entire effect of UAQ on training is an effect of per-layer learning rates.}
+\end{corollary}
+
+\begin{remark}[Finite precision]\label{rem:practice}
+Exact equivalence needs exactly representable rescalings and deterministic kernels.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item At $s=2$, every rescaling is exact in BF16 and FP32, barring overflow and underflow, so the equivalence can be checked bit for bit (\cref{sec:s2}).
+\item At $s=1.5$, $W/s$ is rounded. RL training amplifies such differences, as it amplifies any change of random seed.
+\end{itemize}
+On a real stack, \cref{cor:pipeline} therefore predicts \emph{equality in distribution over seeds}, not identical curves. This is the hypothesis our pre-registered experiment tests (\cref{sec:s3}).
+\end{remark}
+
+\subsection{Implications for the evidence for UAQ}\label{sec:evidence}
+
+The following observations are consistent with \cref{thm:invariance,thm:reparam}. They are not statements about the authors' implementation, which we could not inspect. Figure values were read from the vector data of the figures in the arXiv HTML version of QuRL.
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{QuRL's Fig.~4b} plots the mismatch between quantized and full-precision policies, with and without UAQ, on DAPO with INT8.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The two curves start at the same value, 0.011, as \cref{cor:rollout} predicts.
+  \item They separate only as training proceeds: with UAQ the curve settles near 0.010--0.011, without it near 0.012--0.014. That is what two training trajectories under different per-layer learning rates would produce.
+  \end{itemize}
+\item \textbf{QuRL's Fig.~7} (DAPO, FP8, AIME24 Avg@32) shows QuRL with UAQ at 0.20 by step 20, while the BF16 baseline is at 0.04 and QuRL without UAQ at 0.06. The BF16 baseline catches up by about step 50.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Better rollout fidelity cannot make a quantized run learn faster than a run without quantization.
+  \item A larger effective learning rate on Q/K/V can.
+  \end{itemize}
+\item \textbf{QuRL's Table~4} ablates UAQ against a larger \emph{global} learning rate.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item At $\eta=10^{-6}$, the Avg@32 is 30.63 without UAQ ($s=1$), 31.25 at $s=1.5$ and 29.15 at $s=2$.
+  \item The controls keep $s=1$ and raise the learning rate to $1.5\times10^{-6}$ and $2\times10^{-6}$, giving 29.06 and 26.66.
+  \end{itemize}
+  These numbers raise two problems.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item By \cref{thm:reparam}, the matching control raises the learning rate of Q/K/V alone and lowers that of the normalization gains. That control is absent, and so is a BF16 run with UAQ, which would separate quantization from optimization.
+  \item The table reports one number per configuration, without seeds or intervals, on a 30-problem benchmark.
+  \end{itemize}
+\item \textbf{QuRL's GSM8K experiment} disables UAQ ``due to the relatively high learning rate ($10^{-5}$), which already provides sufficient weight update magnitude''. This is consistent with UAQ acting as a learning-rate change.
+\end{itemize}

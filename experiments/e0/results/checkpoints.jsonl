@@ -1,0 +1,2 @@
+{"s": 1.5, "dir": "/home/minngo/e0_work/uaq_s1.5", "qkv_weights": 24772608, "int8_per_channel_codes_changed_frac": 0.04209455863508598, "fp8_per_tensor_codes_changed_frac": 0.026084617332175927}
+{"s": 2.0, "dir": "/home/minngo/e0_work/uaq_s2", "qkv_weights": 24772608, "int8_per_channel_codes_changed_frac": 0.0, "fp8_per_tensor_codes_changed_frac": 0.0}

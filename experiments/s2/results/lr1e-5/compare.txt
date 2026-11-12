@@ -1,0 +1,22 @@
+reference R4: 20 rollout steps, args R4 s=2.0 lr=1e-05 tau=0.1 on NVIDIA H100 NVL (torch 2.14.0+cu132)
+  activity: clipping on 55% of updates (median grad norm 0.644, tau 0.1); TIS truncation on 0.53% of tokens; ACR kept 7 token terms; mean reward 0.087
+
+steps identical to the reference (first divergent step in brackets):
+run                      tok              mu          pi_old        params.W    params.gamma     params.rest      params.all
+R3                  1/20 [2]        1/20 [2]        1/20 [2]        0/20 [1]        0/20 [1]        0/20 [1]        0/20 [1]
+R4_repeat              20/20           20/20           20/20           20/20           20/20           20/20           20/20
+R5                     20/20           20/20           20/20           20/20           20/20           20/20           20/20
+R5o                 1/20 [2]        1/20 [2]        1/20 [2]        0/20 [1]        0/20 [1]        0/20 [1]        0/20 [1]
+R5x                 1/20 [2]        1/20 [2]        1/20 [2]        0/20 [1]        0/20 [1]        0/20 [1]        0/20 [1]
+
+parameter snapshots vs. reference (share of identical elements; max |difference|):
+  R3         step   1: W 0.0024% (8.96e-05); gamma 0.3116% (3.89e-05); rest 10.0898% (5.09e-05)
+  R3         step  20: W 0.0003% (1.12e-03); gamma 0.0465% (3.95e-04); rest 0.0100% (6.87e-04)
+  R4_repeat  step   1: W 100.0000% (0.00e+00); gamma 100.0000% (0.00e+00); rest 100.0000% (0.00e+00)
+  R4_repeat  step  20: W 100.0000% (0.00e+00); gamma 100.0000% (0.00e+00); rest 100.0000% (0.00e+00)
+  R5         step   1: W 100.0000% (0.00e+00); gamma 100.0000% (0.00e+00); rest 100.0000% (0.00e+00)
+  R5         step  20: W 100.0000% (0.00e+00); gamma 100.0000% (0.00e+00); rest 100.0000% (0.00e+00)
+  R5o        step   1: W 0.0126% (9.78e-05); gamma 3.7156% (2.07e-05); rest 11.2716% (5.09e-05)
+  R5o        step  20: W 0.0004% (1.13e-03); gamma 0.0884% (1.95e-04); rest 0.0128% (5.88e-04)
+  R5x        step   1: W 0.0121% (9.86e-05); gamma 2.9390% (1.74e-05); rest 11.1817% (5.08e-05)
+  R5x        step  20: W 0.0003% (1.32e-03); gamma 0.0419% (2.23e-04); rest 0.0041% (7.68e-04)

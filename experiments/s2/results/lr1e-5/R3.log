@@ -1,0 +1,21 @@
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 5743.07it/s]
+step 1: reward 0.312 tokens 7657 clip 1.00 trunc 0.0024 acr 0 params 7bd452dbd3d4faa2 (22.6 s)
+step 2: reward 0.312 tokens 5933 clip 1.00 trunc 0.0084 acr 4 params ee637a908b0ed0bc (22.1 s)
+step 3: reward 0.281 tokens 7389 clip 0.50 trunc 0.0051 acr 1 params c31703219bf029e4 (21.8 s)
+step 4: reward 0.094 tokens 7241 clip 1.00 trunc 0.0046 acr 0 params a09b9bd64cd874a8 (22.3 s)
+step 5: reward 0.531 tokens 6878 clip 1.00 trunc 0.0028 acr 1 params 9b2a8fc7b57ca935 (21.7 s)
+step 6: reward 0.281 tokens 7024 clip 0.50 trunc 0.0038 acr 0 params 57426b352725f887 (22.1 s)
+step 7: reward 0.125 tokens 7331 clip 0.00 trunc 0.0044 acr 0 params 395b6855f2aff1b9 (22.1 s)
+step 8: reward 0.219 tokens 7075 clip 0.50 trunc 0.0035 acr 0 params dd59f2b87fb2084f (22.0 s)
+step 9: reward 0.125 tokens 7404 clip 1.00 trunc 0.0049 acr 2 params 1d6d5cba05ad9dcf (22.2 s)
+step 10: reward 0.094 tokens 7116 clip 1.00 trunc 0.0062 acr 0 params 8a98b3edbf89f35e (22.5 s)
+step 11: reward 0.156 tokens 6918 clip 1.00 trunc 0.0039 acr 0 params eca83a6542e5ed6e (21.7 s)
+step 12: reward 0.031 tokens 7771 clip 0.50 trunc 0.0036 acr 0 params 06642494bb0af7b6 (22.4 s)
+step 13: reward 0.031 tokens 7854 clip 0.50 trunc 0.0043 acr 0 params 33c13fa897d2d5e2 (21.5 s)
+step 14: reward 0.062 tokens 8064 clip 0.50 trunc 0.0024 acr 0 params 68fc9f2bb66cb952 (22.0 s)
+step 15: reward 0.125 tokens 7614 clip 0.50 trunc 0.0038 acr 0 params b6813213fa421a89 (22.0 s)
+step 16: reward 0.000 tokens 7395 clip 0.00 trunc 0.0047 acr 0 params a58772c1e59ee6ff (22.0 s)
+step 17: reward 0.125 tokens 7362 clip 0.50 trunc 0.0057 acr 0 params f401109c8536c38e (22.3 s)
+step 18: reward 0.000 tokens 7300 clip 0.00 trunc 0.0042 acr 0 params bca145885431e275 (22.0 s)
+step 19: reward 0.188 tokens 7311 clip 0.50 trunc 0.0048 acr 0 params ab69d58d1cf1e3d6 (21.8 s)
+step 20: reward 0.000 tokens 7877 clip 0.00 trunc 0.0043 acr 0 params 4206dc1e63b246e7 (22.0 s)

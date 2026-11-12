@@ -1,0 +1,25 @@
+step   total          gen old_log_prob          ref       values          adv update_criti update_actor update_weigh  score resp_len clipped   tok/s
+   1    59.3          6.1          8.1         11.5          1.5          0.3          2.9         20.0          0.5  0.008    315.0   0.125    1819
+   2    46.0          6.1          7.4          7.7          1.6          0.2          2.6         19.8          0.5  0.016    326.3   0.121    2396
+   3    42.2          4.1          7.4          7.1          1.2          0.2          2.8         18.7          0.5  0.004    307.6   0.094    2495
+   4    43.4          4.1          7.6          7.5          1.5          0.2          2.8         19.0          0.5  0.012    309.2   0.094    2444
+   5    44.5          5.1          7.7          7.6          1.2          0.2          2.5         19.5          0.5  0.027    316.2   0.137    2405
+   6    45.6          6.1          7.7          7.6          1.2          0.2          2.5         19.7          0.5  0.016    322.8   0.109    2397
+   7    46.3          6.1          7.8          7.8          1.3          0.2          2.8         19.6          0.5  0.023    329.9   0.125    2409
+   8    43.5          4.1          7.6          7.6          1.2          0.2          2.7         19.4          0.5  0.016    320.2   0.109    2493
+   9    45.2          5.1          7.8          7.4          1.5          0.2          2.5         20.0          0.5  0.043    332.5   0.121    2474
+  10    46.9          6.1          7.9          7.8          1.2          0.3          2.6         20.3          0.5  0.055    337.4   0.184    2411
+
+step time: first 59.3 s; median of the rest 45.2 s (min 42.2, max 46.9)
+  gen             median     5.1 s (  11% of a step)
+  old_log_prob    median     7.7 s (  17% of a step)
+  ref             median     7.6 s (  17% of a step)
+  values          median     1.2 s (   3% of a step)
+  adv             median     0.2 s (   0% of a step)
+  update_critic   median     2.6 s (   6% of a step)
+  update_actor    median    19.6 s (  43% of a step)
+  update_weights  median     0.5 s (   1% of a step)
+validation (greedy, test set): 19.0 s
+  step 10: val-core/openai/gsm8k/acc/mean@1 = 0.0478
+
+projection for 435 steps: 5.46 h of training + 15 validations = 5.54 h

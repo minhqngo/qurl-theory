@@ -1,0 +1,101 @@
+\section{What re-quantization does to small updates}\label{sec:tracking}
+
+QuRL's weight-update argument compares one update with one grid step. With full-precision master weights re-quantized at every sync, the relevant question is how the \emph{sequence} of quantized weights follows the master weights. We treat one coordinate $w$ with grid step $\Delta$ and round-to-nearest (RTN) rounding.
+
+\begin{assumptionU}[Uniform phase]
+Write $w/\Delta=c+\varphi$ with $c\in\Z$ and $\varphi\in[-\tfrac12,\tfrac12)$, so that $Q(w)=c\Delta$ with error $e=-\Delta\varphi$. Assume:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\varphi\sim\Unif[-\tfrac12,\tfrac12)$;
+\item $\varphi$ is independent of the update applied to $w$;
+\item the phases of different coordinates are independent.
+\end{itemize}
+\end{assumptionU}
+
+\begin{lemma}[When U holds]\label{lem:uniform-phase}
+Let $w$ have density $p$ with characteristic function $\hat p$. Then the density $f$ of $\varphi$ satisfies $\sup_\varphi|f(\varphi)-1|\le\sum_{m\ne0}|\hat p(2\pi m/\Delta)|$.
+
+For a Gaussian, or a mixture of Gaussians each with standard deviation at least $\sigma$, the bound is $2\sum_{m\ge1}e^{-2\pi^2m^2\sigma^2/\Delta^2}$. That is below $10^{-8}$ already at $\sigma=\Delta$.
+\end{lemma}
+
+For per-row absmax INT8, $\sigma/\Delta\approx127/(\max/\rms)$, which is about 6--25 if weight rows have $\max/\rms$ between 5 and 20. In that range U holds essentially exactly for the population distribution, as classical quantization-noise theory predicts \citep{widrow2008quantization,sripad1977necessary}. U fails when weights sit on grid points, for example after quantization-aware training on the same grid.
+
+\begin{proposition}[Bounded lag; no assumption]\label{prop:lag}
+For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for every $k$. Hence $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$.
+
+The quantized trajectory never falls behind the full-precision one by more than one grid step, so it cannot freeze.
+\end{proposition}
+
+\begin{proposition}[One-step capture, under U]\label{prop:capture}
+Write $|d|/\Delta=n_0+a$ with $n_0\in\N$ and $a\in[0,1)$. Then $Q(w+d)-Q(w)=\sgn(d)\,\Delta\,(n_0+B)$ with $B\sim\mathrm{Bernoulli}(a)$. Hence:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\E[Q(w+d)-Q(w)]=d$, so updates are captured in expectation;
+\item the variance is $\Delta^2a(1-a)$, which equals $\Delta|d|-d^2$ when $|d|<\Delta$;
+\item for $|d|<\Delta$, the code flips with probability $|d|/\Delta$.
+\end{itemize}
+\end{proposition}
+
+\begin{proposition}[Layer-level tracking, under U]\label{prop:layer}
+For a weight row with independent phases, update $d$ and input $x$:
+\[
+\E\bigl[(Q(w+d)-Q(w))\cdot x\bigr]=d\cdot x,\qquad \Var=\sum_jx_j^2\Delta_j^2a_j(1-a_j).
+\]
+Take $|d_j|=\epsilon\Delta$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Gradient-aligned update} ($d_j=\epsilon\Delta\sgn(x_j)$): the signal-to-noise ratio is $\sqrt{\epsilon/(1-\epsilon)}\,\|x\|_1/\|x\|_2\approx\sqrt{2\epsilon n/\pi}$ for Gaussian $x$ in dimension $n$.
+\item \emph{Random-sign update:} it is $\sqrt{\epsilon/(1-\epsilon)}$, independent of $n$.
+\end{itemize}
+\end{proposition}
+
+Policy-gradient updates are aligned with the score directions of the sampled tokens. So the quantized policy tracks the intended changes far better than the per-coordinate picture suggests: at $\epsilon=10^{-3}$ and $n=2048$ the aligned correlation is 0.75 (\cref{app:verification}).
+
+\begin{proposition}[Stationary but persistent error, under U]\label{prop:persistence}
+On a fixed grid, the following hold.
+\begin{enumerate}[(i),leftmargin=*,itemsep=1pt]
+\item For every $k$, $e_k=Q(\theta_k)-\theta_k$ has independent $\Unif[-\Delta/2,\Delta/2]$ coordinates, so $\E\|e_k\|^2=n\Delta^2/12$ throughout training.
+\item For a coordinate with cumulative displacement $D=\theta_k-\theta_0$ and $a=\fracpart(|D|/\Delta)$, $\Corr(e_k,e_0)=1-6a(1-a)$.
+\end{enumerate}
+\end{proposition}
+
+\begin{corollary}[Persistence time]\label{cor:persistence-time}
+The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$. With per-step updates of size $|d|$, this takes about $0.092\,\Delta/|d|$ steps under coherent drift, and about $\tfrac\pi2(0.092\,\Delta/|d|)^2$ steps under random-walk drift.
+\end{corollary}
+
+\paragraph{Consequences.} The weight-space rounding error does not grow during training. If the rollout--trainer mismatch grows, as QuRL reports (its Fig.~3a) and as we observe (\cref{sec:s3}), the cause must lie elsewhere:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item the grid itself grows, through absmax or outlier growth;
+\item the policy becomes more sensitive to a fixed error;
+\item the activation error grows;
+\item the visited contexts change.
+\end{itemize}
+
+What re-quantization does create is \emph{persistence}. With QuRL's App.~A magnitudes (a cumulative relative update of about 0.002 against a relative quantization error of about 0.0097 after about 900 steps), $\Corr(e_{900},e_0)$ is still about 0.3--0.7, depending on how the figure is read. Any first-order bias of the update in $e_k$ then acts as a nearly constant drift rather than as noise that averages out.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabularx}{\linewidth}{@{}l L l l L L@{}}
+\toprule
+Scheme & Rollout weights $q_k$ & Per-step var. & Lag-1 corr. & $\sum_{k\le K}e_k$ & Extra cost\\
+\midrule
+RTN & $Q(\theta_k)$ & $\Delta^2/12$ & $1-6a(1-a)\approx1$ & $\approx Ke_0$ while drift $\ll\Delta$ & none\\
+Delta & $Q(\theta_0)+Q_f(\theta_k-\theta_0)$ & $\approx\Delta^2/12$ & $\approx1$ & $\approx Ke_0$ always & second GEMM or a low-rank delta\\
+Stochastic rounding & $\Delta\lfloor\theta_k/\Delta+\xi_k\rfloor$ & $\Delta^2/6$ & $0$ & martingale, $O(\sqrt K\Delta)$ & random bits\\
+Error feedback & $Q(\theta_k+r_{k-1})$, with $r_k=\theta_k+r_{k-1}-q_k$ & $\Delta^2/6$ & $-1/2$ & $r_0-r_K$, at most $\Delta/2$ & one residual per weight\\
+\bottomrule
+\end{tabularx}
+\caption{Rollout-quantization schemes for a master-weight path $\theta_k$ (\cref{prop:schemes}). Stochastic rounding draws $\xi_k\sim\Unif[0,1)$ afresh at each step; $Q_f$ uses a finer grid.}\label{tab:schemes}
+\end{table}
+
+\begin{proposition}[Rollout-quantization schemes]\label{prop:schemes}
+For any master-weight path $\theta_k$, the schemes in \cref{tab:schemes} have the stated properties. The properties of stochastic rounding and error feedback need no uniform-phase assumption.
+\end{proposition}
+
+\begin{corollary}[Cumulative bias]\label{cor:partial-sums}
+Suppose the expected update at step $k$ carries a first-order mismatch bias $b_k=B_ke_k$, with $\|B_k\|\le\beta$ and $\|B_{k+1}-B_k\|\le\lambda$. Then the accumulated bias $\sum_{k\le K}b_k$ behaves as follows:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item it can grow to about $K\beta\|e\|$ under RTN and delta quantization;
+\item it is $O(\sqrt K\,\beta\|e\|)$ under stochastic rounding;
+\item it is at most $(\beta+(K-1)\lambda)\max_k\|r_k\|$ under error feedback, which stays bounded while $B_k$ varies slowly.
+\end{itemize}
+\end{corollary}
+
+The property that matters is a bounded cumulative error, not a larger update-to-grid ratio. Error feedback, the principle behind sigma--delta modulation \citep{gray1990spectra} and compressed SGD \citep{seide2014onebit,stich2018sparsified,karimireddy2019ef}, delivers it at the price of twice the per-step error variance. UAQ enters these quantities only through the update-to-grid ratio, and by \cref{cor:ratio} the matched learning-rate change raises that ratio in exactly the same way.

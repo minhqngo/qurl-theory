@@ -1,0 +1,95 @@
+\section{Proofs}\label{app:proofs}
+
+\paragraph{Proof of \cref{lem:gradients}.} $\mathcal L'(W',\gamma',\mathrm{rest})=\mathcal L(sW',\gamma'/s,\mathrm{rest})$. The chain rule gives $\nabla_{W'}\mathcal L'=s\,\nabla_W\mathcal L$, $\nabla_{\gamma'}\mathcal L'=s^{-1}\nabla_\gamma\mathcal L$, and leaves the other gradients unchanged. \qed
+
+\paragraph{Proof of \cref{thm:reparam}.} We argue by induction on the step $k$. The induction hypothesis $H_k$ has two parts:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\theta_k=\phi_s(\theta'_k)$;
+\item the optimizer states correspond: $m'=s\,m$ and $v'=s^2v$ for $W$; $m'=m/s$ and $v'=v/s^2$ for $\gamma$; equality for the other parameters. Momentum buffers of SGD-type methods scale like $m$.
+\end{itemize}
+$H_0$ holds by construction, with all states zero. Assume $H_k$.
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \emph{Same data.} By \cref{cor:rollout} the two runs have identical policies. With identical seeds they therefore sample identical rollouts and compute identical rewards, advantages, importance weights and clipping decisions. So the step-$k$ losses satisfy $\mathcal L'_k=\mathcal L_k\circ\phi_s$.
+\item \emph{Gradients.} By \cref{lem:gradients}, $g'_W=s\,g_W$, $g'_\gamma=g_\gamma/s$ and $g'_{\mathrm{rest}}=g_{\mathrm{rest}}$.
+\item \emph{Clipping.} The UAQ run clips with the norm of $(g'_W,g'_\gamma,g'_{\mathrm{rest}})$. Under rule (c), the original run clips with the norm of $(s\,g_W,g_\gamma/s,g_{\mathrm{rest}})$. The two norms are equal, so the clipping coefficient $\kappa$ is the same number in both runs, and the clipped gradients again correspond.
+\item \emph{States.} The first moment is updated linearly in the gradient and the second in its square. So $m'_{k+1}=s\,m_{k+1}$ and $v'_{k+1}=s^2v_{k+1}$ for $W$, and correspondingly for $\gamma$. The bias corrections are identical in both runs.
+\item \emph{Adam step for $W$.} With $\hat m'=s\hat m$ and $\hat v'=s^2\hat v$,
+\[
+\Delta W'=-\eta\,\frac{s\,\hat m}{s\sqrt{\hat v}+\varepsilon}-\eta\lambda W',
+\qquad
+\Delta W=s\,\Delta W'=-s\eta\,\frac{\hat m}{\sqrt{\hat v}+\varepsilon/s}-\eta\lambda W .
+\]
+This is AdamW on $W$ with learning rate $s\eta$, constant $\varepsilon/s$ and decoupled decay $\lambda/s$, since $(s\eta)(\lambda/s)=\eta\lambda$.
+\item \emph{Adam step for $\gamma$.} With $\hat m'=\hat m/s$ and $\hat v'=\hat v/s^2$,
+\[
+\Delta\gamma=\Delta\gamma'/s=-\frac{\eta}{s}\,\frac{\hat m}{\sqrt{\hat v}+s\varepsilon}-\eta\lambda\gamma ,
+\]
+that is, learning rate $\eta/s$, constant $s\varepsilon$ and decay $s\lambda$. RMSProp and Adagrad differ from Adam only in how $\hat m$ and $\hat v$ are formed, so the same computation applies.
+\item \emph{SGD with momentum.} For $W$, the buffer satisfies $b'=s\,b$, so $\Delta W=s\,\Delta W'=-s\eta\cdot s\,b-\eta\lambda W=-s^2\eta\,b-\eta\lambda W$: learning rate $s^2\eta$ and decay $\lambda/s^2$. For $\gamma$, $\Delta\gamma=-(\eta/s^2)\,b-\eta\lambda\gamma$: learning rate $\eta/s^2$ and decay $s^2\lambda$. Nesterov momentum is linear in the same way.
+\item \emph{Sign-based methods.} Sign-SGD and Lion apply $\sgn(\cdot)$ to a linear combination of gradients and momenta, which is invariant to positive per-group rescaling. So $\Delta W=s\,\Delta W'$ is a step of size $s\eta$, and $\Delta\gamma=\Delta\gamma'/s$ one of size $\eta/s$.
+\end{enumerate}
+Hence $H_{k+1}$ holds. \qed
+
+Coupled $L^2$ regularization, added to the gradient rather than applied as decoupled decay, transforms differently. We treat decoupled decay, which is what AdamW and VeRL use.
+
+\paragraph{Proof of \cref{cor:ratio}.} The grid step of row $i$ is $\Delta_i(W)=\max_j|W_{ij}|/M$. Under $\phi_s$, both $\Delta_i$ and $\Delta W$ scale by $s$, so $\nu$ is invariant, and UAQ's $\nu$ is that of the matched run of \cref{thm:reparam}.
+
+On the first step of Adam, $|\hat m/\sqrt{\hat v}|=1$ for every coordinate with a nonzero gradient (as $\varepsilon\to0$). The update is then the learning rate itself, so the matched run's $\nu$ is $s$ times the plain run's. Under SGD the update is proportional to the learning rate, a factor $s^2$. Our float64 check gives first-step gains of 1.500 (Adam) and 2.250 (SGD) at $s=1.5$ (\cref{app:verification}). \qed
+
+\paragraph{Proof of \cref{cor:pipeline}.} By \cref{thm:reparam}, $\theta_k=\phi_s(\theta'_k)$ at every step. By \cref{cor:rollout}, the policies $\pi$ and $\mu$, and with them every quantity computed from policy values and sampled data, are identical at every step. \qed
+
+\paragraph{Proof of \cref{lem:uniform-phase}.} The density of $\varphi$ is $f(\varphi)=\sum_{k\in\Z}\Delta\,p(\Delta(k+\varphi))$, which is 1-periodic. By Poisson summation, its Fourier coefficients are $\hat p(2\pi m/\Delta)$, with $\hat p(0)=1$. Hence
+\[
+|f(\varphi)-1|\le\sum_{m\neq0}|\hat p(2\pi m/\Delta)| .
+\]
+For a Gaussian, $|\hat p(t)|=e^{-\sigma^2t^2/2}$, which gives the stated bound. For a mixture, $|\hat p|$ is at most the mixture of the components' $|\hat p|$. At $\sigma=\Delta$ the bound is $2\sum_{m\ge1}e^{-2\pi^2m^2}\approx5\times10^{-9}$. \qed
+
+\paragraph{Proof of \cref{prop:lag}.} Without saturation, RTN satisfies $|Q(\theta)-\theta|\le\Delta/2$ coordinate-wise. Apply this at $\theta_k$ and at $\theta_0$, and use the triangle inequality. \qed
+
+\paragraph{Proof of \cref{prop:capture}.} Take $d>0$ without loss of generality. Then $(w+d)/\Delta=c+n_0+(\varphi+a)$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item This rounds to $c+n_0+B$, where $B=\mathbf 1[\varphi\ge\tfrac12-a]$.
+\item Under U, $\Pr[B=1]=a$. So $\E[Q(w+d)-Q(w)]=\Delta(n_0+a)=d$ and $\Var=\Delta^2a(1-a)$.
+\item For $|d|<\Delta$, $n_0=0$ and $a=|d|/\Delta$, which gives the flip probability and $\Var=\Delta|d|-d^2$. \qed
+\end{itemize}
+
+\paragraph{Proof of \cref{prop:layer}.} The change $(Q(w+d)-Q(w))\cdot x=\sum_jx_j(Q(w_j+d_j)-Q(w_j))$ is a sum of independent terms. By \cref{prop:capture}, its mean is $d\cdot x$ and its variance is $\sum_jx_j^2\Delta_j^2a_j(1-a_j)$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Aligned update.} For $d_j=\epsilon\Delta\sgn(x_j)$ with a common $\Delta$, the mean is $\epsilon\Delta\|x\|_1$ and the standard deviation $\Delta\sqrt{\epsilon(1-\epsilon)}\,\|x\|_2$. For Gaussian $x$, $\|x\|_1/\|x\|_2\to\sqrt{2n/\pi}$.
+\item \emph{Random-sign update.} The signal $d\cdot x$ has magnitude about $\epsilon\Delta\|x\|_2$, against the same standard deviation. \qed
+\end{itemize}
+
+\paragraph{Proof of \cref{prop:persistence}.}
+\begin{enumerate}[(i),leftmargin=*,itemsep=1pt]
+\item A uniform phase shifted by an independent amount, modulo 1, is still uniform, and $e_k=-\Delta\varphi_k$.
+\item For a coordinate displaced by $D$ with $a=\fracpart(|D|/\Delta)$, the new phase is $\varphi'=\varphi+a-\mathbf 1[\varphi\ge\tfrac12-a]$. Then
+\[
+\E[\varphi\varphi']=\tfrac1{12}-\int_{1/2-a}^{1/2}\varphi\,d\varphi=\tfrac1{12}-\tfrac{a(1-a)}2 ,
+\]
+and dividing by $\E\varphi^2=\tfrac1{12}$ gives $1-6a(1-a)$. \qed
+\end{enumerate}
+
+\paragraph{Proof of \cref{cor:persistence-time}.} $1-6a(1-a)=\tfrac12$ gives $a(1-a)=\tfrac1{12}$, so $a=(1-\sqrt{2/3})/2\approx0.092$.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item Under coherent drift, $a=K|d|/\Delta$ for $K|d|<\Delta$.
+\item Under a random walk, $\E|D|=\sqrt{2K/\pi}\,|d|$. Setting $\E|D|/\Delta=0.092$ gives the stated $K$. \qed
+\end{itemize}
+
+\paragraph{Proof of \cref{prop:schemes}.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Stochastic rounding.} $\E[e_k\mid\mathcal F_{k-1},\theta_k]=0$ exactly, so the partial sums form a martingale. The conditional variance is $\Delta^2a(1-a)$, whose average over a uniform $a$ is $\Delta^2/6$. No assumption U is needed.
+\item \emph{Error feedback.} $|r_k|\le\Delta/2$ without saturation, and $e_k=q_k-\theta_k=r_{k-1}-r_k$. The sum therefore telescopes for any path. If the residuals are approximately independent and uniform, the per-step variance is $2\cdot\Delta^2/12$ and the lag-1 correlation is $-\Var(r)/(2\Var(r))=-\tfrac12$.
+\item \emph{Delta quantization.} $e_k=e_0+e_{f,k}$ with $|e_{f,k}|\le\Delta_f/2$.
+\item \emph{RTN.} This is \cref{prop:persistence}. \qed
+\end{itemize}
+
+\paragraph{Proof of \cref{cor:partial-sums}.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Error feedback.} With $r_0=0$, Abel summation gives
+\[
+\sum_{k=1}^KB_k(r_{k-1}-r_k)=-B_Kr_K+\sum_{k=1}^{K-1}(B_{k+1}-B_k)\,r_k ,
+\]
+whose norm is at most $(\beta+(K-1)\lambda)\max_k\|r_k\|$.
+\item \emph{Stochastic rounding.} If $B_k$ is predictable, the increments $B_ke_k$ are martingale differences. So $\E\|\sum_kB_ke_k\|^2=\sum_k\E\|B_ke_k\|^2\le K\beta^2\E\|e\|^2$.
+\item \emph{RTN and delta quantization.} While the drift is below the persistence scale, $e_k\approx e_0$, so $\sum_kB_ke_k\approx(\sum_kB_k)\,e_0$, which can grow to about $K\beta\|e\|$. \qed
+\end{itemize}

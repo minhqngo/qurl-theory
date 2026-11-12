@@ -1,0 +1,22 @@
+math1.5b: 512 responses, 193103 response tokens, mean NLL of sampled tokens under BF16 pi = 1.350 nats
+BF16 alone, none_s1.5 vs none_orig: mad 1.228e-02; IS weight mean 0.9999 (should be ~1)
+reference for an s-fold error reduction: mad ratio 0.667, KL ratio 0.444
+
+rollout quant    metric        orig       s=1.5    ratio  95% CI (seq boot) vs orig pi
+fp8-per-channel  mad    5.7600e-02  5.5764e-02    0.968  [0.960, 0.976]        0.972
+                 k1     8.6316e-03  7.4752e-03    0.866  [0.811, 0.923]        0.881
+                 k3     9.1588e-03  8.1335e-03    0.888  [0.854, 0.921]        0.893
+                 estimator check, mean(r-1) (0 if tokens ~ scored pi): orig +5.3e-04 [-2.2e-04, +1.3e-03]; s1.5 +6.6e-04 [+3.2e-06, +1.3e-03]
+                 error corr(e_orig, e_s1.5) = 0.622; |e| smaller after UAQ on 49.6% of tokens, larger on 48.3%; top 1% of tokens carry 47% of k3 (orig)
+fp8-per-tensor   mad    5.9007e-02  5.7596e-02    0.976  [0.968, 0.984]        0.978
+                 k1     8.0879e-03  7.9686e-03    0.985  [0.922, 1.055]        0.999
+                 k3     9.7533e-03  8.9992e-03    0.923  [0.888, 0.956]        0.926
+                 estimator check, mean(r-1) (0 if tokens ~ scored pi): orig +1.7e-03 [+9.0e-04, +2.4e-03]; s1.5 +1.0e-03 [+3.3e-04, +1.7e-03]
+                 error corr(e_orig, e_s1.5) = 0.606; |e| smaller after UAQ on 49.3% of tokens, larger on 48.5%; top 1% of tokens carry 48% of k3 (orig)
+int8-w8a8        mad    7.2151e-02  7.1886e-02    0.996  [0.988, 1.005]        0.999
+                 k1     1.3972e-02  1.3270e-02    0.950  [0.902, 1.001]        0.966
+                 k3     1.3399e-02  1.3322e-02    0.994  [0.966, 1.022]        1.006
+                 estimator check, mean(r-1) (0 if tokens ~ scored pi): orig -5.7e-04 [-1.3e-03, +2.2e-04]; s1.5 +5.2e-05 [-7.3e-04, +8.5e-04]
+                 error corr(e_orig, e_s1.5) = 0.543; |e| smaller after UAQ on 48.3% of tokens, larger on 49.8%; top 1% of tokens carry 42% of k3 (orig)
+
+ratio = s1.5 / orig with matched pi; 'vs orig pi' = same ratio with pi = none_orig for both (the summary.txt convention).

@@ -1,0 +1,33 @@
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{What UAQ's reported gains can mean.} If UAQ helps, the cause is that the query, key and value projections benefit from a larger learning rate, the normalization gains from a smaller one, or both.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item That would be a finding about per-layer learning rates for RL fine-tuning, and it should then appear with BF16 rollouts as well (H2).
+\item One mechanism could still make the effect larger with quantization: slower updates of the normalization gains may limit the growth of activation outliers, and with them of the activation-quantization step. That would slow the mismatch growth we observe. Without any appeal to update capture, it would explain why QuRL's Fig.~4b separates over training.
+\end{itemize}
+Choosing per-layer learning-rate multipliers for RL fine-tuning is an open question in its own right, independent of quantization.
+
+\paragraph{Recommendations for quantized-rollout research.}
+\begin{enumerate}[leftmargin=*,itemsep=1pt]
+\item Check any reparameterization at step 0. Theorem-level invariances can be verified bit for bit at power-of-two scales (\cref{sec:s1}).
+\item Compare a reparameterization with its matched optimizer settings (\cref{thm:reparam}), including the clipping norm, not with a global learning-rate change.
+\item Report several seeds with intervals. Single runs of this RL configuration can stall for hundreds of steps (\cref{sec:s3}).
+\item State every optimizer hyperparameter, including the critic's learning rate and any warmup. \Cref{sec:s3} shows that one unstated setting can decide between learning and collapse.
+\item To bound the cumulative effect of rollout quantization, use schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}). Larger update-to-grid ratios do not bound it.
+\end{enumerate}
+
+\paragraph{Limitations.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Assumptions of the theory.} The invariance assumes scales recomputed from the rescaled tensors. The reparameterization assumes exact arithmetic and identical data; on real stacks it predicts equality in distribution. The tracking results assume uniform rounding phases.
+\item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model.
+\item \emph{What we could not inspect.} The authors' implementation was not available to us. Our statements about QuRL's figures rest on values read from their vector data.
+\item \emph{The reproduction.} Our GSM8K non-reproduction may reflect settings the paper does not state.
+\end{itemize}
+
+\section{Conclusion}\label{sec:conclusion}
+
+UAQ cannot reduce quantization error for absmax quantizers: the rescaling is invisible to them, exactly so on the hardware kernel QuRL targets. Its effect on training is a per-layer learning-rate change, which a matched optimizer reproduces bit for bit.
+
+Re-quantizing full-precision master weights does not freeze the rollout policy. It captures updates in expectation, at the rate we predict and measure. The open problem it leaves is the persistence of the rounding error, which error feedback addresses and UAQ does not.
+
+\todo{One sentence on the pre-registered verdicts once available.}

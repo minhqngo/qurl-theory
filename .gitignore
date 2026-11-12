@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+
+# LaTeX build byproducts (PDFs are tracked)
+*.aux
+*.blg
+*.bbl
+*.out
+*.toc
+*.synctex.gz
+latex/*.log
+latex/figures/*.log
+paper/*.log
+
+# Large or regenerable experiment outputs
+# - tensor dumps (INT8 refit checks)
+*.pt
+# - transfer archives from the H100; their contents are unpacked into results/
+*.tgz
+# - per-token log-prob dumps of S1/E0 (~340 MB); the summaries next to them are tracked
+experiments/**/score_*.json
+
+# Local tool settings
+.claude/settings.local.json

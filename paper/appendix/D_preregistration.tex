@@ -1,0 +1,49 @@
+\section{Pre-registration of the UAQ experiment}\label{app:prereg}
+
+The analyses below were fixed in writing, and their scripts frozen and hashed, before the data they test were seen. We report what had been seen at each point.
+
+\paragraph{H1 (fixed 2026-11-11, before any R5 result).}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Seen beforehand:} R3 with seed 1 in full; one progress line of R4 with seed 1 (validation 42.8\% at step 29); nothing of R5; and the passed exactness check.
+\item \textbf{Data:} R4 and R5 with seeds 1--3, paired by seed. Seeds 4 and 5 were added the same day, before any R4 or R5 run was analysed, so the test uses five pairs.
+\item \textbf{Run rules:} every completed run counts, whatever its outcome; a crashed run is repeated with the same seed; and no verdict is drawn until all pairs are complete.
+\item \textbf{Primary endpoint:} late accuracy, the mean greedy test accuracy over the last five validations (steps 319, 348, 377, 406 and 435).
+\item \textbf{Decision rule,} with $t$-intervals of the mean paired difference on $n-1$ degrees of freedom:
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item H1 is \emph{supported} if the 90\% interval lies within $\pm\delta$ with $\delta=2.0$ points (two one-sided tests at $\alpha=0.05$);
+  \item it is \emph{contradicted} if the 95\% interval excludes 0;
+  \item it is \emph{inconclusive} otherwise.
+  \end{itemize}
+\item \textbf{Why $\delta=2.0$ points.} QuRL itself presents a 2-point gap as small (``reduces this gap to 2\%'' for INT8). It is also about the largest spread in QuRL's UAQ ablation (2.1 points).
+\item \textbf{Power.} The 90\% half-width is $1.69\times$ the standard deviation of the paired differences with three pairs and $0.95\times$ with five. Equivalence is therefore reachable only if that standard deviation is below about 1.2 or 2.1 points, respectively.
+\item \textbf{Secondary endpoints}, supportive only:
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item final accuracy and reward AUC (mean training score), each with $\delta=2.0$ points;
+  \item the mismatch, the mean $k_3$ compared as a ratio with bounds 0.80--1.25, reported together with the entropy difference.
+  \end{itemize}
+\item \textbf{Sensitivity:} the same analysis of R4 $-$ R3, which shows whether UAQ has an effect at all at this scale.
+\item \textbf{Analysis script:} \texttt{h1\_analysis.py}, SHA-256 \nolinkurl{5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f}.
+\end{itemize}
+
+\paragraph{Exploratory additions (fixed 2026-11-11).} These were added after R5 with seed 1 was seen at 0\% accuracy at step 316, and before any other R4 or R5 seed.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Collapse counts:} a run counts as collapsed if its late accuracy is below 10\%, and collapses are counted per arm.
+\item \emph{Collapse-free tests:} each registered test is repeated on the seeds without a collapsed run.
+\end{itemize}
+These analyses are labelled exploratory. That run later recovered, and with a late accuracy of 11.8\% it does not count as collapsed under the rule fixed beforehand. We keep the rule and report each run's longest stretch without a correct training answer as a description instead.
+
+\paragraph{H2 and H3 (fixed 2026-11-11, before any R1, R2 or R6 run).}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{H2:} the per-seed interaction $(\text{R4}-\text{R3})-(\text{R2}-\text{R1})$, with H1's decision rule and margin. For the mismatch, the interaction is the ratio of ratios $(\text{R4}/\text{R3})/(\text{R2}/\text{R1})$.
+\item \textbf{H3:} the per-seed difference $\text{R6}-\text{R4}$.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item H3 is \emph{supported} if the 95\% interval excludes 0;
+  \item it is \emph{contradicted} if the 90\% interval lies within $\pm2.0$ points;
+  \item it is \emph{inconclusive} otherwise.
+  \end{itemize}
+\item \textbf{Seeds} 1--3.
+\item \textbf{Additional secondary endpoint:} early reward, the mean training score over steps 1--58. It was added after R4 with seed 1 had been seen to start faster than R3, following QuRL's claim that UAQ speeds up early learning.
+\item \textbf{Analysis script:} \texttt{h23\_analysis.py}, SHA-256 \nolinkurl{5ed1a3b280b340550b009e0e54c5d95ee2e00a00f2bddd74b7fa612af1dfb3e4}. It imports the frozen statistics of \texttt{h1\_analysis.py}.
+\end{itemize}
+
+\todo{Insert the verbatim analysis reports produced by the frozen scripts.}

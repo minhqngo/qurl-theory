@@ -1,0 +1,27 @@
+R4 vs R4 after 3 updates (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [3.8591861724853516, 2.572521448135376, 3.1101760864257812]
+  grad norms R4: [3.8591861724853516, 2.572521448135376, 3.1101760864257812]
+  identical grad norms: True
+  W    : 100.0000% of 24772608 elements identical; max |difference| 0.000e+00
+  gamma: 100.0000% of 21504 elements identical; max |difference| 0.000e+00
+  rest : 100.0000% of 469238656 elements identical; max |difference| 0.000e+00
+  BIT-IDENTICAL
+
+R5 vs R4 after 3 updates (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [3.8591861724853516, 2.572521448135376, 3.1101760864257812]
+  grad norms R5: [3.8591861724853516, 2.572521448135376, 3.1101760864257812]
+  identical grad norms: True
+  W    : 100.0000% of 24772608 elements identical; max |difference| 0.000e+00
+  gamma: 100.0000% of 21504 elements identical; max |difference| 0.000e+00
+  rest : 100.0000% of 469238656 elements identical; max |difference| 0.000e+00
+  BIT-IDENTICAL
+
+R5o vs R4 after 3 updates (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [3.8591861724853516, 2.572521448135376, 3.1101760864257812]
+  grad norms R5o: [2.791123628616333, 1.8837562799453735, 2.2722177505493164]
+  identical grad norms: False
+  W    : 0.0234% of 24772608 elements identical; max |difference| 6.808e-05
+  gamma: 5.9756% of 21504 elements identical; max |difference| 1.526e-05
+  rest : 4.5459% of 469238656 elements identical; max |difference| 3.470e-05
+  DIFFERENT
+

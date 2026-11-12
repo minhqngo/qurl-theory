@@ -1,0 +1,71 @@
+H2 and H3 analyses for S3, pre-registered 2026-11-11 (P1 note, section 7)
+h23_analysis.py sha256 5ed1a3b280b340550b009e0e54c5d95ee2e00a00f2bddd74b7fa612af1dfb3e4
+h1_analysis.py  sha256 5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f
+results: C:\Users\minngo\personal\master-research\qurl-theory\experiments\s3\results
+
+run             late acc final acc reward AUC early rew   mean k3  entropy  status
+uaq_R1_s1                                                                   missing
+uaq_R1_s2                                                                   missing
+uaq_R1_s3                                                                   missing
+uaq_R2_s1                                                                   missing
+uaq_R2_s2                                                                   missing
+uaq_R2_s3                                                                   missing
+uaq_R3_s1          50.20     50.11      56.03     34.36  5.49e-02    0.259  complete
+uaq_R3_s2          51.42     49.58      57.43     43.74  5.52e-02    0.304  complete
+uaq_R3_s3          50.99     51.86      44.09      2.88  6.75e-02    0.281  complete
+uaq_R4_s1          49.02     52.16      57.62     41.79  5.83e-02    0.275  complete
+uaq_R4_s2          49.04     50.19      55.17     40.75  6.25e-02    0.341  complete
+uaq_R4_s3          51.19     51.18      57.22     34.07  6.23e-02    0.326  complete
+uaq_R4_s4                                                                   missing
+uaq_R4_s5                                                                   missing
+uaq_R5_s1          11.80     46.63       2.91      0.07  1.60e-02    0.435  complete
+uaq_R5_s2          49.95     50.42      56.12     36.25  6.27e-02    0.302  complete
+uaq_R5_s3          44.46     48.37      43.82      0.10  4.02e-02    0.294  complete
+uaq_R5_s4                                                                   missing
+uaq_R5_s5                                                                   missing
+uaq_R6_s1                                                                   missing
+uaq_R6_s2                                                                   missing
+uaq_R6_s3                                                                   missing
+
+REGISTERED
+
+H2 test: (R4 - R3) - (R2 - R1), paired by seed
+  no verdict: 0 of 3 registered seeds complete for R4 R3 R2 R1
+
+H3 test: R6 - R4, paired by seed
+  no verdict: 0 of 3 registered seeds complete for R6 R4
+
+DESCRIPTIVE (no verdict)
+
+R4 - R3 (UAQ with INT8 rollouts)
+  n = 3 seeds, t on 2 df
+  late accuracy (primary)    margin +-2.0 pts; per seed -1.18 -2.38 +0.20; mean -1.12 (SD 1.29); 90% CI [-3.30, +1.05]; 95% CI [-4.33, +2.08]
+  final accuracy             margin +-2.0 pts; per seed +2.05 +0.61 -0.68; mean +0.66 (SD 1.37); 90% CI [-1.64, +2.96]; 95% CI [-2.73, +4.05]
+  reward AUC                 margin +-2.0 pts; per seed +1.59 -2.27 +13.13; mean +4.15 (SD 8.01); 90% CI [-9.35, +17.65]; 95% CI [-15.74, +24.05]
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +7.43 -2.98 +31.20; mean +11.88 (SD 17.52); 90% CI [-17.65, +41.42]; 95% CI [-31.64, +55.40]
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.063 1.134 0.923; ratio 1.036 (log SD 0.105); 90% CI [0.867, 1.238]; 95% CI [0.797, 1.346]
+
+R2 - R1 (UAQ with BF16 rollouts)
+  no verdict: 0 of 3 registered seeds complete for R2 R1
+
+R6 - R3 (global learning rate x1.5)
+  no verdict: 0 of 3 registered seeds complete for R6 R3
+
+EXPLORATORY (fixed 2026-11-11 after R5 seed 1 collapsed; does not replace the registered verdicts)
+
+collapsed runs per arm (late accuracy below 10%):
+  R1: 0 of 0 complete runs
+  R2: 0 of 0 complete runs
+  R3: 0 of 3 complete runs
+  R4: 0 of 3 complete runs
+  R5: 0 of 3 complete runs
+  R6: 0 of 0 complete runs
+
+H1 without collapsed seeds: R4 - R5
+  no verdict: 3 of 5 registered seeds complete for R4 R5
+
+H2 without collapsed seeds
+  no verdict: 0 of 3 registered seeds complete for R4 R3 R2 R1
+
+H3 without collapsed seeds
+  no verdict: 0 of 3 registered seeds complete for R6 R4

@@ -1,0 +1,28 @@
+\section{Numerical verification of the theory}\label{app:verification}
+
+Every result of \cref{sec:invariance,sec:reparam,sec:tracking} was checked numerically in float64 on single layers or toy models (\cref{tab:verification}). These checks test the mathematics. \Cref{sec:experiments} tests real implementations.
+
+The toy QuRL loop has INT4 rollouts, GRPO advantages, TIS, ACR, AdamW and global-norm clipping. It runs two epochs of four minibatches per rollout batch, so ACR binds 68 times and clipping fires on 20\% of the updates. Against the UAQ run:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item the matched run of \cref{thm:reparam} samples identical actions at every step, and its weights agree to a relative $3.2\times10^{-10}$ ($W$) and $1.3\times10^{-10}$ ($\gamma$) after 2{,}400 updates;
+\item matched learning rates with ordinary clipping share only 59.7\% of the sampled actions;
+\item plain settings share 50.1\%.
+\end{itemize}
+
+\begin{table}[h]
+\centering\footnotesize
+\begin{tabularx}{\linewidth}{@{}l L@{}}
+\toprule
+Claim & Result\\
+\midrule
+\Cref{thm:invariance} (INT8, FP8) & output change at most $2.9\times10^{-16}$ for $s\in\{0.7,1.5,2,4\}$. By contrast, per-channel SmoothQuant scaling \citep{xiao2023smoothquant} changes the INT8 error from 5.2\% to 1.5\%\\
+\Cref{rem:scope} & \cref{tab:scope}\\
+\Cref{thm:reparam}, supervised toy model & over 300 steps, difference $10^{-14}$ for SGD. For Adam it is $1.6\times10^{-6}$ when $\varepsilon$ is left unadjusted, which is the reason for the $\varepsilon$ clause. First-step gain 1.500 (Adam) vs.\ 2.250 (SGD)\\
+\Cref{cor:pipeline}, toy QuRL loop & 100\% identical actions; relative weight difference $3\times10^{-10}$; clipping rule (c) required\\
+\Cref{prop:capture,prop:layer} & flip rate equals $|d|/\Delta$; regression slope $\approx1$; aligned correlation 0.75 at $\epsilon=10^{-3}$, $n=2048$ (predicted 0.75)\\
+\Cref{prop:persistence} & correlations 0.9378, 0.7158 and $-0.4998$ against predicted 0.9406, 0.7150 and $-0.5000$; variance ratio 0.995--1.007 over 2{,}000 steps\\
+\Cref{prop:schemes} & with a random-walk drift of $0.01\Delta$ per step, the rms partial sum after 2{,}000 steps is $292\Delta$ (RTN), $576\Delta$ (delta), $18\Delta$ (stochastic rounding) and $0.29\Delta$ (error feedback); per-step variance ratios 1.0, 1.0, 2.0, 2.0\\
+\bottomrule
+\end{tabularx}
+\caption{Numerical checks of the theory (float64).}\label{tab:verification}
+\end{table}

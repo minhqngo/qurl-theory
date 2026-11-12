@@ -1,0 +1,249 @@
+\documentclass[11pt]{article}
+\input{preamble}
+
+\title{QuRL: Research Problems}
+\author{Research notes on the theory of quantized-rollout reinforcement learning (draft)}
+\date{7 November 2026; reorganized 11 November 2026}
+
+\begin{document}
+\maketitle
+
+\paragraph{Paper analyzed.} \citet{li2026qurl}, \emph{QuRL: Efficient Reinforcement Learning with Quantized Rollout}, arXiv:\allowbreak 2602.13953, version~1 of February 2026 (the only version). It appeared at ICLR 2026 as \emph{QuRL: Low-Precision Reinforcement Learning for Efficient Reasoning}. The LaTeX source was downloaded fresh from arXiv on 7 November 2026; no cached copies were used.
+
+\paragraph{Explainer.} \emph{QuRL, Explained} (\texttt{qurl\_explained.tex}) walks through the problem QuRL addresses, PPO and GRPO, and QuRL's algorithm (its Algorithm~1). Each research problem below says where in that algorithm it arises.
+
+\paragraph{This version} (2026-11-11) reorganizes the report of 2026-11-07 into background and research problems.
+
+\paragraph{Labels.} \tagchecked{} verified numerically (\cref{sec:checks}); \tagderived{} short derivation, to be written up; \tagconj{} plausible, unproven; \tagopen{} research question.
+
+\tableofcontents
+
+% =====================================================================================
+\section{Background}\label{sec:background}
+
+\subsection{RL for reasoning LLMs}
+\begin{itemize}
+\item \textbf{The loop.} Sample a prompt $q$, let the model generate a response $o=(o_1,\dots,o_T)$ (a \emph{rollout}), score it with a verifiable reward $R(q,o)\in[0,1]$ (for example, ``is the final answer correct?''), and update the model. The context of token $t$ is $c_t=(q,o_{<t})$.
+\item \textbf{PPO-style updates} \citep{schulman2017ppo}. One batch of rollouts is reused for several minibatch updates. The policy ratio $R_t=\pi_\theta(o_t\mid c_t)/\pi_k(o_t\mid c_t)$ compares the current policy with the one that existed when the batch was made. Clipping $R_t$ to $[1-\epsilon,1+\epsilon]$ keeps each update inside a \emph{trust region}.
+\item \textbf{Advantages.} PPO uses a learned critic; GRPO \citep{shao2024deepseekmath} and DAPO \citep{yu2025dapo} normalize each reward within a group of responses to the same prompt (explainer Sections~2.2--2.3).
+\item \textbf{Where the time goes.} Generating rollouts takes most of a step (about 70\% in QuRL's setting), so faster generation speeds up RL (explainer Section~2.4).
+\end{itemize}
+
+\subsection{Quantization}
+\begin{itemize}
+\item \textbf{Absmax quantizer.} $Q(x)=\alpha\,r(x/\alpha)$ with scale $\alpha=\max|x|/M$ over a group of entries, and $r$ rounding onto a grid with maximum $M$ (INT8: $M=127$; FP8-E4M3: $M=448$). The \emph{grid step} is $\Delta=\alpha$ for INT formats.
+\item \textbf{W8A8.} Weights and activations are both quantized: one scale per output channel of a weight matrix, one per token of the activations.
+\item \textbf{Error.} Round-to-nearest (RTN) gives $|Q(w)-w|\le\Delta/2$. If a weight's position inside its grid cell is uniformly distributed, the error is uniform with variance $\Delta^2/12$. INT error is absolute ($\propto\max|x|\,2^{-b}$); FP error is relative ($\propto|x|\,2^{-m}$).
+\item \textbf{Master weights.} In quantized-rollout RL the trainer keeps full-precision (FP) weights; the rollout engine receives a re-quantized copy after every update.
+\end{itemize}
+
+\subsection{Quantized rollouts make RL off-policy}
+\begin{itemize}
+\item \textbf{Three policies.} At iteration $k$: the \emph{behavior} policy $\mu_k=\mu_{\theta_k}$ (the quantized model that generated the data), the \emph{proximal} policy $\pi_k=\pi_{\theta_k}$ (the FP model at the same weights), and the \emph{current} policy $\pi_\theta$ being trained \citep{hilton2022batch,fu2025areal} (explainer Section~3.1; Algorithm~1, lines 3--6).
+\item \textbf{Mismatch ratio.} $\rho_t=\pi_k(o_t\mid c_t)/\mu_k(o_t\mid c_t)$. Plain PPO assumes $\rho_t\equiv1$; with quantization it is not.
+\item \textbf{Truncated importance sampling (TIS).} Weight each token by $w_t=\min(\rho_t,C)$ \citep{yao2025flashrl} (Algorithm~1, line~7). Untruncated weights are unbiased but can have huge variance; truncation trades variance for bias \citep{ionides2008truncated}.
+\item \textbf{Measuring the mismatch.} Usually $\KL(\mu_k\,\|\,\pi_k)$, estimated on sampled tokens, per token or per sequence; the exact full-vocabulary KL needs stored logits.
+\end{itemize}
+
+\subsection{What QuRL proposes and reports}
+\begin{itemize}
+\item \textbf{Objective} (decoupled PPO with TIS, plus ACR; explainer Sections~3.4--3.6 and Algorithm~1, line~10), with advantage $A$:
+\begin{gather*}
+\ell_t(\theta)=w_t\,\min\bigl(R_tA,\ \clip(R_t,1-\epsilon,u_t)\,A\bigr),\\
+u_t=\begin{cases}1+\epsilon & \text{TIS (FlashRL)},\\ (1+\epsilon)/r_t & \text{ACR (QuRL)},\end{cases}\qquad
+r_t=\frac{w_t}{\rho_t}=\min\Bigl(1,\frac{C}{\rho_t}\Bigr).
+\end{gather*}
+\item \textbf{ACR} (Adaptive Clipping Range) widens the upper clip bound on truncated tokens (explainer Section~3.6).
+\item \textbf{UAQ} (Update-Aware Quantization) sets $W_Q,W_K,W_V\leftarrow W/s$ and the preceding RMSNorm gain $\gamma\leftarrow s\gamma$, with one scalar $s=1.5$, once before RL (Algorithm~1, line~1). The FP model is unchanged; the paper claims the quantized one captures updates better (explainer Section~3.7).
+\item \textbf{Reported findings.}
+  \begin{itemize}
+  \item Clipping on $\pi_\theta/\mu_k$ (its Eq.~3) collapses within about 100 steps; ignoring $\mu_k$ (Eq.~1) is stable but biased (explainer Section~3.4). The three-policy structure is the right abstraction.
+  \item TIS works for about 500 steps. Then $\KL(\mu_k\|\pi_k)$ grows from 0.0015 to 0.025 by step ${\sim}1200$ (Fig.~3a), max-ratio spikes reach $1.6\times10^4$ (Fig.~3b), and FlashRL's accuracy decays (App.~B).
+  \item Results cover PPO, GRPO and DAPO, INT8 and FP8, on production vLLM kernels \citep{kwon2023vllm}; throughput gains grow with model size.
+  \item Per-step weight updates ($10^{-7}$--$10^{-6}$) are far below the INT8 grid step (``the weight update problem'').
+  \end{itemize}
+\end{itemize}
+
+\subsection{Gaps in QuRL (where the problems come from)}\label{sec:gaps}
+\begin{itemize}
+\item \textbf{G1. No objective, no guarantee.} The paper never says whether it optimizes the FP policy, $J(\pi_\theta)$, or the deployed quantized one, $J(\mu_\theta)$ \citep[cf.][]{liang2026mirage}. There is no improvement bound, convergence statement or bias analysis, and ``exponential growth of the divergence'' rests on one run. $\to$ P2, P7.
+\item \textbf{G2. ACR is not a bias correction} \tagderived. For $A>0$, ACR's term is exactly $\min(w_tR_t,\,(1+\epsilon)\rho_t)A$: truncated gradient weight, untruncated cap. On tokens with $\rho_t>C$ the policy may move up to $R_t=(1+\epsilon)\rho_t/C$, so the trust region is effectively removed there. ACR equals TIS on the first minibatch, leaves the truncation bias untouched, and ignores $A<0$; $C$ is not reported. $\to$ P5.
+\item \textbf{G3. UAQ cannot reduce quantization error} \tagchecked. Absmax quantizers satisfy $Q(cx)=cQ(x)$, so $Q(W/s)\,Q(sX)^\top=Q(W)\,Q(X)^\top$ exactly. Training in UAQ coordinates equals training with per-layer learning rates ($\times s$ on Q/K/V, $\div s$ on the norm gain under Adam). $\to$ P1.
+\item \textbf{G4. The ``weight update problem'' is mis-specified} \tagchecked. Re-quantized FP master weights never lag by more than $\Delta/2$, and a sub-step update flips a code with probability $|d|/\Delta$, so updates are captured in expectation. The real issue is that the rounding error is \emph{persistent} across steps. $\to$ P1, P6.
+\item \textbf{G5. Mismatch growth and collapse are unexplained.} Weight error is stationary, so growth must come from elsewhere. The Eq.~3 collapse looks like the negative-advantage failure that dual-clip PPO \citep{ye2020dualclip} fixes \tagconj. $\to$ P4.
+\item \textbf{G6. Diagnostics are biased or under-specified.} Fig.~4b plots $\E_{a\sim\mu}[\mu(a)-\pi(a)]$, which is positive even for exchangeable noise \tagchecked. Fig.~3a's KL is a sampled-token estimate of unstated granularity, confounded by response length. The text says max ratio $10^5$, the figure $1.6\times10^4$. $\to$ P3.
+\item \textbf{G7. Thin experimental rigor.} One seed throughout; UAQ's gain is 30.63 $\to$ 31.25 Avg@32 on AIME24's 30 problems. No end-to-end wall-clock (by Amdahl's law a $1.8\times$ rollout speedup gives at most ${\sim}1.45\times$ per step). No KV-cache quantization, 4-bit or MoE, and no code. $\to$ P8, P9.
+\end{itemize}
+
+% =====================================================================================
+\section{Research problems}\label{sec:problems}
+
+\subsection{Overview}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L l l L@{}}
+\toprule
+\# & Problem & Kind & Difficulty & Impact\\
+\midrule
+P1 & UAQ and update tracking, done correctly & make rigorous & low--med & corrects a published mechanism; quick paper (in progress)\\
+P2 & What QuRL converges to: bias decomposition and stationarity & make rigorous & med & first guarantee; framework for P5--P6\\
+P3 & Quantization-specific theory of the mismatch & make rigorous & med & predicts mismatch from the quantizer\\
+P4 & Why the mismatch grows, and why ACR stops it & explain & med--high & QuRL's central failure mode\\
+P5 & A principled replacement for ACR & improve & med & correction rule with a guarantee\\
+P6 & Dithered / randomized-quantization rollouts & improve & med & \textbf{new algorithm + theorem}\\
+P7 & Which policy to optimize: FP or quantized & improve & med--high & right target for deployment\\
+P8 & Precision as a scheduled resource & improve & med & time-to-accuracy, not throughput\\
+P9 & KV-cache and activation quantization over long horizons & explore & med--high & the real long-CoT bottleneck\\
+P10 & Quantization noise, entropy and exploration & explore & med & settles folklore\\
+P11 & Quantized self-speculative rollouts & explore & med & exact alternative to correction\\
+P12 & Asynchronous RL + quantization & explore & med & systems relevance\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Group A: make QuRL rigorous}
+
+\researchproblem{P1}{UAQ and update tracking, done correctly}
+\begin{itemize}
+\item \textbf{Where it arises.} UAQ, applied once before training (Algorithm~1, line~1; explainer Section~3.7), and the re-quantization of the FP weights at every step (line~3; explainer Section~3.3).
+\item \textbf{Question.} Does UAQ change the quantized rollout model at all? If not, what does it change? Does re-quantization freeze the rollout model, and what should ``update-aware'' mean?
+\item \textbf{What it means.} It separates a number-format effect from an optimization effect. If UAQ is exactly a per-layer learning-rate change, its gains belong to learning-rate tuning, and the update problem has to be restated.
+\item \textbf{Impact.} It corrects a published mechanism and gives practitioners the right control (per-layer learning rates, in the parameterization view of \citealp{yang2021tp4}). The tools (homogeneity, the uniform-phase model, persistence) feed P3, P4 and P6.
+\item \textbf{Status (2026-11-11).} Theorems proved; Theorem~1 verified bit-for-bit on vLLM's INT8 kernel at three model sizes; Theorem~2 verified bit-for-bit in a training loop; the pre-registered RL experiment is running. See the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and the P1 experiments report (\texttt{p1\_experiments.tex}).
+\end{itemize}
+
+\researchproblem{P2}{What does QuRL converge to?}
+\begin{itemize}
+\item \textbf{Where it arises.} The update of lines 7--11 (explainer Sections~3.4--3.6) uses a batch sampled by the 8-bit policy $\mu$ (line~4) and corrects it only token by token, with truncated weights and ACR's clip, so it is a biased estimate of the FP policy gradient.
+\item \textbf{Question.} The expected first-minibatch update $g(\theta)$ is biased, $b=g-\nabla J(\pi_\theta)$. Decompose $b$ into:
+  \begin{itemize}
+  \item \emph{prefix shift}: contexts drawn from $d^{\mu}_t$, not $d^{\pi}_t$;
+  \item \emph{continuation}: $Q^{\mu}$ instead of $Q^{\pi}$, because later tokens come from $\mu$;
+  \item \emph{truncation}: $-\E_{\mu}\bigl[\sum_t(\rho_t-C)_+\nabla\log\pi_\theta\,A\bigr]$;
+  \item \emph{prompt reweighting}: GRPO's standard deviation is computed under $\mu$ \citep[cf.][]{liu2025drgrpo}.
+  \end{itemize}
+  Bound each part with token-level divergences (the $O(T)$ and $O(T^{3/2})$ bounds of \citealp{li2025trm}, driven by the \emph{maximum} token KL), then prove a biased-SGD result \citep{ajalloeian2020biased},
+  $\min_{k<K}\E\|\nabla J(\theta_k)\|^2\le O(1/\sqrt K)+O(\sup_k\|b_k\|^2)$, with explicit $T$, $C$, $\epsilon$ and minibatch count. Tools: the performance-difference lemma \citep{kakade2002approximately} and trust-region bounds \citep{schulman2015trpo,achiam2017cpo,queeney2021geppo}; \citet{zheng2025stabilizing} give a first-order view without a bound.
+\item \textbf{What it means.} It says how far from a stationary point of $J(\pi_\theta)$ QuRL can end, and ranks Eq.~1, Eq.~3, TIS, ACR and sequence-level IS by bias and variance. Since $|J(\pi_\theta)-J(\mu_\theta)|\le D^{\mathrm{seq}}_{\TV}$, it also says when the FP and quantized objectives share stationary points.
+\item \textbf{Impact.} The first guarantee for quantized-rollout RL, and the framework P5 and P6 plug into.
+\end{itemize}
+
+\researchproblem{P3}{A quantization-specific theory of the mismatch}
+\begin{itemize}
+\item \textbf{Where it arises.} The behavior policy $\mu$ is the FP policy run through the quantizer (Algorithm~1, lines 3--4; explainer Section~3.3), and the ratio $\rho_t$ of line~7 measures the gap token by token.
+\item \textbf{Question.} Existing mismatch theory treats $\mu$ as a black box \citep{li2025trm,qi2026dppo,yu2026cis}. Quantization gives it structure, $\mu_\theta=\pi_{\theta+e(\theta)}$ (plus activation error) with nearly uniform, independent $e$ \citep{widrow2008quantization,sripad1977necessary}. Derive:
+  \begin{itemize}
+  \item (a) a \emph{Fisher law}, $\E\,\KL(\mu\|\pi)\approx\tfrac1{24}\sum_j\Delta_j^2F_{jj}$, with a remainder, and its activation analogue (tokens with massive activations dominate);
+  \item (b) \emph{log-normal ratios}: $\log\rho\approx\mathcal N(-\sigma^2/2,\sigma^2)$, so $\chi^2=e^{\sigma^2}-1$ and the truncated mass has a Black--Scholes form, $\E(\rho-C)_+=\Phi(d_1)-C\Phi(d_1-\sigma)$;
+  \item (c) \emph{scaling laws} for INT vs.\ FP, granularity, the effective sample size $N/(1+\chi^2)$, and where 4-bit breaks token-level IS;
+  \item (d) \emph{tails}: outliers, near-tie argmax flips, MoE routing flips, as rare catastrophic events on top of a smooth $\Delta^2$ part \citep[cf. the error tokens of][]{gu2026qarl}.
+  \end{itemize}
+\item \textbf{What it means.} The mismatch can be predicted from the quantizer configuration and the Fisher, before running RL.
+\item \textbf{Impact.} A ``mismatch calculator'', Fisher-weighted mixed-precision allocation (minimize $\sum_l\Delta_l^2\,\mathrm{tr}F_l$ under a throughput budget), and a first-principles account of the empirical log-odds displacement of \citet{yu2026cis}.
+\end{itemize}
+
+\researchproblem{P4}{Why does the mismatch grow, and why does ACR stop it?}
+\begin{itemize}
+\item \textbf{Where it arises.} The long-horizon collapse that ACR was introduced to fix: under TIS, $\KL(\mu\|\pi_{\mathrm{old}})$ keeps growing during training (explainer Section~3.6).
+\item \textbf{Question.} Weight error is stationary (P1), so QuRL's growing mismatch needs another mechanism:
+  \begin{itemize}
+  \item \textbf{M1} sensitivity growth (Fisher, logit scale, Jacobians);
+  \item \textbf{M2} grid growth (weight and activation outliers, e.g.\ through norm-gain updates);
+  \item \textbf{M3} context shift (longer responses, high-sensitivity states such as repetition loops);
+  \item \textbf{M4} anchor feedback \tagconj: a trust region anchored at the recomputed $\pi_k$ lets $\pi$ drift from $\mu$ where $\mu$ rarely samples; \citet{qi2026dppo} report that a rollout anchor is stable and a recomputed one is not.
+  \end{itemize}
+\item \textbf{Approach.} An exactly solvable model (contextual softmax bandit, quantized two-layer policy) that shows growth under decoupled TIS and contraction under a $\mu$-anchored constraint; logged M1--M4 in real runs; ablations (frozen norm gains, frozen scales).
+\item \textbf{What it means.} Our first data already show it: in P1's 435-step INT8 run, the sampled-token mismatch rose $7\times$ and then partly receded, tracking neither entropy nor the KL to the reference model.
+\item \textbf{Impact.} A mechanism for QuRL's central long-horizon failure, and a fix derived from it.
+\end{itemize}
+
+\researchproblem{P5}{A principled replacement for ACR}
+\begin{itemize}
+\item \textbf{Where it arises.} The TIS weight and ACR's clip bound (Algorithm~1, lines 7 and~10; explainer Sections~3.5--3.6).
+\item \textbf{Question.}
+  \begin{itemize}
+  \item (a) Choose the per-token weight and clip that maximize the surrogate under a divergence budget and a variance budget; recover TIS, ACR, MIS, IcePop, CISPO, DPPO \citep{qi2026dppo} and TRM \citep{li2025trm} as special cases.
+  \item (b) Analyse ACR over several minibatches: when does it reduce cumulative bias, and how far does it break TRM's max-divergence condition?
+  \item (c) Handle the $A<0$ side, which TIS under-weights.
+  \item (d) \emph{Derailment} \tagderived: one quantized near-tie flip ($\mu(a)=0.5$, $\pi(a)=10^{-3}$) puts the whole continuation in a prefix that $\pi$ would rarely produce, yet all later $\rho_t\approx1$. Token-level weights over-weight it ${\sim}500\times$, a bias of order the derailment rate $\eta\approx T\,p_{\mathrm{flip}}(b)$. TIS and ACR cannot see it; sequence-level masking can.
+  \end{itemize}
+\item \textbf{What it means.} A correction rule derived from an objective, not tuned, and a proven separation between token-level and sequence-level correction.
+\item \textbf{Impact.} Replaces a heuristic that removes the trust region on exactly the tokens that need it.
+\end{itemize}
+
+\subsection{Group B: improve the algorithm, with guarantees}
+
+\researchproblem{P6}{Dithered / randomized-quantization rollouts (recommended main contribution)}
+\begin{itemize}
+\item \textbf{Where it arises.} Line~3 of Algorithm~1 (explainer Section~3.3): every step re-quantizes the FP weights with deterministic round-to-nearest, so the rounding error persists from step to step.
+\item \textbf{Idea.} RTN's error is persistent, so its first-order bias acts as a constant drift. Re-randomize the quantization each step so the first-order term averages out: stochastic rounding with a fresh seed ($\E\,Q(\theta)=\theta$), a random Hadamard rotation with fresh signs, which also removes outliers \citep{ashkboos2024quarot}, or random grid offsets. Error feedback, which P1 shows has bounded cumulative error, is the deterministic alternative.
+\item \textbf{Theorem target.} RTN's stationarity gap is $\Theta(\|B\|\Delta)$ (attained by a trajectory that stays inside its cells); dithering reduces it to $O(\eta\|B\|^2\Delta^2+\|B_2\|\Delta^2)$, because the first-order term is a martingale. IS stays exact for the realized $\mu_k$.
+\item \textbf{Trade-offs.} Stochastic rounding doubles the per-step error variance ($\Delta^2/6$ vs.\ $\Delta^2/12$); rotations need online Hadamard transforms on activations.
+\item \textbf{Impact.} A new algorithm with a theorem; also a principled form of parameter-space exploration \citep{plappert2018parameter,fortunato2018noisy} with a correct off-policy correction, unlike the heuristic noise of \citet{huang2025qerl}. No prior work found that randomizes rollout quantization per step with an unbiasedness analysis (nearest: \citealp{wang2026trace}; stochastic rounding for training, \citealp{ozkara2025stochastic}).
+\end{itemize}
+
+\researchproblem{P7}{Which policy should be optimized?}
+\begin{itemize}
+\item \textbf{Where it arises.} QuRL's basic design (explainer Sections~1 and 3.3--3.4): it trains the FP policy $\pi_\theta$ but samples from, and may deploy, the 8-bit policy $\mu$.
+\item \textbf{The three paradigms.} (a) QuRL and FlashRL target $J(\pi_\theta)$, sample from $\mu$ and correct. (b) Jet-RL \citep{xi2026jetrl} and QaRL \citep{gu2026qarl} run the quantized forward pass in both learner and rollout with straight-through (STE) gradients: they target $J(\mu_\theta)$ on-policy. (c) QeRL \citep{huang2025qerl} trains LoRA on a frozen quantized base.
+\item \textbf{Theory.} Treat the STE policy gradient as lazy projection onto the quantization lattice \citep{courbariaux2015binaryconnect,bai2019proxquant,yin2019ste} and prove convergence to stationary points of $J$ on the lattice; compare deployment gaps; with stochastic quantization, (b) optimizes a smoothed objective that favors quantization-robust policies.
+\item \textbf{Cheap test.} Are QuRL checkpoints more quantization-robust (smaller $J(\pi_\theta)-J(\mu_\theta)$) than BF16-RL checkpoints?
+\item \textbf{Impact.} Tells practitioners which paradigm to use when the deployed model is quantized. \tagopen{} Monotonic improvement for the deployed quantized policy; \citet{liang2026mirage} give none.
+\end{itemize}
+
+\researchproblem{P8}{Precision as a scheduled resource}
+\begin{itemize}
+\item \textbf{Where it arises.} Lines 3--4 of Algorithm~1 (explainer Sections~2.4 and~3.3): the rollout precision trades speed (20--80\% faster rollout) against mismatch.
+\item \textbf{Time-to-accuracy model.} Step time $t(b)$ times steps needed $K(b)$, which grow through the ESS loss $1/(1+\chi^2(b))$ (from P3) and through bias. Derive the optimal precision $b^*$ and when 4-bit pays off \citep[cf.][]{kumar2024precision}.
+\item \textbf{Adaptive precision.} Raise a layer's precision when a diagnostic crosses a threshold (ESS, max token KL, PSIS $\hat k$, \citealp{vehtari2024psis}); prove the cumulative bias stays bounded (cf.\ the bit-centering of \citealp{desa2018halp}).
+\item \textbf{Impact.} Turns QuRL's inference microbenchmarks into end-to-end time-to-accuracy.
+\end{itemize}
+
+\subsection{Group C: further exploration}
+\begin{itemize}
+\item \textbf{P9. KV-cache and activation quantization over long horizons.} \emph{Arises at} line~4 of Algorithm~1, where QuRL quantizes weights and activations but keeps the KV cache in BF16 (explainer Section~3.3). KV error contaminates every later token, so the per-token KL depends on position and TRM's $\delta$ grows with $T$. Stale scales (FP8-RL recalibrates every step, \citealp{qiu2026fp8rl}) have no theory yet. \emph{Impact:} the real bottleneck for long chain-of-thought, which QuRL skipped.
+\item \textbf{P10. Quantization noise, entropy and exploration.} \emph{Arises at} line~4, where sampling from $\mu$ adds quantization noise to the logits (explainer Section~3.3). QeRL says quantization raises entropy; QaRL sees no rise. To second order, $\E H(\mathrm{softmax}(z+\xi))-H(\mathrm{softmax}(z))\approx\tfrac12\mathrm{tr}(\nabla^2H\,\Sigma_\xi)$, whose sign depends on the regime. Derive entropy dynamics under TIS and ACR \citep[cf.][]{cui2025entropy}. \emph{Impact:} settles the folklore.
+\item \textbf{P11. Quantized self-speculative rollouts.} \emph{An alternative to} lines 4 and~7: sample exactly from $\pi_{\mathrm{old}}$ instead of correcting afterwards (explainer Sections~3.4--3.5). The quantized model drafts and the FP model verifies \citep{leviathan2023speculative,chen2023speculative}, giving exactly on-policy samples with acceptance $1-\TV(\mu,\pi)$, the quantity behind QuRL's bias. Compare time-to-accuracy with QuRL. \emph{Impact:} an exact alternative; speculative RL so far uses cached drafts \citep{liu2025specrl,chang2026srt}, and no RL work with quantized drafts was found.
+\item \textbf{P12. Asynchronous RL + quantization.} \emph{Arises at} line~3, if the engine received older weights as well as quantized ones (explainer Section~3.3). With $\mu=\pi_{Q(\theta_{k-s})}$, staleness and quantization compose; bound the product ratio and find which dominates. \emph{Impact:} the setting of AReaL-style systems \citep{fu2025areal}.
+\end{itemize}
+
+% =====================================================================================
+\section{Plan (master's-thesis arc)}\label{sec:plan}
+\begin{enumerate}
+\item \textbf{P1 first} (started 2026-11-07). Theory complete; S1 and S2 done on the H100; S3's RL experiment running. Builds the toolkit and a quick result.
+\item \textbf{P3 + P4.} The theory of the mismatch and its growth, the scientific core: an exact toy model plus logged diagnostics on a small LLM.
+\item \textbf{P6, with P2 as its convergence framework.} The algorithmic contribution with a theorem; P5 follows naturally.
+\end{enumerate}
+
+\paragraph{Testbed.} Qwen2.5-0.5B-Instruct \citep{qwen2024qwen25} with PPO on GSM8K \citep{cobbe2021gsm8k} (the paper's setup) for fast iteration; a 1.5B math model \citep{yang2024qwen25math,luo2025deepscaler} for long-horizon effects; VeRL \citep{sheng2025hybridflow} + vLLM INT8/FP8 with full-vocabulary KL logging; a NumPy quantized-bandit simulator for exact dynamics.
+
+\paragraph{Notes.} QuRL has no public code; the authors are at NVIDIA Research, so asking internally may be fastest. The ICLR reviews (\url{https://openreview.net/forum?id=eG0bpCwdKn}) block automated access and were not read.
+
+% =====================================================================================
+\section{Numerical sanity checks}\label{sec:checks}
+All scripts are in \texttt{sanity\_checks/} and use NumPy only.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}L l L@{}}
+\toprule
+Check & Script & Result\\
+\midrule
+Scalar invariant scaling leaves the quantized output unchanged (G3) & \texttt{uaq\_equivalence.py} & INT8 and FP8-E4M3: max rel.\ diff $\le2.9\times10^{-16}$ for $s\in\{0.7,1.5,2,4\}$. A per-channel (SmoothQuant, \citealp{xiao2023smoothquant}) vector does change the INT8 error, 5.2\% $\to$ 1.5\%.\\
+\addlinespace
+UAQ $\equiv$ per-layer learning-rate change (G3) & \texttt{uaq\_equivalence.py} & Adam vs.\ matched LR: rel.\ diff $1.6\times10^{-6}$ ($W$), $2.0\times10^{-8}$ ($\gamma$); vs.\ plain LR 16.5\%. SGD ($\times s^2$, $\div s^2$): $10^{-14}$. First-step update/grid gain for $s=1.5$: \textbf{1.500 (Adam)}, 2.250 (SGD).\\
+\addlinespace
+Re-quantized master weights track updates (G4) & \texttt{rtn\_tracking.py} & Code-flip fraction $=|d|/\Delta$ from $10^{-3}$ to 0.3; aligned-update slope 1.00--1.07; correlation 0.75 at $|d|/\Delta=10^{-3}$.\\
+\addlinespace
+Fig.~4b's metric is biased (G6) & \texttt{selection\_bias\_metric.py} & $\E_{a\sim\mu}[\mu(a)-\pi(a)]=4.7\times10^{-3}$ vs.\ $\tfrac12\|\mu-\pi\|^2=4.5\times10^{-3}$ under exchangeable logit noise.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+P1 adds three more scripts (for the full QuRL loop, the scope of Theorem~1, and the tracking schemes) and real-stack tests on the H100; see the P1 experiments report (\texttt{p1\_experiments.tex}).
+
+% Background references listed in the bibliography but not cited in the text above.
+\nocite{qi2025fp16,zhong2026diagnosing,zhu2025pathnottaken,krishnan2022quarl,gupta2015limited,li2017training,yang2022tp5}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

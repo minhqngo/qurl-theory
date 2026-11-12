@@ -1,0 +1,52 @@
+runs: {'fp8-per-channel_orig': 'fp8_per_channel', 'fp8-per-channel_orig_shuffled': 'fp8_per_channel', 'fp8-per-channel_s1.5': 'fp8_per_channel', 'fp8-per-channel_s2': 'fp8_per_channel', 'fp8-per-tensor_orig': 'fp8_per_tensor', 'fp8-per-tensor_orig_shuffled': 'fp8_per_tensor', 'fp8-per-tensor_s1.5': 'fp8_per_tensor', 'fp8-per-tensor_s2': 'fp8_per_tensor', 'int8-per-channel-weight-only_orig': 'int8_per_channel_weight_only', 'int8-per-channel-weight-only_orig_shuffled': 'int8_per_channel_weight_only', 'int8-per-channel-weight-only_s1.5': 'int8_per_channel_weight_only', 'int8-per-channel-weight-only_s2': 'int8_per_channel_weight_only', 'int8-w8a8_orig': 'compressed-tensors', 'int8-w8a8_orig_shuffled': 'compressed-tensors', 'int8-w8a8_s1.5': 'compressed-tensors', 'int8-w8a8_s2': 'compressed-tensors', 'mxfp8_orig': 'mxfp8', 'mxfp8_orig_shuffled': 'mxfp8', 'mxfp8_s1.5': 'mxfp8', 'mxfp8_s2': 'mxfp8', 'none_orig': None, 'none_s1.5': None, 'none_s2': None, 'nvfp4-per-token_orig': 'nvfp4_per_token', 'nvfp4-per-token_orig_shuffled': 'nvfp4_per_token', 'nvfp4-per-token_s1.5': 'nvfp4_per_token', 'nvfp4-per-token_s2': 'nvfp4_per_token'}
+
+comparison (per response token)       mean|d|     p99|d|     max|d|    identical
+fp8-per-channel_orig vs fp8-per-channel_orig_shuffled   0.00e+00   0.00e+00   0.00e+00      100.00%
+fp8-per-channel_orig vs fp8-per-channel_s2   0.00e+00   0.00e+00   0.00e+00      100.00%
+fp8-per-channel_orig vs fp8-per-channel_s1.5   5.09e-02   5.66e-01   3.05e+00        1.06%
+fp8-per-tensor_orig vs fp8-per-tensor_orig_shuffled   0.00e+00   0.00e+00   0.00e+00      100.00%
+fp8-per-tensor_orig vs fp8-per-tensor_s2   0.00e+00   0.00e+00   0.00e+00      100.00%
+fp8-per-tensor_orig vs fp8-per-tensor_s1.5   5.13e-02   5.67e-01   6.38e+00        1.22%
+int8-per-channel-weight-only_orig vs int8-per-channel-weight-only_orig_shuffled   3.07e-05   0.00e+00   2.24e-01       99.61%
+int8-per-channel-weight-only_orig vs int8-per-channel-weight-only_s2   4.02e-05   0.00e+00   2.40e-01       99.72%
+int8-per-channel-weight-only_orig vs int8-per-channel-weight-only_s1.5   1.10e-02   1.23e-01   6.98e-01        4.80%
+int8-w8a8_orig vs int8-w8a8_orig_shuffled   0.00e+00   0.00e+00   0.00e+00      100.00%
+int8-w8a8_orig vs int8-w8a8_s2       0.00e+00   0.00e+00   0.00e+00      100.00%
+int8-w8a8_orig vs int8-w8a8_s1.5     5.79e-02   6.59e-01   2.99e+00        1.25%
+mxfp8_orig vs mxfp8_orig_shuffled    5.15e-03   1.04e-01   4.48e-01       52.73%
+mxfp8_orig vs mxfp8_s2               1.81e-03   6.15e-02   3.65e-01       80.58%
+mxfp8_orig vs mxfp8_s1.5             3.48e-02   3.95e-01   2.69e+00        1.28%
+none_orig vs none_s2                 7.24e-05   0.00e+00   3.60e-01       99.42%
+none_orig vs none_s1.5               1.10e-02   1.23e-01   6.98e-01        4.80%
+nvfp4-per-token_orig vs nvfp4-per-token_orig_shuffled   7.13e-05   0.00e+00   3.66e-01       99.42%
+nvfp4-per-token_orig vs nvfp4-per-token_s2   7.13e-05   0.00e+00   3.66e-01       99.42%
+nvfp4-per-token_orig vs nvfp4-per-token_s1.5   1.10e-02   1.23e-01   6.98e-01        4.80%
+
+mismatch vs BF16 original (pi):
+rollout config       mean|logmu-logpi|    KL(pi||mu) estimate
+fp8-per-channel_orig     5.2245e-02             7.8338e-03
+fp8-per-channel_orig_shuffled     5.2245e-02             7.8338e-03
+fp8-per-channel_s1.5     5.2121e-02             8.3734e-03
+fp8-per-channel_s2       5.2245e-02             7.8338e-03
+fp8-per-tensor_orig      5.3885e-02             8.5163e-03
+fp8-per-tensor_orig_shuffled     5.3885e-02             8.5163e-03
+fp8-per-tensor_s1.5      5.4117e-02             8.7939e-03
+fp8-per-tensor_s2        5.3885e-02             8.5163e-03
+int8-per-channel-weight-only_orig     4.0241e-05            -1.6455e-06
+int8-per-channel-weight-only_orig_shuffled     7.0955e-05            -5.9590e-06
+int8-per-channel-weight-only_s1.5     1.1027e-02             1.4475e-05
+int8-per-channel-weight-only_s2     0.0000e+00             0.0000e+00
+int8-w8a8_orig           5.4286e-02             9.1694e-03
+int8-w8a8_orig_shuffled     5.4286e-02             9.1694e-03
+int8-w8a8_s1.5           5.4449e-02             9.4209e-03
+int8-w8a8_s2             5.4286e-02             9.1694e-03
+mxfp8_orig               4.2399e-02             5.2645e-03
+mxfp8_orig_shuffled      4.2396e-02             5.2439e-03
+mxfp8_s1.5               4.0658e-02             5.1199e-03
+mxfp8_s2                 4.2417e-02             5.2692e-03
+nvfp4-per-token_orig     7.2439e-05            -3.3175e-06
+nvfp4-per-token_orig_shuffled     4.0241e-05            -1.6455e-06
+nvfp4-per-token_s1.5     1.1035e-02             2.0322e-05
+nvfp4-per-token_s2       4.0241e-05            -1.6455e-06
+
+response tokens compared: 175345

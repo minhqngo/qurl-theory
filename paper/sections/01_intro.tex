@@ -1,0 +1,46 @@
+\section{Introduction}\label{sec:intro}
+
+Reinforcement learning with verifiable rewards has become a standard way to improve the reasoning of large language models \citep{shao2024deepseekmath,yu2025dapo}. Most of its cost is rollout generation. Low-precision rollouts, with the policy served in FP8 or INT8 while training stays in BF16, cut that cost substantially \citep{yao2025flashrl,li2026qurl,huang2025qerl,xi2026jetrl,qiu2026fp8rl}.
+
+The price is a training--inference mismatch. Rollouts are sampled from a quantized policy $\mu$, while the policy-gradient update is computed for the full-precision policy $\pi$. Truncated importance sampling (TIS) \citep{ionides2008truncated,yao2025flashrl} and QuRL's adaptive clipping range (ACR) \citep{li2026qurl} correct the update for this.
+
+QuRL also identifies a second problem. A single RL update changes a weight by roughly $10^{-7}$ to $10^{-6}$, far less than one step of an INT8 grid. Re-quantizing the updated policy for the next rollout would then lose the update: ``quantization masks nearly all weight updates, effectively freezing the quantized model'' (QuRL, Sec.~4.3).
+
+QuRL's remedy is Update-Aware Quantization (UAQ). It rescales the query, key and value projections, $W_{Q,K,V}\to W/s$, and absorbs the factor $s$ into the preceding normalization layer, with $s=1.5$. The paper argues that ``the scaling factor $s$ reduces quantization error by a factor of $s$ while amplifying weight updates by the same factor'', so that this ``dual effect creates an $s^2$ improvement in the ratio between weight updates and quantization noise''. QuRL reports that UAQ improves its DAPO results, and an ablation finds it better than a larger global learning rate.
+
+This paper examines UAQ and the weight-update argument from first principles and tests every conclusion on real kernels. Our contributions are as follows.
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+\item \textbf{UAQ is invisible to the rollout quantizer} (\cref{sec:invariance}).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Take any quantizer whose scales are computed from absolute maxima: INT or FP, per tensor, channel, token or block, and two-level FP4 scaling. For all of these, $Q(W/s)\,Q(sX)^\top=Q(W)\,Q(X)^\top$ (\cref{thm:invariance}).
+  \item At QuRL's granularity this holds for every scalar $s>0$. UAQ therefore changes neither the rollout policy nor the importance weights nor the mismatch.
+  \item The claimed $s$-fold error reduction measures the weight error in the rescaled coordinates. The activation error grows by the same factor and cancels it.
+  \item We also characterize the cases where the invariance fails.
+  \end{itemize}
+\item \textbf{UAQ is a per-layer learning-rate change} (\cref{sec:reparam}).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Training in UAQ coordinates is trajectory-equivalent to training the original model with per-group optimizer settings (\cref{thm:reparam}): learning rate $\times s$ on Q/K/V and $\div s$ on the normalization gain under Adam-type optimizers ($\times s^2$ and $\div s^2$ under SGD), with matched $\varepsilon$, weight decay, and a clipping norm computed in UAQ coordinates.
+  \item The equivalence extends to a full QuRL iteration (\cref{cor:pipeline}).
+  \item So any effect of UAQ on training is an optimization effect. QuRL's ablation raises the \emph{global} learning rate and does not control for it.
+  \end{itemize}
+\item \textbf{Re-quantization does not freeze the policy} (\cref{sec:tracking}).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item With full-precision master weights, the rollout weights never lag by more than one grid step.
+  \item Under a uniform-phase condition, a sub-grid update $\delta$ flips a code with probability $|\delta|/\Delta$, so updates are captured in expectation.
+  \item What re-quantization does produce is a rounding error that is stationary in size but persistent in time. We derive its autocorrelation.
+  \item We compare four rollout-quantization schemes by their cumulative error: round-to-nearest, delta, stochastic rounding and error feedback.
+  \end{itemize}
+\item \textbf{Verification on real stacks} (\cref{sec:experiments}). All runs use one H100 GPU.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item \emph{Rollouts:} with vLLM's CUTLASS INT8 W8A8 kernel, UAQ at $s=2$ leaves per-token log-probabilities bit-identical for Qwen2.5 models of 0.5B, 1.5B and 7B parameters. At $s=1.5$ it leaves the mismatch unchanged: ratios of 0.99--1.01, where an $s$-fold reduction would give 0.67.
+  \item \emph{Training:} a QuRL-style loop with matched settings reproduces UAQ bit for bit over 80 AdamW updates, as does VeRL's FSDP2 actor. Dropping the clipping rule, or matching only the learning rates, diverges at the first update.
+  \item \emph{Update capture:} on a real PPO step, 0.21\% of INT8 codes flip where \cref{prop:capture} predicts 0.20\%.
+  \end{itemize}
+\item \textbf{A reproduction and a pre-registered test} (\cref{sec:s3}).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item QuRL's GSM8K PPO result (55.35\% BF16, 53.55\% INT8) did not reproduce at its stated learning rate of $10^{-5}$ in our VeRL setup: we obtained 0.0\% and 2.9\%. The same configuration trains at $10^{-6}$.
+  \item We pre-register a seed-paired comparison of UAQ with its matched control and with QuRL's global-learning-rate control. \todo{report the pre-registered verdicts once all runs are complete.}
+  \end{itemize}
+\end{enumerate}
+
+\paragraph{Scope.} Our results concern UAQ and the weight-update argument, not low-precision rollouts or importance-sampling corrections in general. The theorems hold for the stated quantizer classes and exact arithmetic; \cref{rem:practice} discusses what survives finite precision. The experiments use rollouts of up to 7B parameters and RL training at 0.5B.

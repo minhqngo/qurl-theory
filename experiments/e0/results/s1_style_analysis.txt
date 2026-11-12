@@ -1,0 +1,25 @@
+results: 512 responses, 175345 response tokens, mean NLL of sampled tokens under BF16 pi = 0.453 nats
+BF16 alone, none_s1.5 vs none_orig: mad 1.103e-02; IS weight mean 1.0004 (should be ~1)
+reference for an s-fold error reduction: mad ratio 0.667, KL ratio 0.444
+
+rollout quant    metric        orig       s=1.5    ratio  95% CI (seq boot) vs orig pi
+fp8-per-channel  mad    5.2245e-02  5.2197e-02    0.999  [0.990, 1.009]        0.998
+                 k1     7.8338e-03  8.8302e-03    1.127  [1.048, 1.222]        1.069
+                 k3     8.7318e-03  8.6192e-03    0.987  [0.958, 1.017]        0.983
+                 error corr(e_orig, e_s1.5) = 0.506; |e| smaller after UAQ on 46.7% of tokens, larger on 52.4%; top 1% of tokens carry 40% of k3 (orig)
+fp8-per-tensor   mad    5.3885e-02  5.3994e-02    1.002  [0.992, 1.011]        1.004
+                 k1     8.5163e-03  9.1592e-03    1.075  [1.002, 1.153]        1.033
+                 k3     9.4722e-03  9.3002e-03    0.982  [0.952, 1.012]        0.988
+                 error corr(e_orig, e_s1.5) = 0.535; |e| smaller after UAQ on 49.1% of tokens, larger on 49.8%; top 1% of tokens carry 42% of k3 (orig)
+int8-per-channel-weight-only skipped: mismatch to BF16 4.0e-05, i.e. not actually quantized
+int8-w8a8        mad    5.4286e-02  5.4282e-02    1.000  [0.991, 1.009]        1.003
+                 k1     9.1694e-03  9.8062e-03    1.069  [0.999, 1.143]        1.027
+                 k3     9.4218e-03  9.4062e-03    0.998  [0.972, 1.025]        1.002
+                 error corr(e_orig, e_s1.5) = 0.415; |e| smaller after UAQ on 49.8% of tokens, larger on 49.1%; top 1% of tokens carry 39% of k3 (orig)
+mxfp8            mad    4.2399e-02  4.0572e-02    0.957  [0.948, 0.966]        0.959
+                 k1     5.2645e-03  5.5301e-03    1.050  [0.971, 1.134]        0.973
+                 k3     5.8195e-03  5.2982e-03    0.910  [0.887, 0.936]        0.912
+                 error corr(e_orig, e_s1.5) = 0.601; |e| smaller after UAQ on 52.2% of tokens, larger on 46.8%; top 1% of tokens carry 41% of k3 (orig)
+nvfp4-per-token  skipped: mismatch to BF16 7.2e-05, i.e. not actually quantized
+
+ratio = s1.5 / orig with matched pi; 'vs orig pi' = same ratio with pi = none_orig for both (the summary.txt convention).

@@ -1,0 +1,48 @@
+% Preamble for the paper draft. Kept template-neutral: when a venue is chosen, drop geometry/fonts and load the
+% venue's style file instead; everything below the font block is compatible with the usual ML templates.
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,tabularx,array}
+\usepackage[shortlabels]{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[authoryear,round]{natbib}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=NavyBlue,citecolor=ForestGreen,urlcolor=RoyalBlue]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\setlength{\emergencystretch}{2em}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+
+% ---- theorem-like environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem*{assumptionU}{Assumption U}
+\newtheorem{remark}{Remark}
+\crefname{assumptionU}{Assumption}{Assumptions}
+
+% ---- notation
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Unif}{\mathcal{U}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Corr}{Corr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sgn}{sign}
+\DeclareMathOperator{\fracpart}{frac}
+\DeclareMathOperator{\rms}{rms}
+\newcommand{\KL}{\mathrm{KL}}
+
+% ---- drafting aids (remove before submission)
+\newcommand{\todo}[1]{\textcolor{BrickRed}{\textbf{[TODO:} #1\textbf{]}}}
+\newcommand{\pending}[1]{\textcolor{BrickRed}{#1}}

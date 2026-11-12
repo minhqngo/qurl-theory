@@ -1,0 +1,27 @@
+\section{Related work}\label{sec:related}
+
+\paragraph{Low-precision rollouts for RL.}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Quantized rollouts with corrections.} FlashRL serves rollouts in 8 bits and corrects the mismatch with truncated importance sampling \citep{yao2025flashrl}. QuRL adds ACR and UAQ \citep{li2026qurl}. QeRL uses quantized rollouts to also change exploration \citep{huang2025qerl}.
+\item \emph{Unified FP8 precision} for training and rollouts: Jet-RL and FP8-RL \citep{xi2026jetrl,qiu2026fp8rl}.
+\item \emph{Quantization-aware training aligned to the rollout format:} QaRL and TRACE \citep{gu2026qarl,wang2026trace}.
+\item \emph{Classical deep RL:} QuaRL studied quantization there \citep{krishnan2022quarl}.
+\end{itemize}
+Our results bear on any method that rescales weights before quantization. By \cref{thm:invariance}, a scalar rescaling cannot change an absmax-quantized rollout. By \cref{thm:reparam}, its effect on training is fixed by the optimizer.
+
+\paragraph{Training--inference mismatch.} The mismatch between rollout and training engines arises even without deliberate quantization \citep{qi2025fp16,zheng2025stabilizing}. Recent work locates where it arises and how to correct it \citep{yu2026cis,zhong2026diagnosing}. Other work recasts the objective or the trust region around it \citep{liang2026mirage,li2025trm,qi2026dppo}. Truncated and Pareto-smoothed importance sampling \citep{ionides2008truncated,vehtari2024psis} and decoupled PPO \citep{hilton2022batch} are the standard tools.
+
+Our observations on vLLM add to this picture: its default engine is not batch-invariant at small model sizes, and the mismatch is heavy-tailed (\cref{sec:s1}). We also give a mechanism-level constraint: a stationary weight error (\cref{prop:persistence}) cannot by itself explain a growing mismatch.
+
+\paragraph{Equivalent transformations in quantization.} Per-channel scaling moves quantization difficulty between activations and weights \citep{xiao2023smoothquant,lin2024awq}, and rotations remove outliers \citep{ashkboos2024quarot}. These transformations change the quantized model because they act differently on different channels within a quantization group.
+
+UAQ's scalar version cannot, because absmax scales absorb a common factor (\cref{lem:homogeneity}). \Cref{tab:scope} lists the format-specific exceptions: power-of-two block scales \citep{rouhani2023mx}, static scales, and unscaled casts.
+
+\paragraph{Reparameterization and per-layer learning rates.} The correspondence between a parameter rescaling and a per-layer learning rate is central to the maximal-update parameterization \citep{yang2021tp4,yang2022tp5}. \Cref{thm:reparam} applies the same view to Adam-type optimizers \citep{kingma2015adam,loshchilov2019adamw} with decoupled weight decay and global-norm clipping. The clipping rule (c) is easy to miss, and \cref{sec:s2} shows that it matters.
+
+\paragraph{Rounding and error feedback.} Our tracking analysis builds on classical quantization-noise theory \citep{widrow2008quantization,sripad1977necessary}. It also connects to two lines of work in low-precision training:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item stochastic rounding \citep{gupta2015limited,li2017training,desa2018halp,ozkara2025stochastic};
+\item error feedback, from sigma--delta modulation \citep{gray1990spectra} to compressed SGD \citep{seide2014onebit,stich2018sparsified,karimireddy2019ef}.
+\end{itemize}
+To our knowledge, the comparison of rollout-quantization schemes by cumulative error (\cref{tab:schemes}) has not been made for quantized-rollout RL.

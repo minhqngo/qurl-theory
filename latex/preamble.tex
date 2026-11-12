@@ -1,0 +1,68 @@
+% Shared preamble for the qurl-theory reports.
+% Build either report from this folder with:  latexmk -pdf <file>.tex
+% (or: pdflatex <file>; bibtex <file>; pdflatex <file>; pdflatex <file>)
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[authoryear,round]{natbib}
+\usepackage{xurl}  % lets long URLs break anywhere (loads url)
+
+% Allow a line break (without an inserted hyphen) after each \_ in text, so long file names can wrap.
+\makeatletter
+\DeclareRobustCommand{\_}{\ifmmode\nfss@text{\textunderscore}\else\textunderscore\allowbreak\fi}
+\makeatother
+\usepackage[colorlinks=true,linkcolor=NavyBlue,citecolor=ForestGreen,urlcolor=RoyalBlue]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+% ---- theorem-like environments (defined after cleveref so shared counters get the right names)
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem*{assumptionU}{Assumption U}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% ---- status tags (robust, so they can appear in section titles and the table of contents)
+\DeclareRobustCommand{\statustag}[2]{\textsf{\footnotesize\textcolor{#1}{[#2]}}}
+\DeclareRobustCommand{\tagchecked}{\statustag{ForestGreen}{checked}}
+\DeclareRobustCommand{\tagproved}{\statustag{RoyalBlue}{proved}}
+\DeclareRobustCommand{\tagderived}{\statustag{RoyalBlue}{derived}}
+\DeclareRobustCommand{\tagconj}{\statustag{BurntOrange}{conjecture}}
+\DeclareRobustCommand{\tagopen}{\statustag{BrickRed}{open}}
+
+% ---- research-problem headings (numbered P1, P2, ... by hand, listed in the table of contents)
+\newcommand{\researchproblem}[2]{%
+  \subsubsection*{#1.\ #2}\addcontentsline{toc}{subsubsection}{#1.\ #2}}
+
+% ---- math and text macros
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Unif}{\mathcal{U}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Corr}{Corr}
+\DeclareMathOperator{\clip}{clip}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\sgn}{sign}
+\DeclareMathOperator{\fracpart}{frac}
+\DeclareMathOperator{\rms}{rms}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\script}[1]{\texttt{sanity\_checks/\allowbreak#1}}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\setlist{itemsep=2pt,topsep=4pt}
+
+% ---- layout: avoid overfull lines from unbreakable math/citations; ragged-right bibliography
+\setlength{\emergencystretch}{1.5em}
+\renewcommand{\bibfont}{\raggedright}

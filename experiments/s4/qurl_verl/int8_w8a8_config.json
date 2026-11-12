@@ -1,0 +1,23 @@
+{
+ "quant_method": "compressed-tensors",
+ "format": "int-quantized",
+ "quantization_status": "compressed",
+ "ignore": ["lm_head"],
+ "config_groups": {
+  "group_0": {
+   "targets": ["Linear"],
+   "format": "int-quantized",
+   "weights": {"num_bits": 8, "type": "int", "symmetric": true, "strategy": "channel", "dynamic": false,
+               "group_size": null, "observer": "memoryless_minmax"},
+   "input_activations": {"num_bits": 8, "type": "int", "symmetric": true, "strategy": "token", "dynamic": true,
+                         "group_size": null},
+   "output_activations": null
+  }
+ },
+ "kv_cache_scheme": null,
+ "sparsity_config": {},
+ "transform_config": {},
+ "global_compression_ratio": null,
+ "moe_sparsity_config": null,
+ "version": "0.20.1"
+}

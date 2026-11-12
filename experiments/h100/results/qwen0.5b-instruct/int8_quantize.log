@@ -1,0 +1,42 @@
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 5998.69it/s]
+2026-11-09T07:39:41.4877 | __init__ | WARNING - Disabling tokenizer parallelism due to threading conflict between FastTokenizer and Datasets. Set TOKENIZERS_PARALLELISM=false to suppress this warning.
+2026-11-09T07:39:41.7391 | reset | INFO - Compression lifecycle reset
+2026-11-09T07:39:41.7420 | from_modifiers | INFO - Creating recipe from modifiers
+Applying quantization config:   0%|          | 0/168 [00:00<?, ?it/s]Applying quantization config: 100%|██████████| 168/168 [00:00<00:00, 10374.91it/s]
+2026-11-09T07:39:41.7741 | initialize | INFO - Compression lifecycle initialized for 1 modifiers
+2026-11-09T07:39:41.7742 | IndependentPipeline | INFO - Inferred `DataFreePipeline` for `QuantizationModifier`
+2026-11-09T07:39:42.1694 | finalize | INFO - Compression lifecycle finalized for 1 modifiers
+Compressing model:   0%|          | 0/168 [00:00<?, ?it/s]Compressing model:   1%|          | 1/168 [00:00<00:56,  2.94it/s]Compressing model:  40%|████      | 68/168 [00:00<00:00, 199.49it/s]Compressing model:  75%|███████▌  | 126/168 [00:00<00:00, 310.61it/s]Compressing model: 100%|██████████| 168/168 [00:00<00:00, 273.74it/s]
+2026-11-09T07:39:42.8570 | _retie_embeddings | INFO - Re-tied input/output embeddings; saving a single shared table.
+/localhome/local-minngo/venvs/llmc/lib/python3.12/site-packages/transformers/modeling_utils.py:3430: UserWarning: Attempting to save a model with offloaded modules. Ensure that unallocated cpu memory exceeds the `shard_size` (50GB default)
+  warnings.warn(
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  6.12it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  6.11it/s]
+2026-11-09T07:39:43.0403 | resave_config | INFO - Resaved original config with patched fields to /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_orig/config.json
+Dispatching model:   0%|          | 0/319 [00:00<?, ?it/s]Dispatching model: 100%|██████████| 319/319 [00:00<00:00, 33675.20it/s]
+saved /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_orig
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 7527.51it/s]
+2026-11-09T07:39:43.8476 | reset | INFO - Compression lifecycle reset
+2026-11-09T07:39:43.8505 | from_modifiers | INFO - Creating recipe from modifiers
+Applying quantization config:   0%|          | 0/168 [00:00<?, ?it/s]Applying quantization config: 100%|██████████| 168/168 [00:00<00:00, 10547.76it/s]
+2026-11-09T07:39:43.8708 | initialize | INFO - Compression lifecycle initialized for 1 modifiers
+2026-11-09T07:39:43.8709 | IndependentPipeline | INFO - Inferred `DataFreePipeline` for `QuantizationModifier`
+2026-11-09T07:39:44.0278 | finalize | INFO - Compression lifecycle finalized for 1 modifiers
+Compressing model:   0%|          | 0/168 [00:00<?, ?it/s]Compressing model:  45%|████▌     | 76/168 [00:00<00:00, 758.14it/s]Compressing model:  90%|█████████ | 152/168 [00:00<00:00, 658.41it/s]Compressing model: 100%|██████████| 168/168 [00:00<00:00, 656.51it/s]
+2026-11-09T07:39:44.3683 | _retie_embeddings | INFO - Re-tied input/output embeddings; saving a single shared table.
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  5.36it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  5.35it/s]
+2026-11-09T07:39:44.5727 | resave_config | INFO - Resaved original config with patched fields to /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_s2/config.json
+Dispatching model:   0%|          | 0/319 [00:00<?, ?it/s]Dispatching model: 100%|██████████| 319/319 [00:00<00:00, 33862.70it/s]
+saved /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_s2
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 8691.31it/s]
+2026-11-09T07:39:45.2140 | reset | INFO - Compression lifecycle reset
+2026-11-09T07:39:45.2169 | from_modifiers | INFO - Creating recipe from modifiers
+Applying quantization config:   0%|          | 0/168 [00:00<?, ?it/s]Applying quantization config: 100%|██████████| 168/168 [00:00<00:00, 10650.75it/s]
+2026-11-09T07:39:45.2370 | initialize | INFO - Compression lifecycle initialized for 1 modifiers
+2026-11-09T07:39:45.2370 | IndependentPipeline | INFO - Inferred `DataFreePipeline` for `QuantizationModifier`
+2026-11-09T07:39:45.3916 | finalize | INFO - Compression lifecycle finalized for 1 modifiers
+Compressing model:   0%|          | 0/168 [00:00<?, ?it/s]Compressing model:  45%|████▌     | 76/168 [00:00<00:00, 739.19it/s]Compressing model:  89%|████████▉ | 150/168 [00:00<00:00, 658.05it/s]Compressing model: 100%|██████████| 168/168 [00:00<00:00, 651.43it/s]
+2026-11-09T07:39:45.7362 | _retie_embeddings | INFO - Re-tied input/output embeddings; saving a single shared table.
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  6.19it/s]Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  6.19it/s]
+2026-11-09T07:39:45.9155 | resave_config | INFO - Resaved original config with patched fields to /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_s1.5/config.json
+Dispatching model:   0%|          | 0/319 [00:00<?, ?it/s]Dispatching model: 100%|██████████| 319/319 [00:00<00:00, 34482.32it/s]
+saved /localhome/local-minngo/e0_work/qwen0.5b-instruct/int8_w8a8_s1.5

@@ -1,0 +1,365 @@
+\documentclass[11pt]{article}
+\input{preamble}
+
+\title{P1 Experiments:\\Testing the UAQ and Update-Tracking Theory}
+\author{Experiments report for research problem P1 (draft)}
+\date{12 November 2026 (split from the theory note)}
+
+\begin{document}
+\maketitle
+
+\paragraph{Scope.} This is the experiments report for research problem P1 in the companion report \texttt{research\_problems.tex}, and the companion to the theory note \texttt{p1\_uaq\_and\_update\_tracking.tex}, which states and proves the results tested here. Theorem, lemma, proposition, corollary, remark and assumption numbers refer to the theory note, as do QuRL's claims~(i) and~(ii) \citep{li2026qurl}. Float64 checks are in \texttt{sanity\_checks/}; GPU experiments in \texttt{experiments/}, all run on one H100.
+
+\section*{In short}\addcontentsline{toc}{section}{In short}
+\begin{itemize}
+\item \textbf{Float64 checks (T)} agree with Theorems~1--2, Corollary~3 and Propositions~4--7.
+\item \textbf{On vLLM's kernels (S1)}, Theorem~1 holds bit-for-bit: with INT8 the log-probabilities are identical at $s=2$ for 0.5B, 1.5B and 7B models, and at the paper's $s=1.5$ the mismatch does not shrink.
+\item \textbf{In a training loop (S2)}, Theorem~2 holds bit-for-bit, in a QuRL-style loop and in VeRL; clipping rule~(c) is necessary.
+\item \textbf{In RL (S3)}, QuRL's GSM8K result (Table~1) did not reproduce at the stated learning rate $10^{-5}$; at $10^{-6}$ the setup learns. The pre-registered RL test of ``UAQ $=$ per-layer learning rates'' is running: 9 of 22 runs done (R3, R4 and R5 for seeds 1--3). Early stalls hit 3 of the 9 runs, in R3 as well as R5, and leave H1's registered test almost certainly ``inconclusive''. With INT8 rollouts, UAQ left the training mismatch within the 0.80--1.25 margin, and the INT8 rollout model follows the trainer.
+\item \textbf{Overall} (\cref{sec:assessment}), nothing in the experiments contradicts a theoretical result. The largest gaps are E2 (tracking and persistence on real checkpoints) and E3 (what drives the mismatch rise).
+\end{itemize}
+
+\tableofcontents
+
+% =====================================================================================
+\section{What is tested}\label{sec:tested}
+The theory note answers five questions (its Section~2); the stages below test the answers. The algorithm under test is Algorithm~1 of the QuRL explainer (\texttt{qurl\_explained.tex}).
+\begin{itemize}
+\item \textbf{Q1. Does UAQ change the rollout model?} Theorem~1: no, for QuRL's W8A8 and any quantizer that is homogeneous on its groups. Tested in float64 (T) and on vLLM's kernels (S1).
+\item \textbf{Q2. What does UAQ change in training?} Theorem~2 and Corollary~3: only per-layer learning rates ($\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW). Tested in float64 (T), bit-for-bit in a training loop and in VeRL (S2), and in distribution over seeds in full RL runs (S3, hypotheses H1--H3).
+\item \textbf{Q3. Do re-quantized master weights freeze?} Propositions~3--5: no; updates are captured in expectation. Tested in float64 (T) and by a first look in S3; E2 is the full test.
+\item \textbf{Q4. What is the real issue?} Propositions~6--7: the rounding error persists across steps, and error feedback bounds its cumulative effect. Tested in float64 (T); E2 and E3 are planned.
+\item \textbf{Q5. Do the answers hold on a real RL stack?} Stages S1--S5 below.
+\end{itemize}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l L l@{}}
+\toprule
+Stage & Question & What runs & Status\\
+\midrule
+T & Q1--Q4 (the maths) & float64 checks: one layer or a toy QuRL loop & done\\
+S1 & Q1 on real kernels & step-0 identity test in vLLM, three model sizes & done\\
+S2 & Q2, exactly & deterministic 20-step QuRL loop, UAQ vs.\ Theorem~2 settings at $s=2$ & done\\
+S3 & Q5: H1--H3 & GSM8K PPO in VeRL: R1--R6 $\times$ 3 seeds ($+2$ for R4, R5); Table~1 reproduction & running (9 of 22)\\
+S4 & H1 closest to the paper & DAPO-style math RL with a 1.5B model & planned\\
+S5 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & planned\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% =====================================================================================
+\section{Design}\label{sec:design}
+All GPU stages run on one H100 NVL (94\,GB); the laptop runs only T and the analysis.
+
+\subsection{T: float64 checks}\label{sec:t}
+\begin{itemize}
+\item \script{uaq\_equivalence.py}: Theorem~1 for INT8 and FP8 at $s\in\{0.7,1.5,2,4\}$; Theorem~2 on a 300-step supervised toy (Adam and SGD).
+\item \script{uaq\_edge\_cases.py}: the scope table of Remark~2.
+\item \script{uaq\_pipeline\_equivalence.py}: Corollary~3 in a toy QuRL loop with INT4 rollouts, GRPO, TIS, ACR, AdamW and global-norm clipping (2 epochs $\times$ 4 minibatches, so ACR and clipping both bind).
+\item \script{rtn\_tracking.py}: Propositions~4--5.
+\item \script{tracking\_schemes.py}: Propositions~6--7 over 2{,}000 steps.
+\end{itemize}
+
+\subsection{S1: step-0 identity test on vLLM kernels}\label{sec:s1}
+\begin{itemize}
+\item \textbf{Models.} Qwen2.5-0.5B-Instruct \citep{qwen2024qwen25} (S3's model), Qwen2.5-Math-1.5B (S4's) and Qwen2.5-Math-7B (the paper's size) \citep{yang2024qwen25math}, each with UAQ'd checkpoints at $s=2$ (exact in BF16) and $s=1.5$ (the paper's value; BF16 storage re-rounds about 4\% of INT8 codes).
+\item \textbf{Rollout formats.} INT8 W8A8 on vLLM's \citep{kwon2023vllm} CUTLASS INT8 kernel (what QuRL would use on Hopper); FP8 per-tensor and per-channel as controls; BF16.
+\item \textbf{Protocol.} Sample 512 GSM8K responses from the BF16 model; teacher-force every token under each configuration; compare per-token log-probabilities. Noise floor: the same checkpoint with shuffled batches.
+\item \textbf{Metrics.} Identity: mean $|\Delta\log p|$ and share of identical tokens. Mismatch to the matched BF16 policy: mean $|\log\mu-\log\pi|$ (primary) and sampled-token KL ($k_3$, $k_1$), with paired bootstrap CIs.
+\item \textbf{Prediction.} $s=2$: identical. $s=1.5$: no systematic change. An $s$-fold error reduction would give ratios of 0.667 (mean $|\Delta\log p|$) and 0.444 (KL).
+\item \textbf{Earlier laptop run.} A first run of this test on a laptop GPU (\texttt{experiments/e0/}) is superseded and not used as evidence: it had no CUTLASS INT8 kernel and a nondeterministic BF16 path.
+\end{itemize}
+
+\subsection{S2: exact equivalence in a training loop}\label{sec:s2}
+\begin{itemize}
+\item \textbf{Why $s=2$.} Every rescaling is exact, so Theorem~2 predicts bit-identical runs.
+\item \textbf{Loop.} Qwen2.5-0.5B-Instruct on GSM8K: 20 rollout batches of 8 prompts $\times$ 4 samples; GRPO with decoupled PPO, TIS ($C=2$) and ACR; 2 epochs $\times$ 2 minibatches (80 AdamW updates); $\lambda=0.01$, $\varepsilon=10^{-8}$, clipping at 0.1. Rollouts use INT8 W8A8 fake quantization in PyTorch with seeded sampling (vLLM cannot re-quantize INT8 online and is not repeatable at this size); training uses BF16 autocast with FP32 master weights and deterministic kernels.
+\item \textbf{Two learning rates.} $\eta=10^{-6}$ (QuRL's regime; there weight decay changes no FP32 weight, since $\eta\lambda<2^{-25}$) and $10^{-5}$ (decay active).
+\item \textbf{Arms.} R4 (UAQ, plain AdamW); R4 repeat; R5 (no UAQ, Theorem~2(b)--(c) settings); R5o (R5 with ordinary clipping); R5x (learning rates matched only); R3 (no UAQ, plain settings).
+\item \textbf{Measure.} SHA-256 fingerprints at every step of the sampled tokens, $\mu$, $\pi_{\mathrm{old}}$ and the weights mapped to original coordinates.
+\end{itemize}
+
+\subsection{S3: QuRL's GSM8K PPO setup in VeRL}\label{sec:s3}
+\begin{itemize}
+\item \textbf{Configuration} (the paper's GSM8K setup, which is VeRL's quickstart, \citealp{sheng2025hybridflow}). Qwen2.5-0.5B-Instruct; PPO with a critic; batch 256, mini-batch 64; responses up to 512 tokens; 15 epochs $=$ 435 steps; greedy validation on the 1{,}319 test problems \citep{cobbe2021gsm8k} every 29 steps; KL penalty and entropy bonus 0.001, as in VeRL's documented baseline (56.7\% at $\eta=10^{-6}$). VeRL v0.9.1 with vLLM 0.24.
+\item \textbf{Added to VeRL.} INT8 W8A8 rollouts re-quantized at every sync (CUTLASS INT8 kernel); ACR as a policy loss; the UAQ checkpoint; an optimizer plug-in for R5 (per-group learning rate, $\varepsilon$ and decay, plus rule (c) clipping). All arms run the same code.
+\item \textbf{Table~1 reproduction.} R1 (BF16) and R3 (QuRL INT8) at the paper's $\eta=10^{-5}$, one seed each. Targets: 55.35\% and 53.55\%.
+\item \textbf{UAQ experiment.} At $\eta=10^{-6}$ (all the paper's UAQ results use $10^{-6}$) and $s=1.5$:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Arm & Rollout & Change\\
+\midrule
+R1 & BF16 & ---\\
+R2 & BF16 & UAQ\\
+R3 & QuRL: INT8 W8A8, TIS ($C=2$), ACR & ---\\
+R4 & QuRL & UAQ\\
+R5 & QuRL & Theorem~2(b)--(c) settings instead of UAQ\\
+R6 & QuRL & global learning rate $\times1.5$ (the paper's control)\\
+\bottomrule
+\end{tabular}
+\end{center}
+\item \textbf{Seeds.} 1--3 for every arm, plus 4--5 for R4 and R5 (added 2026-11-11 for power): 22 runs of about 4.5\,h. Seed $k$ fixes the prompt order and the sampling seed, so arms are paired by seed.
+\item \textbf{Gate.} The queue first repeats R5's exactness check on the H100 (three updates on one fixed batch at $s=2$) and starts only if it passes.
+\item \textbf{Hypotheses.}
+  \begin{itemize}
+  \item \textbf{H1:} R4 and R5 are equal in distribution (Corollary~3 with Remark~3).
+  \item \textbf{H2:} UAQ's effect is not specific to quantization: (R2 $-$ R1) $\approx$ (R4 $-$ R3).
+  \item \textbf{H3:} R6 differs from R4: a global learning-rate increase is the wrong control.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Pre-registered analysis of S3}\label{sec:prereg}
+Fixed on 2026-11-11: H1 before any R5 result, H2 and H3 before any R1, R2 or R6 run. The scripts are frozen by SHA-256 and were tested on synthetic runs with known answers; any later change is recorded here, and results from both versions are reported.
+\begin{itemize}
+\item \textbf{Primary endpoint.} Late accuracy: mean greedy GSM8K test accuracy over the last five validations (steps 319--435), in points.
+\item \textbf{Secondary endpoints} (supportive only). Final accuracy (step 435); reward AUC (mean training score over all steps); mismatch (mean $k_3$, compared as a ratio with bounds 0.80--1.25, with the entropy difference reported next to it); for H2 and H3 also early reward (mean score over steps 1--58, added after R4 seed~1's fast start had been seen).
+\item \textbf{Margin.} $\delta=2.0$ points: the gap the paper calls small (``reduces this gap to 2\%''), and about the largest difference in its UAQ ablation.
+\item \textbf{Decision rules} (paired by seed; t-intervals on $n-1$ degrees of freedom):
+\begin{center}\small
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Hypothesis & Contrast per seed & Seeds & Supported if & Contradicted if\\
+\midrule
+H1 & R4 $-$ R5 & 1--5 & 90\% CI within $\pm\delta$ & 95\% CI excludes 0\\
+H2 & (R4 $-$ R3) $-$ (R2 $-$ R1) & 1--3 & 90\% CI within $\pm\delta$ & 95\% CI excludes 0\\
+H3 & R6 $-$ R4 & 1--3 & 95\% CI excludes 0 & 90\% CI within $\pm\delta$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Otherwise inconclusive. If both conditions hold: ``equivalent within $\delta$, smaller difference detected'' (H1, H2) or ``supported, with a difference smaller than $\delta$'' (H3). For the mismatch, H2's contrast is the ratio of ratios (R4/R3)/(R2/R1): if UAQ helped the quantized rollout capture updates, R4/R3 would be below 1 and R2/R1 near 1.
+\item \textbf{Also reported, without verdict.} UAQ's own effect R4 $-$ R3 (if it is within $\pm\delta$, H1 cannot distinguish ``R5 reproduces UAQ'' from ``UAQ does nothing here''), R2 $-$ R1, and R6 $-$ R3.
+\item \textbf{Data rules.} Every completed run counts; a crashed run is re-run with the same seed; no verdict before all registered runs are complete.
+\item \textbf{Power.} At zero true difference, H1's equivalence is reachable only if the paired SD is below about 1.2 points with 3 seeds, or 2.1 with 5. H2 needs a single-run spread below about 0.6 points, so it will likely be inconclusive. H3 detects only differences above about 2.5 paired SDs.
+\item \textbf{Exploratory} (fixed after R5 seed~1's stall was seen at step 316, before any other R4 or R5 seed). A run counts as collapsed if its late accuracy is below 10\%; collapses are counted per arm, and H1--H3 are repeated without collapsed seeds. Each run's longest stretch without a correct training answer is reported.
+\item \textbf{Seen before fixing.} H1: R3 seed~1 in full, one progress line of R4 seed~1 (step 44), nothing from R5. H2/H3: R3 and R4 seed~1 in full, R5 seed~1 through step 316; for seed~1, R4 $-$ R3 was $-1.2$ points in late accuracy and $+7.4$ in early reward.
+\item \textbf{Code.} \texttt{experiments/s3/h1\_analysis.py}, run with \texttt{--seeds 1 2 3 4 5}; SHA-256:\\ \texttt{\small 5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f}.\\ \texttt{experiments/s3/h23\_analysis.py}, which reuses \texttt{h1\_analysis.py}'s arithmetic; SHA-256:\\ \texttt{\small 5ed1a3b280b340550b009e0e54c5d95ee2e00a00f2bddd74b7fa612af1dfb3e4}.\\ Each report repeats the hashes.
+\end{itemize}
+
+\subsection{Planned: S4 and S5}\label{sec:planned}
+\begin{itemize}
+\item \textbf{S4.} DAPO-style \citep{yu2025dapo} math RL with a 1.5B model (Qwen2.5-Math-1.5B or R1-Distill-1.5B, \citealp{luo2025deepscaler}) at $\eta=10^{-6}$, about 300 steps: R3--R5 $\times$ 3 seeds, then R1 and R2. This is closest to the paper's UAQ ablation (DAPO at 7B). Metrics: reward, exact full-vocabulary KL, per-layer $\nu$, MATH500 Avg@32 (AIME24 secondary: 30 problems are too noisy at 1.5B).
+\item \textbf{S5 $=$ E2 + E3.} \emph{E2}, on saved checkpoints: code-flip fraction vs.\ Proposition~4's prediction $\frac1n\sum_j\min(1,|\delta_j|/\Delta_j)$; $\Corr(e_k,e_0)$ vs.\ Proposition~6; correlation of $\Delta\log\mu$ and $\Delta\log\pi$; phase histograms for Assumption~U. \emph{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability.
+\item \textbf{Link to 7B.} Early in Adam training each element moves by about $\eta$ per step, so $\nu_l\approx\eta/\Delta_l$, computable from the 7B checkpoint without training it. Choosing S4's learning rate to match the 7B distribution of $\nu_l$ puts the small runs in the same tracking regime (Proposition~4 depends only on $|d|/\Delta$).
+\item \textbf{Why not paper scale.} A 7B full fine-tune needs about 112\,GB for weights, gradients and Adam state alone; R3--R5 $\times$ 3 seeds would take 1{,}400--2{,}700 H100-hours. H1 at 7B is future work.
+\end{itemize}
+
+% =====================================================================================
+\section{Results}\label{sec:results}
+
+\subsection{T: float64 checks}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L@{}}
+\toprule
+Claim & Result\\
+\midrule
+Theorem~1 (INT8, FP8) & output change $\le2.9\times10^{-16}$ for $s\in\{0.7,1.5,2,4\}$; a per-channel (SmoothQuant, \citealp{xiao2023smoothquant}) vector does change the INT8 error, 5.2\% $\to$ 1.5\%\\
+Theorem~2, supervised toy & Adam $1.6\times10^{-6}$ (limited by unadjusted $\varepsilon$), SGD $10^{-14}$; first-step $\nu$ gain 1.500 (Adam) vs.\ 2.250 (SGD)\\
+Corollary~3, toy QuRL loop & matched settings: 100\% identical actions, weights within $3\times10^{-10}$; ordinary clipping: 59.7\% identical actions; plain settings: 50.1\%\\
+Props.~4--5 & flip rate $=|d|/\Delta$ from $10^{-3}$ to 0.3; slope $\approx1$; aligned correlation 0.75 at $\epsilon=10^{-3}$, $n=2048$ (predicted 0.75)\\
+Props.~6--7 & correlation within 0.007 of $1-6a(1-a)$; variance ratio 0.995--1.007 over 2{,}000 steps; rms partial sums after 2{,}000 steps: $292\Delta$ (RTN), $576\Delta$ (delta), $18\Delta$ (SR), $0.29\Delta$ (error feedback)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{S1: UAQ does not change the rollout model on real kernels}\label{sec:s1-results}
+\textbf{At $s=2$} (UAQ vs.\ original, per-token log-probabilities):
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L L l@{}}
+\toprule
+Format & 0.5B & 1.5B & 7B\\
+\midrule
+\textbf{INT8 W8A8} (QuRL) & \textbf{identical} & \textbf{identical} & \textbf{identical}\\
+FP8 per-tensor / per-channel & identical & run-to-run variation (an $s=2$ run reproduced an original run bit-for-bit) & identical\\
+BF16 & 0.36\% of tokens differ (engine nondeterminism) & identical & identical\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{At $s=1.5$} (mismatch with UAQ $\div$ mismatch without, 95\% CI; an $s$-fold reduction would be 0.667 and 0.444):
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Format & Model & mean $|\Delta\log p|$ ratio & KL ($k_3$) ratio\\
+\midrule
+\textbf{INT8 W8A8} & 0.5B & \textbf{0.994} [0.984, 1.004] & \textbf{0.978} [0.951, 1.007]\\
+\textbf{INT8 W8A8} & 1.5B & \textbf{0.996} [0.988, 1.005] & \textbf{0.994} [0.966, 1.022]\\
+\textbf{INT8 W8A8} & 7B & \textbf{1.013} [1.004, 1.021] & \textbf{1.022} [0.995, 1.049]\\
+FP8 per-tensor & 0.5B / 1.5B / 7B & 1.004 / 0.976 / 0.946 & 1.013 / 0.923 / 0.862\\
+FP8 per-channel & 0.5B / 1.5B / 7B & 1.007 / 0.968 / 0.943 & 1.013 / 0.888 / 0.964\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \textbf{Theorem~1 holds bit-for-bit at $s=2$} for QuRL's INT8 W8A8 at all three sizes.
+\item \textbf{At the paper's $s=1.5$, the INT8 mismatch does not shrink at any size}, 7B included. The claimed error-reduction mechanism is absent at step 0 on the paper's kernel.
+\item \textbf{FP8} shows small reductions at 1.5B and 7B, never near $s$-fold. They are three BF16 re-rounding draws, two favourable; per-token errors before and after UAQ correlate only 0.43--0.64. A null distribution over re-rounding draws would settle whether any of it is systematic.
+\item \textbf{Side findings.} vLLM's default engine is neither batch-invariant nor run-to-run deterministic at 0.5B and 1.5B (0.22--0.31\% of tokens change under reshuffling, BF16 included); INT8 W8A8 was identical in every same-order comparison. The INT8--FP8 KL ratio grows with size (1.0--1.1$\times$ at 0.5B, 1.4--1.5$\times$ at 1.5B, 2.8--3.0$\times$ at 7B), consistent with activation outliers \citep{dettmers2022llmint8,xiao2023smoothquant} but not yet attributed. The mismatch is heavy-tailed: the top 1\% of tokens carry 38--48\% of the KL. Sampled-token KL estimates are fragile (rare tokens with $\mu/\pi$ up to 17--37), so mean $|\Delta\log p|$ is the primary metric.
+\end{itemize}
+
+\subsection{S2: Theorem~2 holds bit-for-bit}\label{sec:s2-results}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L l l@{}}
+\toprule
+Arm & Differs from R4 in & Bit-identical steps ($10^{-6}$; $10^{-5}$) & Max.\ weight diff.\ (20 steps)\\
+\midrule
+R4 repeat & nothing & 20/20; 20/20 & 0; 0\\
+\textbf{R5} & coordinates only & \textbf{20/20; 20/20} & \textbf{0; 0}\\
+R5o & clipping norm in original coordinates & 0/20; 0/20 & 1.6e-4; 1.1e-3\\
+R5x & learning rates only matched & 0/20; 0/20 & 1.7e-4; 1.3e-3\\
+R3 & plain settings, no UAQ & 0/20; 0/20 & 1.4e-4; 1.1e-3\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{itemize}
+\item \textbf{R5 matched R4 in every fingerprint at every step}, and its saved weights equal R4's mapped weights element by element. The test covers INT8 W8A8 rollouts, BF16 autocast with FP32 master weights, GRPO, TIS, ACR, AdamW and global-norm clipping (binding on every update with a nonzero gradient), and weight decay at $10^{-5}$.
+\item \textbf{Clipping rule (c) is necessary.} On the first update the gradient norm is 1.131 in UAQ coordinates and 0.874 in original ones, so ordinary clipping (R5o) diverged at step~1, as early as R3.
+\item \textbf{One differing bit decorrelates the runs}, so at $s=1.5$, where $W/s$ is rounded, H1 must be tested in distribution over seeds.
+\item \textbf{In VeRL}, the R5 plug-in passed the same test inside VeRL's FSDP2 actor (three updates on one fixed batch at $s=2$): R5 and an R4 repeat were bit-identical to R4 in all 494M parameters, on the laptop and again on the H100; R5o differed from the first update.
+\end{itemize}
+
+\subsection{S3: QuRL's Table~1 is not reproduced at \texorpdfstring{$\eta=10^{-5}$}{eta = 1e-5}}\label{sec:t1-results}
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Run & GSM8K test accuracy at step 435 & Best of 15 validations & Paper (Table~1)\\
+\midrule
+R1, BF16 & 0.0\% & 0.0\% & 55.35\%\\
+R3, QuRL INT8 & 2.9\% & 3.4\% (step 58) & 53.55\%\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \textbf{Neither run learned.} R1's responses shrank to 2--3 tokens, with a KL from the reference model of about 5 nats per token. From step 290, R3's responses all ran to the 512-token cap at an entropy of 0.001.
+\item \textbf{The learning rate is the cause.} The 10-step pilots of the same configuration at $10^{-6}$ show it: after 10 steps the KL from the reference model is $2.1\times10^{-3}$ at $10^{-6}$ against 0.15 at $10^{-5}$; the PPO clip fraction is 10--20$\times$ higher and the entropy rises from 0.50 to 0.80; correct answers in steps 5--10 number 6 against none.
+\item \textbf{Mechanism.} At step 1 the critic's new value head predicts $-20$ to $+33$ for returns in $[0,1]$, so early advantages mostly reflect its error. At $10^{-5}$ the actor follows them ten times as fast and leaves the region where correct answers occur; afterwards only the KL penalty acts.
+\item \textbf{Two explanations fit.} (1) The paper's actor ran at $10^{-6}$ and $10^{-5}$ is the critic's rate, as in VeRL's baseline (56.7\%, within 1.4 points of the paper's 55.35\%). (2) The paper used an unstated stabilizer such as warmup. Its text favors (2), its numbers fit (1); the paper does not let us decide.
+\item \textbf{Side result.} A near-deterministic policy hides the mismatch: in R3 at $10^{-5}$, $k_3$ tracked the entropy (Spearman 0.94); in a normal run at $10^{-6}$ it does not (0.13).
+\end{itemize}
+
+\subsection{S3: the UAQ experiment at \texorpdfstring{$\eta=10^{-6}$}{eta = 1e-6} (in progress)}\label{sec:uaq-results}
+\textbf{Progress (2026-11-12).} 9 of 22 runs complete: R3, R4 and R5 for seeds 1--3. R1, R2 and R6 for seeds 1--3 are running, then R4 and R5 for seeds 4--5. No hypothesis verdict is drawn until all registered runs are in. The gate passed on the H100: R5 and an R4 repeat were bit-identical to R4 in all 494M parameters; R5o differed in 99.98\% of $W$.
+\begin{center}\footnotesize
+\begin{tabularx}{\linewidth}{@{}l c c c c c c c L@{}}
+\toprule
+Run & Seed & Late & Final & Early rew. & Rew.\ AUC & $k_3$ & Entropy & Longest stretch without a correct answer\\
+\midrule
+R3, QuRL INT8 & 1 & 50.2 & 50.1 & 34.4 & 56.0 & 0.055 & 0.26 & none\\
+R4, QuRL + UAQ & 1 & 49.0 & 52.2 & 41.8 & 57.6 & 0.058 & 0.28 & none\\
+R5, Thm.~2 settings & 1 & 11.8 & 46.6 & 0.1 & 2.9 & 0.016 & 0.44 & 370 steps (4--373)\\
+R3 & 2 & 51.4 & 49.6 & 43.7 & 57.4 & 0.055 & 0.30 & none\\
+R4 & 2 & 49.0 & 50.2 & 40.8 & 55.2 & 0.063 & 0.34 & none\\
+R5 & 2 & 49.9 & 50.4 & 36.3 & 56.1 & 0.063 & 0.30 & 1 step (steps 5 and 10)\\
+R3 & 3 & 51.0 & 51.9 & 2.9 & 44.1 & 0.068 & 0.28 & 21 steps (2--22)\\
+R4 & 3 & 51.2 & 51.2 & 34.1 & 57.2 & 0.062 & 0.33 & 3 steps (4--6)\\
+R5 & 3 & 44.5 & 48.4 & 0.1 & 43.8 & 0.040 & 0.29 & 72 steps (9--80)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Late and final: accuracy in \%; early reward and reward AUC: mean training score in \%; $k_3$ and entropy: means over all steps. For reference: the paper's QuRL INT8 result is 53.55\%, VeRL's BF16 baseline 56.7\%.
+\begin{itemize}
+\item \textbf{The setup learns at $10^{-6}$.} R3 reached 41.4\% and 46.4\% at step 29 in seeds 1 and 2 (VeRL's BF16 log: 45.8\%), and its final accuracy is 49.6--51.9\% over three seeds, 1.7--4.0 points below the paper's INT8 result. This confirms that the $10^{-5}$ failure came from the learning rate.
+\item \textbf{R5 seed~1 stalled for 370 steps, then learned.} Its few correct answers vanished within three steps while the entropy rose from 0.54 to 0.93 by step 10, the same early drift as the $10^{-5}$ runs. With no reward left, the KL penalty pulled the policy back toward the reference model (KL 1.1 at step 119, 0.03--0.05 by steps 300--390); correct answers returned at step 374, and validation went from 0.0\% (through step 377) to 46.6\% at step 435.
+\item \textbf{No implementation fault.} The log shows the intended settings (Q/K/V: lr $1.5\times10^{-6}$, $\varepsilon$ $6.7\times10^{-9}$, decay 0.0067; norm gains: lr $6.7\times10^{-7}$, $\varepsilon$ $1.5\times10^{-8}$, decay 0.015; rest: $10^{-6}$; clip on the UAQ-coordinate norm), no non-finite gradients, and a constant scheduler that keeps each group's rate. Runs differ randomly from step 1 (R3 and R5 sampled different responses from identical weights), so a stall is a possible outcome of this configuration, not evidence that R5 differs from R4.
+\item \textbf{R3 stalls too.} R3 seed~3 had no correct training answer at steps 2--22, the same pattern as R5 seed~1: correct answers vanish within a few steps, the entropy rises (0.52 $\to$ 0.85 by step 25) and the policy drifts from the reference model.
+  \begin{itemize}
+  \item \textbf{The stall.} Over steps 30--125 the median response was 7 tokens long and the KL from the reference model was above 1 at every step but one (peak 3.0 at step 93). Validation stayed at 5.5--8.3\% through step 116.
+  \item \textbf{The recovery} came after about 125 steps instead of 370. Between steps 125 and 135 the policy returned to long answers (KL from the reference 2.1 $\to$ 0.10, training score 8\% $\to$ 42\%), and it validated at 49.2--52.6\% from step 174 on.
+  \item \textbf{What it shows.} R3 runs VeRL's ordinary optimizer settings on the original checkpoint, so early stalls belong to this configuration at $10^{-6}$, not to R5's settings.
+  \end{itemize}
+\item \textbf{R5 seed~2 learned normally.} Correct training answers were missing only at steps 5 and 10; validation was 44.7\% at step 29 and 47.5--50.4\% afterwards. The log shows the same R5 settings as seed~1.
+\item \textbf{R5 seed~3 stalled for about 80 steps, quietly.} It had 6, 3, 4 and 1 correct training answers at steps 1--4, then none at steps 5--7, 9--80 and 82. Validation was 0.0\% at steps 29 and 58, 25.5\% at step 87, and 42.3--48.4\% from step 116 on, apart from one dip. The log shows the same R5 settings as seeds 1 and 2.
+  \begin{itemize}
+  \item \textbf{Quiet.} Over steps 1--87 the policy stayed near the reference model (KL 0.006--0.047, window medians). Its entropy fell from 0.55 to 0.38, its responses stayed long (median 243--304 tokens), and the mismatch stayed low ($k_3$ $1.7$--$2.6\times10^{-2}$). R5 seed~1 and R3 seed~3 instead drifted far from the reference (KL about 1 or more) with rising entropy.
+  \item \textbf{One late dip.} Validation fell to 33.6\% at step 319, between 45.1\% (step 290) and 46.3\% (step 348), while the training score held at 0.51--0.61. The dip came during the run's highest mismatch ($k_3$ 0.06--0.13 per step over steps 315--331). It alone moves seed~3's R4~$-$~R5 in late accuracy from 3.7 points (over the other four late validations) to 6.7.
+  \end{itemize}
+\item \textbf{R4 seed~3 wobbled but did not stall.} It had no correct answer at steps 4--6, the highest early entropy of any run (0.96 at step 11), and a mismatch whose 29-step median reached 0.128 (steps 26--54). It recovered at once: 15 correct answers at step 10, a training score of 0.3 from step 22, and validation of 42.4--45.6\% through step 116 and 46.8--53.3\% afterwards.
+\item \textbf{Early stalls hit 3 of 9 runs.} R5 seed~1, R3 seed~3 and R5 seed~3 validated at 0.0\%, 5.5\% and 0.0\% at step 29; the other six at 41.4--46.4\%. Seed~3 was hard for all three arms (early reward: R3 2.9, R4 34.1, R5 0.1).
+  \begin{itemize}
+  \item \textbf{By arm:} R3 1 of 3, R4 0 of 3, R5 2 of 3. If every run stalled with the same chance, a 2--1--0 split would be the most likely pattern (54 of the 84 equally likely placements of 3 stalls among 9 runs). So the split says nothing about the arms.
+  \item \textbf{Same start, different drifts.} In each stall the few correct answers of the first steps vanished within ten steps, and none returned for a long stretch. With no task reward in that stretch, nothing task-driven steers the policy, and the three runs drifted in three different ways.
+  \item \textbf{No collapse.} All three recovered. The lowest late accuracy is R5 seed~1's 11.8\%, above the 10\% threshold.
+  \end{itemize}
+\item \textbf{R4's faster start did not recur.} In seed~1, R4 had 49 correct answers per batch at step 10 against R3's 14 (early reward $+7.4$ points); in seed~2, 23 against 39 ($-3.0$); in seed~3, 15 against 0 ($+31.2$, as R3 stalled). Early reward varies widely between seeds of one arm (R3: 34.4, 43.7 and 2.9), so that endpoint is noisy.
+\item \textbf{Side hypothesis, not supported so far.} The proposal was that the $1.5\times$ Q/K/V learning rate that R4 and R5 share (and R6 exceeds) makes the early phase more volatile: faster learning, and more stalls. R4 started slower than R3 in seed~2, and stalls hit R4 and R5 in 2 of 6 runs against R3's 1 of 3, the same rate. R6 will add evidence.
+\item \textbf{H1's registered verdict will almost surely be ``inconclusive''.} Per seed, R4 $-$ R5 is $+37.2$, $-0.9$ and $+6.7$ points of late accuracy.
+  \begin{itemize}
+  \item \textbf{Supported:} impossible. Whatever seeds 4 and 5 give, the far end of the 90\% CI stays at least 23.1 points from 0, against $\delta=2$.
+  \item \textbf{Contradicted:} only if R4 $-$ R5 is between about 31 and 35 points in both seeds 4 and 5. The best case, 33.3 twice, gives a 95\% CI of $[0.02, 43.8]$. Two pairs without a stall (0 each) give $[-11.6, 28.8]$; two full R5 stalls (40--49 each) give lower ends of $-0.3$ to $-1.3$.
+  \item \textbf{Otherwise inconclusive.} This follows from the frozen rules and changes nothing in them; seeds 4--5 run as registered. The exploratory repeat without collapsed seeds keeps every seed (none is below 10\%), so it is limited in the same way.
+  \item \textbf{Seed~2, the only seed without a stall in either arm,} is close on H1's endpoints: $-0.9$ points late, $-0.2$ final, $-1.0$ reward AUC, mean-$k_3$ ratio 1.00.
+  \end{itemize}
+\item \textbf{The INT8 mismatch rises, then partly recedes.} $k_3$ starts at $1.02$--$1.14\times10^{-2}$ in all nine runs. In the six runs without a stall it reaches window medians of $6.6$--$8.0\times10^{-2}$ over steps 60--175, and it ends (median of steps 400--435) at $3.6$--$6.3\times10^{-2}$ in those six and in R3 and R5 seed~3, 65--115$\times$ the BF16 floor.
+  \begin{itemize}
+  \item \textbf{Not explained by entropy or drift.} In the six runs without a stall it tracks neither entropy (Spearman $-0.38$ to 0.13) nor the KL from the reference model ($-0.34$ to 0.38), so attribution needs E3.
+  \item \textbf{The three stalls differ.} R3 seed~3's had the highest mismatch of any run: a 29-step median of 0.195 (steps 40--68), against at most 0.128 elsewhere (R4 seed~3's wobble), with TIS truncating a median 2.1\% of tokens per step (at most 3.4\%). R5's two stalls had the lowest (window medians at most $3.1\times10^{-2}$ in seed~1 and $2.6\times10^{-2}$ in seed~3).
+  \item \textbf{TIS and ACR.} In the other eight runs TIS truncated 0.19--1.80\% of tokens per step. The largest ratio in a run ranged from 153 (R5 seed~1) to 19{,}438. ACR changed the clipping decision for 0.003--0.011\% of tokens.
+  \item \textbf{Validation dips (exploratory).} How far a validation falls below its two neighbours correlates weakly with the mismatch over the 10 steps before it (Spearman $+0.22$ over 95 validations after learning; $+0.01$ to $+0.73$ per run). The two largest dips, R5 seed~3's 12.1 points at step 319 and R3 seed~1's 4.9 at step 145, came at $1.5\times$ and $2.9\times$ their run's median mismatch.
+  \end{itemize}
+\item \textbf{UAQ's own effect, R4 $-$ R3, is small} (seeds 1--3, complete; reported without verdict, \cref{sec:prereg}).
+  \begin{itemize}
+  \item \textbf{Mismatch.} R4's mean $k_3$ is $1.036\times$ R3's (per seed 1.063, 1.134 and 0.923; 90\% CI $[0.867, 1.238]$). The CI lies inside the bounds 0.80--1.25, so UAQ changed the training mismatch by less than the margin, as S1 found at step 0 for $s=1.5$. H2's ratio of ratios tests this against the BF16 arms.
+  \item \textbf{Accuracy.} Late $-1.1$ points (90\% CI $[-3.3, 1.1]$), final $+0.7$ ($[-1.6, 3.0]$), reward AUC $+4.2$ ($[-9.4, 17.7]$). None of these CIs lies within $\pm\delta$ or excludes 0.
+  \item \textbf{Entropy.} 0.017, 0.037 and 0.045 higher with UAQ.
+  \item \textbf{Consequence for H1} (the caveat in \cref{sec:prereg}). With UAQ barely moving the mismatch, H1's mismatch endpoint cannot tell ``R5 reproduces UAQ'' from ``UAQ does little here''.
+  \end{itemize}
+\item \textbf{Update tracking, first look.} All 168 linear weights were re-quantized at each of the 436 syncs in all nine runs, on the CUTLASS kernel. In the INT8 pilot, one PPO step at $10^{-6}$ flipped 0.21\% of layer 0's Q/K/V codes, against 0.20\% predicted by $|d|/\Delta$ (Proposition~4). Row by row the agreement is loose (correlation 0.2--0.4); E2 is the full test.
+\end{itemize}
+
+% =====================================================================================
+\section{What the experiments say about the theory}\label{sec:assessment}
+\emph{As of 2026-11-12: T, S1, S2 and the nine H1 runs of S3.} Nothing in the experiments contradicts a theoretical result. The exact results hold wherever they can be tested exactly. S3 adds real-stack evidence that UAQ does not lower the mismatch during training and that the INT8 rollout follows the trainer. Its distributional test of Corollary~3 (H1) is underpowered, and Propositions~6--7 are tested only in float64.
+\begin{itemize}
+\item \textbf{Theorem~1 holds on the real kernel.} Log-probabilities are bit-identical at $s=2$ on vLLM's INT8 kernel at all three sizes (\cref{sec:s1-results}).
+  \begin{itemize}
+  \item \textbf{No reduction at step 0.} At $s=1.5$ the mismatch ratios are 0.98--1.02, with CIs that exclude an $s$-fold reduction (0.667 and 0.444).
+  \item \textbf{No reduction during training.} In S3, R4's mean $k_3$ is $1.04\times$ R3's (90\% CI $[0.87, 1.24]$). The paper's mechanism, error divided by $s$, would give a KL ratio of $1/s^2\approx0.44$.
+  \item \textbf{Scope.} R4 against R3 is not a test of Theorem~1 itself, since the trajectories differ through Theorem~2. It rules out, within the margin, a reduction that would appear only later in training.
+  \end{itemize}
+\item \textbf{Theorem~2 and Corollary~3 hold exactly; RL adds little.} Training is bit-identical in S2's 20-step QuRL loop at both learning rates and in VeRL's FSDP2 actor on the H100 (\cref{sec:s2-results}). Computing the clip norm in the original coordinates, or matching only the learning rates, breaks the equality at step 1, so the theorem's conditions are needed in practice too.
+  \begin{itemize}
+  \item \textbf{H1 (Remark~3).} R4~$-$~R5 is $+37.2$, $-0.9$ and $+6.7$ points, and both large values come from R5 stalls. If R4 and R5 stall equally often, both of two stalls land in R5 with probability $1/5$. In seed~2, where neither stalled, the arms agree within 0.9 points, with a mismatch ratio of 1.00.
+  \item \textbf{Why H1 stays open.} Nothing contradicts H1, but its test cannot confirm it. Equivalence needs a paired SD below about 2.1 points with 5 seeds (\cref{sec:prereg}); the stalls make it about 20. This limits the test, not the theorem.
+  \item \textbf{UAQ's own effect.} By Corollary~3, R4~$-$~R3 is the effect of the $\times1.5$ Q/K/V and $\div1.5$ norm-gain learning rates. It is small here: late accuracy $-1.1$ points (90\% CI $[-3.3, 1.1]$) and an unchanged mismatch. So the benefit the paper reports for UAQ does not appear in this setting. H2 tests directly that the effect is not quantization-specific; by the power analysis in \cref{sec:prereg} it will likely be inconclusive.
+  \end{itemize}
+\item \textbf{Propositions~3--5: the INT8 rollout follows the trainer.} QuRL's claim~(i) (Section~1.3 of the theory note) predicts a rollout model that stays near its starting point.
+  \begin{itemize}
+  \item \textbf{Tracking.} In the eight S3 runs that had learned by step 200, the trainer moved 0.43--0.72 nats per token from the reference model, its starting point, over steps 200--435. The INT8 rollout stayed 0.041--0.061 from the trainer ($k_3$), 9.8--13.5$\times$ closer. A frozen rollout would show a mismatch of the order of the drift.
+  \item \textbf{Learning.} The INT8 model learns: its validation accuracy, generated by the INT8 engine, reaches about 50\%.
+  \item \textbf{Quantitative test.} The pilot's flip rate matches Proposition~4 in aggregate (0.21\% vs.\ 0.20\%) but loosely row by row. The full test, E2, needs weight snapshots; the S3 runs keep only layer 0's codes after the first two syncs.
+  \end{itemize}
+\item \textbf{Propositions~6--7: tested only in float64.} S3 sharpens the question Proposition~6 raises.
+  \begin{itemize}
+  \item \textbf{The mismatch rise is unexplained.} In the six runs without a stall, $k_3$ rises 6--7-fold, from $1.0$--$1.1\times10^{-2}$ at step 1 to window medians of $6.6$--$8.0\times10^{-2}$ over steps 60--175, then partly falls. If the weight error is stationary (fixed grid, Assumption~U), the rise must come from moving grids (outliers), sensitivity, activation error or contexts. It tracks neither entropy nor the drift from the reference model; attributing it is E3.
+  \item \textbf{The side hypothesis of the theory note's Section~3.5 is not supported.} UAQ's slower norm gains were to slow mismatch growth. R4's mismatch is not lower than R3's, either on average ($1.04\times$) or at the end of training (steps 400--435: $1.13\times$, $1.56\times$ and $0.88\times$ per seed).
+  \end{itemize}
+\item \textbf{Outside the theory.} The early stalls (3 of 9 runs) and the failure at $10^{-5}$ are optimization behaviour of this PPO configuration. Nothing ties the stalls to quantization: R3 seed~3's had the highest mismatch of any run, R5's two the lowest. R1 and R2 will show whether stalls also occur with BF16 rollouts.
+\item \textbf{For the write-up.} The case that UAQ is a per-layer learning-rate change, not a quantization fix, rests on exact identities verified on the real stack (\cref{sec:s1-results,sec:s2-results}) and on the absence of a mismatch reduction, both at step 0 and during RL. The RL accuracy results are consistent with it but underpowered. The largest gaps are E2 (tracking and persistence on real checkpoints) and E3 (what drives the mismatch rise).
+\end{itemize}
+
+% =====================================================================================
+\section{Status}\label{sec:status}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}L l L L@{}}
+\toprule
+Claim & Theory & Evidence so far & Status\\
+\midrule
+UAQ leaves the rollout model unchanged & Thm.~1 & float64; vLLM INT8 bit-identical at $s=2$ (3 sizes); no change at $s=1.5$; in RL, R4's mean $k_3$ within 0.80--1.25 of R3's & established\\
+UAQ $=$ per-layer learning rates & Thm.~2, Cor.~3 & float64; bit-identical 20-step loop; VeRL check & exact equivalence established; H1 in RL running (registered verdict almost surely ``inconclusive'')\\
+Updates are captured & Props.~3--5 & float64; S3 pilot 0.21\% vs.\ 0.20\%; in RL the INT8 rollout follows the trainer & supported; E2 pending\\
+Error is persistent; error feedback bounds it & Props.~6--7 & float64 & theory; E2, P6 pending\\
+UAQ's effect is not quantization-specific & Cor.~3 & H2 & pending\\
+A global learning rate is the wrong control & Thm.~2 & H3 & pending\\
+QuRL's Table~1 at $\eta=10^{-5}$ & --- & not reproduced & open (ask the authors)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+% Background references listed in the bibliography but not cited in the text above.
+\nocite{yao2025flashrl,hilton2022batch}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

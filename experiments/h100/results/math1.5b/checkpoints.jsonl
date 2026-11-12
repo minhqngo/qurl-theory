@@ -1,0 +1,2 @@
+{"s": 1.5, "dir": "/localhome/local-minngo/e0_work/math1.5b/uaq_s1.5", "qkv_weights": 88080384, "int8_per_channel_codes_changed_frac": 0.04259079978579566, "fp8_per_tensor_codes_changed_frac": 0.019644214993431455}
+{"s": 2.0, "dir": "/localhome/local-minngo/e0_work/math1.5b/uaq_s2", "qkv_weights": 88080384, "int8_per_channel_codes_changed_frac": 0.0, "fp8_per_tensor_codes_changed_frac": 0.0}

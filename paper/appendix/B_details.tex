@@ -1,0 +1,87 @@
+\section{Experimental details}\label{app:details}
+
+\subsection{Rollout invariance (\texorpdfstring{\cref{sec:s1}}{Section 6.1})}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Checkpoints.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The UAQ checkpoints divide every $W_{Q,K,V}$ by $s$ and multiply every attention input-norm gain by $s$. Both checkpoints are stored in BF16, like the original.
+  \item At $s=2$, no INT8 or FP8 code changes, and the stored INT8 scales are exactly halved.
+  \item At $s=1.5$, BF16 storage re-rounds 4.0--4.3\% of the INT8 per-channel codes and 2.0--2.6\% of the FP8 per-tensor codes. Quantized checkpoints whose scales are also stored in BF16 change 5.4--5.7\% of their codes.
+  \end{itemize}
+\item \textbf{Serving.} vLLM 0.33.0. The logs confirm \texttt{CutlassInt8ScaledMMLinearKernel} for INT8 W8A8 and \texttt{CutlassFP8ScaledMMLinearKernel} for both FP8 modes.
+\item \textbf{Responses.} 512 GSM8K training prompts, one response each, sampled from the original BF16 model at temperature 1. Every response token is teacher-forced under every configuration.
+\item \textbf{Metrics.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The primary metric is the mean $|\log\mu-\log\pi|$ over sampled tokens, with $\pi$ the BF16 policy of the same checkpoint.
+  \item The KL estimators are importance-weighted when the reference is the UAQ checkpoint's BF16 policy, because the tokens were sampled from the original one.
+  \item Intervals: paired bootstrap over the 512 responses.
+  \end{itemize}
+\item \textbf{Why mean $|\Delta\log p|$ is primary.} Both sampled-token KL estimators rely on $\E_\pi[r-1]=0$. A few rare tokens with $\mu\gg\pi$ (with $r$ up to 17--37) make the sample mean of $r-1$ unreliable for FP8 per-tensor at 1.5B. Removing the 100 largest values of $r-1$ (0.05\% of tokens) changes it from $+1.7\times10^{-3}$ to $-2.8\times10^{-4}$.
+\item \textbf{Determinism.} Every configuration was re-run with shuffled batches, and the FP8 runs at 0.5B and 1.5B were repeated in the same batch order. At 7B, every configuration is batch-invariant. Each model took 14--18 minutes on the H100.
+\end{itemize}
+
+\subsection{Exact equivalence in a training loop (\texorpdfstring{\cref{sec:s2}}{Section 6.2})}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Loop.} PyTorch 2.14 on the H100. GSM8K training prompts; 20 rollout batches of 8 prompts $\times$ 4 samples, with at most 256 new tokens.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item GRPO advantages, and the decoupled PPO loss with clip 0.2, TIS cap $C=2$ and the ACR bound.
+  \item Two epochs of two minibatches per rollout batch, so 4 AdamW updates per batch and 80 in all.
+  \item $\lambda=0.01$, $\varepsilon=10^{-8}$, global-norm clipping at $\tau=0.1$, seed 0.
+  \end{itemize}
+\item \textbf{Rollouts.} INT8 W8A8 fake quantization in PyTorch, with per-channel absmax weights and dynamic per-token absmax activations. Tokens are sampled by inverse CDF from seeded uniforms. vLLM is not used, because it re-quantizes only FP8 online and its default engine is not repeatable at this size (\cref{sec:s1}).
+\item \textbf{Training numerics.} BF16 autocast with FP32 master weights; PyTorch's deterministic-algorithms mode; eager attention; TF32 off.
+\item \textbf{Fingerprints.} At every step, SHA-256 hashes of the sampled tokens, $\mu$, $\pi_{\mathrm{old}}$, and the per-group weights mapped to original coordinates. Weights were also saved after steps 1 and 20.
+\item \textbf{What was exercised} (R4).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Clipping bound on every update with a nonzero gradient (gradient norms 0.27--3.2 against $\tau=0.1$).
+  \item The remaining updates had an exactly zero gradient, because every group in the minibatch had uniform rewards; AdamW still moved the weights through its momentum.
+  \item TIS truncated 0.2--1.3\% of tokens per batch, and ACR's raised bound kept 26 ($\eta=10^{-6}$) and 7 ($\eta=10^{-5}$) token terms that PPO clipping would have dropped.
+  \item Each arm took 7.7 minutes.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Implementation in VeRL}\label{app:verl}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Stack.} VeRL v0.9.1 with its locked dependencies: vLLM 0.24.0, PyTorch 2.11 and Transformers 5.9.0. Actor and critic use PyTorch SDPA attention without sequence packing, because the pinned flash-attention wheel is no longer available. A two-line patch lets VeRL's critic loader honour the configured attention implementation; it is our only change to VeRL's code.
+\item \textbf{INT8 rollouts re-quantized at every sync.} VeRL natively refits only FP8 blockwise rollouts.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item vLLM is started with a compressed-tensors INT8 W8A8 configuration: per-channel weights, dynamic per-token activations, and the output head left in BF16.
+  \item At every sync, a vLLM worker extension quantizes each incoming linear weight row by row: scale $=$ row absmax $\times$ fl32$(1/127)$, and codes $=\mathrm{round}(W/\text{scale})$ clamped to $\pm127$. It writes codes and scales into the live INT8 parameters in the layout of the CUTLASS kernel.
+  \item The synced weights arrive as the FP32 master weights, so quantization starts from FP32 without BF16 rounding first.
+  \item The scale is computed as a multiplication on purpose: PyTorch divides a GPU tensor by a scalar through its reciprocal, which differs by one ulp from true division in about 5\% of rows.
+  \item vLLM's post-load weight processing is disabled during syncs.
+  \item We verified that all 168 linear weights of the 0.5B model are re-quantized at every sync, and that the resulting codes and scales are bit-identical to an independent quantization.
+  \end{itemize}
+\item \textbf{ACR} is a custom policy loss. With no truncated token, it is bit-identical to VeRL's PPO loss with TIS weights. With truncation, it matches a float64 reference of QuRL's ACR loss to $6\times10^{-10}$.
+\item \textbf{Matched settings (R5).} An optimizer plug-in for VeRL's FSDP2 actor builds three parameter groups: Q/K/V weights, attention input-norm gains, and everything else.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Each group gets its own learning rate, $\varepsilon$ and weight decay from \cref{thm:reparam}(b).
+  \item It replaces the clipping step with rule (c): the clipping norm is computed on $(s\,g_W,g_\gamma/s,g_{\mathrm{rest}})$ for R5, and on the ordinary gradient for every other arm.
+  \item So all six arms run identical optimizer and clipping code.
+  \item VeRL's constant learning-rate scheduler keeps each group's rate.
+  \end{itemize}
+\item \textbf{Exactness check in VeRL.} The plug-in was checked on the H100 inside VeRL's FSDP2 engine (\cref{sec:s2}): R5 and an R4 repeat were bit-identical to R4 after three updates. Each run of the UAQ experiment starts only after this check passes.
+\end{itemize}
+
+\subsection{GSM8K PPO configuration (\texorpdfstring{\cref{sec:s3}}{Section 6.4})}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L@{}}
+\toprule
+Setting & Value\\
+\midrule
+Model & Qwen2.5-0.5B-Instruct (actor, reference and critic initialization)\\
+Data & GSM8K: 7{,}473 training and 1{,}319 test problems; VeRL's prompt template and strict answer format\\
+Algorithm & PPO with a critic; GAE with $\gamma=\lambda=1$; one PPO epoch; clip 0.2; dual clip 3.0; token-mean loss\\
+Batch & 256 prompts per step, PPO mini-batch 64 (4 updates per step), 15 epochs = 435 steps\\
+Lengths & prompts up to 320 tokens (all GSM8K prompts fit in 256), responses up to 512\\
+Actor optimizer & AdamW, betas (0.9, 0.999), weight decay 0.01, gradient clip 1.0, constant learning rate without warmup: $10^{-6}$ (UAQ experiment) or $10^{-5}$ (reproduction)\\
+Critic & AdamW, learning rate $10^{-5}$, value clip 0.5\\
+Regularizers & KL penalty to the reference in the reward, 0.001 ($k_1$, fixed); entropy bonus 0.001\\
+Rollouts & vLLM 0.24, temperature 1; validation greedy every 29 steps\\
+QuRL arms & INT8 W8A8 re-quantized at every sync; token-level TIS, $C=2$; ACR\\
+UAQ & $s=1.5$ on Q/K/V and the attention input-norm gains\\
+Seeds & seed $k$ sets the data order and the rollout seed $42+k$; the arms of a seed share both\\
+Run time & about 4.5\,h per run in the UAQ experiment; 2.9\,h and 4.9\,h for the two reproduction runs\\
+\bottomrule
+\end{tabularx}
+\end{center}

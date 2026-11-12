@@ -1,0 +1,4 @@
+(EngineCore pid=687201) INFO 11-09 07:45:12 [__init__.py:817] Selected CutlassFP8ScaledMMLinearKernel for Fp8PerTensorOnlineLinearMethod
+(EngineCore pid=687500) INFO 11-09 07:45:42 [__init__.py:817] Selected CutlassFP8ScaledMMLinearKernel for Fp8PerTensorOnlineLinearMethod
+(EngineCore pid=687768) INFO 11-09 07:46:12 [__init__.py:817] Selected CutlassFP8ScaledMMLinearKernel for Fp8PtpcOnlineLinearMethod
+(EngineCore pid=688047) INFO 11-09 07:46:42 [__init__.py:817] Selected CutlassFP8ScaledMMLinearKernel for Fp8PtpcOnlineLinearMethod

@@ -1,0 +1,3 @@
+Q/K/V weight tensors: 72, dtype torch.int8; other quantized tensors: 96
+s2: Q/K/V INT8 codes changed 0.000%; max relative error of scale vs scale/s 0.00e+00; untouched layers identical: True
+s1.5: Q/K/V INT8 codes changed 5.700%; max relative error of scale vs scale/s 3.44e-03; untouched layers identical: True

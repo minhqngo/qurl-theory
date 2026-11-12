@@ -1,0 +1,26 @@
+\section{Setting}\label{sec:setting}
+
+\paragraph{Quantized linear layers.} A linear layer computes $Y=XW^\top$, with activations $X\in\R^{T\times d}$ (tokens $\times$ input channels) and weights $W\in\R^{m\times d}$. A quantized rollout engine computes $\hat Y=Q_a(X)\,Q_w(W)^\top$ instead.
+
+A \emph{single-level absmax quantizer} partitions the entries of a tensor into groups $g$ and sets
+\begin{equation}\label{eq:absmax}
+Q(X)_i=\alpha_g\,r\!\left(X_i/\alpha_g\right)\quad(i\in g),\qquad \alpha_g=\max_{j\in g}|X_j|\,/\,M .
+\end{equation}
+Here $r$ is a fixed rounding rule onto a grid with maximum $M$: INT-$b$ has $M=2^{b-1}-1$, FP8-E4M3 has $M=448$, and FP4-E2M1 has $M=6$. QuRL's INT8 rollouts use per-output-channel weight groups and dynamic per-token activation groups (QuRL, Sec.~5); we call this INT8 W8A8.
+
+\paragraph{UAQ.} In a pre-norm transformer block, the attention input is $X=\gamma\odot n(x)$, where $n(x)=x/\rms(x)$ is RMS normalization and $\gamma$ its learned gain. $X$ feeds $W_Q$, $W_K$ and $W_V$. UAQ replaces $(W_{Q,K,V},\gamma)$ by $(W/s,\ s\gamma)$ for a scalar $s>0$; QuRL uses $s=1.5$.
+
+The map back to the original coordinates is $\phi_s(W',\gamma')=(sW',\gamma'/s)$, and it leaves the full-precision forward pass unchanged. The same construction applies to the MLP input through the second normalization layer, and everything below carries over verbatim.
+
+\paragraph{One QuRL iteration.} At step $k$, responses are sampled from the quantized policy $\mu_k=\mu_{\theta_k}$, and $\pi_k=\pi_{\theta_k}$ is the full-precision proximal policy.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{The loss} is a decoupled PPO surrogate \citep{schulman2017ppo,hilton2022batch}. Each token's term is weighted by the TIS weight $w=\min(\rho,C)$, where $\rho=\pi_k/\mu_k$. Its upper clipping bound is QuRL's ACR bound, $(1+\epsilon)\max(1,\rho/C)$. An optional KL term to a reference policy $\pi_{\mathrm{ref}}$ can be added.
+\item \emph{The updates} are minibatch steps of an optimizer, in practice AdamW \citep{kingma2015adam,loshchilov2019adamw} with global-norm gradient clipping.
+\item \emph{Dependence on the parameters:} the loss sees them only through the policies $\pi_\theta$, $\pi_k$, $\mu_k$ and $\pi_{\mathrm{ref}}$ and the sampled data. This is what makes the equivalences below hold for the whole iteration.
+\end{itemize}
+
+\paragraph{Mismatch.} We measure the rollout--trainer mismatch on sampled tokens with the following quantities:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item the mean absolute log-probability difference $|\log\mu-\log\pi|$;
+\item the sampled-token estimators of $\KL(\pi\|\mu)$, namely $k_1=\log\pi-\log\mu$ and $k_3=(r-1)-\log r$ with $r=\mu/\pi$.
+\end{itemize}

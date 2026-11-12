@@ -1,0 +1,71 @@
+\section{UAQ is invisible to absmax quantizers}\label{sec:invariance}
+
+\begin{definition}[Homogeneous group quantizer]\label{def:homogeneous}
+Partition the entries of a tensor into groups $g\in\mathcal P$. A quantizer $Q$ is \emph{homogeneous on $\mathcal P$} if $Q(c\odot X)=c\odot Q(X)$ for every positive $c$ that is constant on each group.
+\end{definition}
+
+\begin{lemma}\label{lem:homogeneity}
+Single-level absmax quantizers \eqref{eq:absmax} are homogeneous on their groups. So are multi-level quantizers in which every scale is either an absmax over a set of entries or a rounding of a ratio of such absmaxes. An example is NVFP4-style scaling \citep{nvidia2025nvfp4}, with E4M3 block scales applied under a per-tensor FP32 absmax scale.
+\end{lemma}
+
+\begin{proof}
+If $c$ equals $c_g$ on group $g$, then $\alpha_g(c\odot X)=c_g\,\alpha_g(X)$. So $X_i/\alpha_g$ is unchanged, and $Q(c\odot X)_i=c_g\,Q(X)_i$.
+
+In the multi-level case, every absmax scales by the same $c_g$. The ratios that are rounded are therefore scale-free.
+\end{proof}
+
+\begin{theorem}[Invariance]\label{thm:invariance}
+Let $X'=X\diag(s)$ and $W'=W\diag(s)^{-1}$ with $s\in\R^d_{>0}$. Suppose $s$ is constant on the input-channel footprint of every activation group and every weight group. Then
+\[
+Q_a(X')\,Q_w(W')^\top=Q_a(X)\,Q_w(W)^\top .
+\]
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item With per-token or per-tensor activation groups and per-output-channel or per-tensor weight groups (QuRL's INT8 W8A8), this holds for every scalar $s>0$.
+\item With block quantization, it holds for every $s$ that is constant on blocks, scalars included.
+\end{itemize}
+\end{theorem}
+
+\begin{proof}
+By \cref{lem:homogeneity}, $Q_a(X')=Q_a(X)\diag(s)$ and $Q_w(W')=Q_w(W)\diag(s)^{-1}$. Multiply.
+\end{proof}
+
+\begin{corollary}[UAQ leaves the rollout policy unchanged]\label{cor:rollout}
+Suppose every quantized linear layer touched by UAQ satisfies \cref{thm:invariance}. Then $\pi_{\phi_s^{-1}(\theta)}=\pi_\theta$ and $\mu_{\phi_s^{-1}(\theta)}=\mu_\theta$.
+
+So with the same random seeds, UAQ leaves all of the following unchanged: the rollouts, rewards and advantages, the importance ratios $\pi/\mu$, and every divergence between $\mu$ and $\pi$.
+\end{corollary}
+
+\begin{remark}[The $s$-fold error reduction]\label{rem:paper-formula}
+QuRL writes the weight quantization error as $\hat\theta-\theta\propto|\theta|/(s2^b)$. This is the \emph{absolute} error of $W/s$ in the rescaled coordinates:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $|Q(W/s)-W/s|=|Q(W)-W|/s$, so the relative weight error is unchanged;
+\item the activation error grows by the same factor, $|Q(sX)-sX|=s\,|Q(X)-X|$;
+\item the two effects cancel exactly in $\hat Y$.
+\end{itemize}
+Measured in any coordinate-free way, for instance as the error of the layer output or the divergence between $\mu$ and $\pi$, UAQ reduces nothing.
+\end{remark}
+
+\begin{remark}[Where the invariance fails]\label{rem:scope}
+\Cref{thm:invariance} needs every scale to be recomputed from the rescaled tensor, with scales that can represent the factor $s$. \Cref{tab:scope} lists the cases that violate this, measured on a single layer in float64 (\cref{app:verification}).
+
+Wherever UAQ changes the quantized model at all, the change comes from a different rounding pattern or a calibration side-effect. It is never a systematic $s$-fold error reduction, and with stale static scales it makes the error worse. MX formats are those of \citet{rouhani2023mx}.
+\end{remark}
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}L l l L@{}}
+\toprule
+Quantizer & $s=1.5$ & $s=2$ & Reason\\
+\midrule
+INT8, dynamic; per-channel weights, per-token activations & unchanged & unchanged & \cref{thm:invariance}\\
+NVFP4-like: E4M3 block scales under a dynamic FP32 tensor scale & unchanged & unchanged & \cref{lem:homogeneity}, multi-level case\\
+MXFP4 (power-of-two block scales) & $18.42\%\to18.70\%$ & unchanged & an E8M0 scale represents only $2^k$\\
+INT8 with a static activation scale, not recalibrated & $7.65\%\to9.28\%$ & $18.7\%$ & becomes a clipping-range change\\
+FP8 cast without a scale factor & $4.12\%\to4.57\%$ & $5.06\%$ & subnormals use a fixed absolute grid\\
+INT8 of BF16-stored weights & $4.822\%\to4.829\%$ & unchanged & BF16 rounding of $W/s$ is not homogeneous\\
+\bottomrule
+\end{tabularx}
+\caption{Relative output error of one quantized layer before $\to$ after UAQ, in float64. ``Unchanged'' means equal outputs up to float64 round-off ($\le3\times10^{-16}$). In the last row, 3.7\% of the INT8 codes are re-rounded at $s=1.5$.}\label{tab:scope}
+\end{table}
+
+\paragraph{Consequence for UAQ's motivation.} At the step where it is applied, UAQ cannot change what the rollout engine computes for QuRL's quantizer; in finite precision it can only re-round some weights. Whatever UAQ does to training must therefore enter through the optimizer. \Cref{sec:reparam} identifies exactly what it does there.

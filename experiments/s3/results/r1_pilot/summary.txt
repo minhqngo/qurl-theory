@@ -1,0 +1,24 @@
+step   total          gen old_log_prob       values          adv update_criti update_actor update_weigh  score resp_len clipped   tok/s
+   1    45.9          6.1          8.1          1.2          0.2          3.2         17.9          0.5  0.016    314.3   0.129    2347
+   2    37.0          6.1          7.7          1.2          0.2          3.3         17.8          0.5  0.008    317.8   0.102    2921
+   3    36.1          6.1          7.4          1.1          0.2          2.9         17.6          0.5  0.012    306.1   0.094    2908
+   4    34.6          4.1          7.5          1.2          0.2          3.2         17.7          0.5  0.012    298.2   0.086    2983
+   5    33.7          4.1          7.0          1.2          0.2          3.1         16.9          0.4  0.004    296.9   0.082    3035
+   6    33.4          4.1          7.4          1.2          0.2          2.9         16.9          0.5  0.008    293.7   0.082    3049
+   7    34.5          4.1          7.6          1.2          0.2          2.9         17.7          0.5  0.004    309.5   0.086    3088
+   8    35.9          6.1          7.4          1.1          0.2          3.2         17.2          0.5  0.000    300.9   0.086    2882
+   9    33.7          4.1          7.3          1.5          0.1          2.9         17.1          0.5  0.000    294.0   0.066    3030
+  10    34.0          4.1          7.4          1.2          0.2          2.8         17.3          0.8  0.016    302.9   0.109    3067
+
+step time: first 45.9 s; median of the rest 34.5 s (min 33.4, max 37.0)
+  gen             median     4.1 s (  12% of a step)
+  old_log_prob    median     7.4 s (  22% of a step)
+  values          median     1.2 s (   3% of a step)
+  adv             median     0.2 s (   1% of a step)
+  update_critic   median     2.9 s (   8% of a step)
+  update_actor    median    17.3 s (  50% of a step)
+  update_weights  median     0.5 s (   1% of a step)
+validation (1,319 test prompts, greedy): 18.1 s
+  step 10: val-core/openai/gsm8k/acc/mean@1 = 0.0000
+
+projection for 435 steps: 4.16 h of training + 15 validations = 4.24 h
