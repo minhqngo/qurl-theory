@@ -1,0 +1,3 @@
+# Keep LF line endings in the working tree on every platform, whatever core.autocrlf says:
+# shell scripts run on Linux servers, and frozen analysis scripts are pinned by SHA-256.
+* text=auto eol=lf
