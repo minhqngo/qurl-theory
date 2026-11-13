@@ -196,7 +196,7 @@ ssh h100 "tar czf uaq_first.tgz --exclude='*.pt' -C qurl/s3 uaq_queue.log result
 scp h100:uaq_first.tgz experiments/s3/
 ```
 
-**Results so far (P1 experiments report §3.5).** The queue started its first run at 13:09 UTC on 2026-11-10, after the gate passed. The nine H1 runs (R3, R4 and R5 for seeds 1–3) were done at 06:53 UTC on 2026-11-12, when R1 seed 1 started.
+**Results so far (P1 experiments report §3.5).** The queue started its first run at 13:09 UTC on 2026-11-10, after the gate passed. The nine H1 runs (R3, R4 and R5 for seeds 1–3) were done at 06:53 UTC on 2026-11-12, when R1 seed 1 started. R1, R2 and R6 for seed 1 were done at 22:36 UTC on 2026-11-12, when R1 seed 2 started.
 
 | Run | Arm | Seed | GSM8K test accuracy at step 435 | Best (step) | Run time |
 |---|---|---|---|---|---|
@@ -209,8 +209,62 @@ scp h100:uaq_first.tgz experiments/s3/
 | `uaq_R3_s3` | R3 | 3 | 51.9% (5.5–8.3% until step 116) | 52.6% (232) | 4.3 h |
 | `uaq_R4_s3` | R4 | 3 | 51.2% | 53.3% (290) | 4.8 h |
 | `uaq_R5_s3` | R5 | 3 | 48.4% (0% at steps 29 and 58; 33.6% at step 319) | 48.4% (435) | 4.7 h |
+| `uaq_R1_s1` | R1, BF16 | 1 | 56.3% | 56.3% (377) | 5.5 h |
+| `uaq_R2_s1` | R2, BF16 + UAQ | 1 | 56.1% | 56.7% (377) | 5.3 h |
+| `uaq_R6_s1` | R6, QuRL INT8, lr × 1.5 | 1 | 49.4% (39.3% at step 145) | 50.1% (406) | 5.0 h |
 
-Late accuracy (the H1 primary endpoint, mean of the last five validations, from `h1_analysis.py`): R3 50.2 / 51.4 / 51.0, R4 49.0 / 49.0 / 51.2 and R5 11.8 / 49.9 / 44.5 for seeds 1–3. The H1 test withholds its verdict until seeds 4–5 are in, and `h23_analysis.py` withholds H2 and H3 until R1, R2 and R6 finish. The R4 − R3 sensitivity contrast (seeds 1–3) is complete.
+Late accuracy (the H1 primary endpoint, mean of the last five validations, from `h1_analysis.py`): R3 50.2 / 51.4 / 51.0, R4 49.0 / 49.0 / 51.2 and R5 11.8 / 49.9 / 44.5 for seeds 1–3; R1 55.9, R2 55.7 and R6 48.7 for seed 1. The H1 test withholds its verdict until seeds 4–5 are in, and `h23_analysis.py` withholds H2 and H3 until R1, R2 and R6 have all three seeds. The R4 − R3 sensitivity contrast (seeds 1–3) is complete.
+
+**R1, R2 and R6, seed 1 (H100, finished 2026-11-12, copied back 2026-11-13 as `uaq_r1r2r6_s1.tgz`).** Descriptive only: H2 and H3 need seeds 2–3. The comparisons below come from `h23_analysis.py` (frozen, rerun into `results/h23_analysis.txt`) and exploratory scripts.
+- **All three runs are clean:**
+  - each ran with `data.seed=1` and `rollout.seed=43` and logged the intended optimizer settings: `mode plain` at lr 1e-6 for R1 and R2, and at 1.5e-6 for every group in R6;
+  - R2 ran on the s = 1.5 UAQ checkpoint;
+  - R6 re-quantized all 168 linear weights at every one of the 436 syncs on the CUTLASS kernel;
+  - each ended with the harmless DataLoader shutdown error.
+- **BF16 reproduces the published baselines:**
+  - R1's late accuracy is 55.9% and its final accuracy 56.3%, against the paper's 55.35% (Table 1) and VeRL's documented 56.7% at lr 1e-6.
+  - R2's are 55.7% and 56.1%.
+  - Neither stalled. The first step with a training score of 0.3 was 26 (R1) and 20 (R2).
+- **INT8 trails BF16 by about 5 points.** Late accuracy is 55.7–55.9% for the BF16 runs and 48.7–51.4% for the INT8 runs other than R5 seeds 1 and 3 (11.8% and 44.5%). R1 − R3 is 5.7 points in seed 1, and 5.0 against R3's three-seed mean.
+  - **Against the paper:** the paper's QuRL INT8 trails its BF16 by 1.8 points. If the paper reports the best validation rather than the last, R3's best values (52.5, 53.8, 52.6) are close to its 53.55%, but R1's best is 56.3%, so the gap is still about 3.4 points.
+  - **When it opens:** the arms match at the first validation. At step 29, BF16 gives 43.2% and 46.9%, and the INT8 runs that did not stall give 41.4–47.4%.
+    - From step 87 on, BF16 leads: 52.9–54.6% against 39.3–50.9% over steps 87–145.
+    - From step 174 on, BF16 gives 53.4–56.7% and those INT8 runs 45.1–53.8%.
+  - **Training dynamics** (medians over steps 407–435, BF16 vs. the INT8 runs that did not stall):
+
+    | Measure | BF16 | INT8 |
+    |---|---|---|
+    | Training score | 73% | 58–64% |
+    | Response length | 241–264 tokens | 134–194 tokens |
+    | Entropy | 0.05–0.06 | 0.21–0.43 |
+    | KL from the reference model | 0.20–0.26 | 0.48–0.82 |
+
+  - **Where they part:**
+    - The training score plateaus near 60% from about step 175 in the INT8 runs, while BF16 keeps climbing.
+    - INT8 entropy bottoms out near 0.2 over steps 59–116 and then rises again; BF16 entropy keeps falling.
+    - The PPO-KL diagnostic (mean log π_old − log π over the rollout's tokens) is about +1e-4 in BF16 from step 11 on. In INT8 every window median through step 174 is negative, down to −2.3e-3. On the INT8 sampler's tokens, the updated trainer puts more probability than π_old did.
+  - **Caveat: INT8 runs are validated through the INT8 engine.** VeRL validates greedily with the rollout engine, so every INT8 accuracy here is the quantized actor's, not the trained BF16 weights'.
+    - No checkpoints are saved (`trainer.save_freq=-1`), so the two cannot be separated afterwards.
+    - The equal step-29 accuracies argue against a fixed INT8 evaluation penalty, but a penalty that grows with training is not ruled out.
+- **UAQ under BF16, R2 − R1** (the BF16 half of H2):
+  - late −0.2 points, final −0.2, reward AUC +0.6, early reward +7.4;
+  - mismatch ratio 1.02, at the BF16 floor of 6.2e-4 and 6.3e-4.
+  - **H2's interaction, seed 1:** (R4 − R3) − (R2 − R1) is −1.0 points of late accuracy, +2.2 final, +1.0 AUC and +0.0 early reward. The mismatch ratio of ratios is 1.04.
+  - **UAQ's early boost** was identical with BF16 and INT8 rollouts in seed 1, +7.4 points in both, as H2 expects. In seeds 2 and 3, R4 − R3 was −3.0 and +31.2 points, the latter from R3 seed 3's stall.
+- **Global learning rate × 1.5, R6** (H3: R6 ≠ R4):
+  - **R6 − R4, seed 1:** late −0.3 points, final −2.7, AUC −2.0, early −0.5. Against R3: late −1.5, early reward +6.9, the same early boost as UAQ.
+  - **Mismatch:** R6's mean k3 is 3.7e-2, 0.63× R4's and 0.68× R3's in seed 1, with medians of 4.1e-2 over steps 60–175 and 3.1e-2 over steps 400–435. TIS truncated a median 0.58% of tokens per step, against 0.71–0.77% in the other INT8 runs. The exception is R5 seed 1 at 0.38%, which stalled for 370 steps.
+  - **R6 dipped once:** 39.3% at step 145, between 50.0% (116) and 47.5% (174). The training score at that step was normal (53%).
+    - The dip is 9.5 points below its two neighbours' mean. The median k3 over the 10 steps up to it was 0.78× the run's median (the measure of the exploratory dip analysis). So this dip came at low mismatch, unlike the two large dips in the H1 runs (1.5× and 2.9×).
+    - This weakens the exploratory link between dips and mismatch. With R6, the pooled Spearman is +0.18 over 106 validations after learning (+0.22 over 95 before).
+    - The BF16 runs' largest dips are 0.9 and 2.0 points, against 2.0–12.1 in the INT8 runs.
+- **Rollout speed cannot be read from these runs:**
+  - VeRL's `timing_s/gen` comes in steps of about 2 s (4.1 s in nearly every step), and rollout is only about 10% of a step for this 0.5B model.
+  - The BF16 runs took 5.3–5.5 h against 4.3–5.0 h for INT8 because their responses stay longer. Their median step was about 43 s, against 36–39 s for INT8. The exception is R5 seed 1 at 41 s, whose stall kept its responses long.
+  - So QuRL's 20–80% rollout speedup is not testable in this setup.
+- **Seed 2 so far** (progress line, R1 seed 2 at step 160):
+  - validation 51.0 / 52.5 / 53.4 / 54.7% at steps 58–145, against R1 seed 1's 49.6 / 52.9 / 53.1 / 54.6%;
+  - k3 6.3e-4, the BF16 floor.
 
 **Seed 3 of R4 and R5 (H100, finished 2026-11-12, copied back the same day as `uaq_s3.tgz`).**
 - **Both runs are clean:** each re-quantized all 168 linear weights at every one of the 436 syncs on the CUTLASS kernel and ran with `data.seed=3` and `rollout.seed=45`. Each logged the intended optimizer settings (R4: `mode plain` on the UAQ checkpoint; R5: `mode r5, s 1.5`) and ended with the harmless DataLoader shutdown error.

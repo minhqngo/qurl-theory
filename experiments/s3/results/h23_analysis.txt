@@ -4,10 +4,10 @@ h1_analysis.py  sha256 5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05
 results: C:\Users\minngo\personal\master-research\qurl-theory\experiments\s3\results
 
 run             late acc final acc reward AUC early rew   mean k3  entropy  status
-uaq_R1_s1                                                                   missing
+uaq_R1_s1          55.88     56.25      63.92     29.55  6.21e-04    0.116  complete
 uaq_R1_s2                                                                   missing
 uaq_R1_s3                                                                   missing
-uaq_R2_s1                                                                   missing
+uaq_R2_s1          55.69     56.10      64.54     36.97  6.32e-04    0.111  complete
 uaq_R2_s2                                                                   missing
 uaq_R2_s3                                                                   missing
 uaq_R3_s1          50.20     50.11      56.03     34.36  5.49e-02    0.259  complete
@@ -23,17 +23,17 @@ uaq_R5_s2          49.95     50.42      56.12     36.25  6.27e-02    0.302  comp
 uaq_R5_s3          44.46     48.37      43.82      0.10  4.02e-02    0.294  complete
 uaq_R5_s4                                                                   missing
 uaq_R5_s5                                                                   missing
-uaq_R6_s1                                                                   missing
+uaq_R6_s1          48.72     49.43      55.60     41.25  3.70e-02    0.239  complete
 uaq_R6_s2                                                                   missing
 uaq_R6_s3                                                                   missing
 
 REGISTERED
 
 H2 test: (R4 - R3) - (R2 - R1), paired by seed
-  no verdict: 0 of 3 registered seeds complete for R4 R3 R2 R1
+  no verdict: 1 of 3 registered seeds complete for R4 R3 R2 R1
 
 H3 test: R6 - R4, paired by seed
-  no verdict: 0 of 3 registered seeds complete for R6 R4
+  no verdict: 1 of 3 registered seeds complete for R6 R4
 
 DESCRIPTIVE (no verdict)
 
@@ -46,26 +46,26 @@ R4 - R3 (UAQ with INT8 rollouts)
   mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.063 1.134 0.923; ratio 1.036 (log SD 0.105); 90% CI [0.867, 1.238]; 95% CI [0.797, 1.346]
 
 R2 - R1 (UAQ with BF16 rollouts)
-  no verdict: 0 of 3 registered seeds complete for R2 R1
+  no verdict: 1 of 3 registered seeds complete for R2 R1
 
 R6 - R3 (global learning rate x1.5)
-  no verdict: 0 of 3 registered seeds complete for R6 R3
+  no verdict: 1 of 3 registered seeds complete for R6 R3
 
 EXPLORATORY (fixed 2026-11-11 after R5 seed 1 collapsed; does not replace the registered verdicts)
 
 collapsed runs per arm (late accuracy below 10%):
-  R1: 0 of 0 complete runs
-  R2: 0 of 0 complete runs
+  R1: 0 of 1 complete runs
+  R2: 0 of 1 complete runs
   R3: 0 of 3 complete runs
   R4: 0 of 3 complete runs
   R5: 0 of 3 complete runs
-  R6: 0 of 0 complete runs
+  R6: 0 of 1 complete runs
 
 H1 without collapsed seeds: R4 - R5
   no verdict: 3 of 5 registered seeds complete for R4 R5
 
 H2 without collapsed seeds
-  no verdict: 0 of 3 registered seeds complete for R4 R3 R2 R1
+  no verdict: 1 of 3 registered seeds complete for R4 R3 R2 R1
 
 H3 without collapsed seeds
-  no verdict: 0 of 3 registered seeds complete for R6 R4
+  no verdict: 1 of 3 registered seeds complete for R6 R4
