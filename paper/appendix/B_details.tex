@@ -77,11 +77,11 @@ Lengths & prompts up to 320 tokens (all GSM8K prompts fit in 256), responses up 
 Actor optimizer & AdamW, betas (0.9, 0.999), weight decay 0.01, gradient clip 1.0, constant learning rate without warmup: $10^{-6}$ (UAQ experiment) or $10^{-5}$ (reproduction)\\
 Critic & AdamW, learning rate $10^{-5}$, value clip 0.5\\
 Regularizers & KL penalty to the reference in the reward, 0.001 ($k_1$, fixed); entropy bonus 0.001\\
-Rollouts & vLLM 0.24, temperature 1; validation greedy every 29 steps\\
+Rollouts & vLLM 0.24, temperature 1; validation greedy every 29 steps, with the rollout engine (INT8 for the QuRL arms)\\
 QuRL arms & INT8 W8A8 re-quantized at every sync; token-level TIS, $C=2$; ACR\\
 UAQ & $s=1.5$ on Q/K/V and the attention input-norm gains\\
 Seeds & seed $k$ sets the data order and the rollout seed $42+k$; the arms of a seed share both\\
-Run time & about 4.5\,h per run in the UAQ experiment; 2.9\,h and 4.9\,h for the two reproduction runs\\
+Run time & 4.3--5.5\,h per run in the UAQ experiment, 86\,h for the 18 runs of seeds 1--3; 2.9\,h and 4.9\,h for the two reproduction runs\\
 \bottomrule
 \end{tabularx}
 \end{center}

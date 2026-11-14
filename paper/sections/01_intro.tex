@@ -38,8 +38,9 @@ This paper examines UAQ and the weight-update argument from first principles and
   \end{itemize}
 \item \textbf{A reproduction and a pre-registered test} (\cref{sec:s3}).
   \begin{itemize}[leftmargin=*,itemsep=1pt]
-  \item QuRL's GSM8K PPO result (55.35\% BF16, 53.55\% INT8) did not reproduce at its stated learning rate of $10^{-5}$ in our VeRL setup: we obtained 0.0\% and 2.9\%. The same configuration trains at $10^{-6}$.
-  \item We pre-register a seed-paired comparison of UAQ with its matched control and with QuRL's global-learning-rate control. \todo{report the pre-registered verdicts once all runs are complete.}
+  \item QuRL's GSM8K PPO result (55.35\% BF16, 53.55\% INT8) did not reproduce at its stated learning rate of $10^{-5}$ in our VeRL setup: we obtained 0.0\% and 2.9\%. The same configuration trains at $10^{-6}$, where plain BF16 training reaches 54.8--56.6\% late accuracy over three seeds.
+  \item In a pre-registered, seed-paired six-arm experiment at $10^{-6}$, UAQ changed the INT8 mismatch by about the same factor as the BF16 one, within the registered bounds (ratio of ratios 1.10, 90\% CI $[1.015, 1.20]$): no error reduction appears during training either. Its accuracy effects were too small to resolve with three seeds, both against the BF16 arms (H2) and against QuRL's global-learning-rate control (H3); both tests are inconclusive, as their power analysis anticipated. \pending{The test of UAQ against its matched settings (H1) awaits two more seeds.}
+  \item INT8 rollouts lowered the quantized policy's test accuracy by 4.9 points (95\% CI $[2.3, 7.6]$), more than the 1.8 points QuRL reports; every BF16 run ended above every INT8 run.
   \end{itemize}
 \end{enumerate}
 

@@ -3,15 +3,25 @@
 \paragraph{What UAQ's reported gains can mean.} If UAQ helps, the cause is that the query, key and value projections benefit from a larger learning rate, the normalization gains from a smaller one, or both.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item That would be a finding about per-layer learning rates for RL fine-tuning, and it should then appear with BF16 rollouts as well (H2).
-\item One mechanism could still make the effect larger with quantization: slower updates of the normalization gains may limit the growth of activation outliers, and with them of the activation-quantization step. That would slow the mismatch growth we observe. Without any appeal to update capture, it would explain why QuRL's Fig.~4b separates over training.
+\item One mechanism could still make the effect larger with quantization: slower updates of the normalization gains may limit the growth of activation outliers, and with them of the activation-quantization step. That would slow the mismatch growth we observe and, without any appeal to update capture, explain why QuRL's Fig.~4b separates over training. Our runs show no such slowing at 0.5B: R4's mismatch was $1.04\times$ R3's, and relative to the BF16 arms $1.10\times$ (\cref{tab:s3tests}).
+\item At 0.5B, UAQ had no detectable effect on accuracy with either rollout format ($-1.1$ points with INT8, $-1.0$ with BF16). A gain at 7B, as QuRL reports, would therefore need a larger optimization effect there, not a quantization one.
 \end{itemize}
 Choosing per-layer learning-rate multipliers for RL fine-tuning is an open question in its own right, independent of quantization.
+
+\paragraph{Low-precision rollouts were not free in our setup.} With INT8 rollouts, TIS and ACR, the quantized policy's GSM8K accuracy was 4.9 points below BF16 training (95\% CI $[2.3, 7.6]$), against the 1.8 points QuRL reports. The difference built up during training, with lower reward, higher entropy and a larger drift from the reference model, while the residual mismatch stayed 40--100$\times$ the BF16 floor (\cref{sec:s3}). Three explanations remain open:
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item the persistent rounding error of \cref{prop:persistence} biases the updates;
+\item TIS's truncation leaves a bias that grows with the mismatch;
+\item scoring with the quantized policy costs accuracy that the BF16 weights would not lose.
+\end{itemize}
+Scoring the trained weights in both formats separates the third from the first two, and per-layer error logging can attribute the mismatch. If the persistent error is the cause, schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}), are the natural remedy.
 
 \paragraph{Recommendations for quantized-rollout research.}
 \begin{enumerate}[leftmargin=*,itemsep=1pt]
 \item Check any reparameterization at step 0. Theorem-level invariances can be verified bit for bit at power-of-two scales (\cref{sec:s1}).
 \item Compare a reparameterization with its matched optimizer settings (\cref{thm:reparam}), including the clipping norm, not with a global learning-rate change.
-\item Report several seeds with intervals. Single runs of this RL configuration can stall for hundreds of steps (\cref{sec:s3}).
+\item Report several seeds with intervals. In this RL configuration, 4 of 18 runs stalled early, for 21 to 370 steps (\cref{sec:s3}).
+\item Train the BF16 baseline with the same seeds, and score the trained full-precision weights as well as the quantized policy. Validation through the rollout engine scores only the latter.
 \item State every optimizer hyperparameter, including the critic's learning rate and any warmup. \Cref{sec:s3} shows that one unstated setting can decide between learning and collapse.
 \item To bound the cumulative effect of rollout quantization, use schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}). Larger update-to-grid ratios do not bound it.
 \end{enumerate}
@@ -22,6 +32,8 @@ Choosing per-layer learning-rate multipliers for RL fine-tuning is an open quest
 \item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model.
 \item \emph{What we could not inspect.} The authors' implementation was not available to us. Our statements about QuRL's figures rest on values read from their vector data.
 \item \emph{The reproduction.} Our GSM8K non-reproduction may reflect settings the paper does not state.
+\item \emph{Power.} Three seeds per arm resolve accuracy differences of several points only; H2 and H3 are inconclusive for that reason, as planned in their power analysis.
+\item \emph{Scoring.} Runs with INT8 rollouts were validated with the quantized policy, and no checkpoints were kept to score their BF16 weights.
 \end{itemize}
 
 \section{Conclusion}\label{sec:conclusion}
@@ -30,4 +42,4 @@ UAQ cannot reduce quantization error for absmax quantizers: the rescaling is inv
 
 Re-quantizing full-precision master weights does not freeze the rollout policy. It captures updates in expectation, at the rate we predict and measure. The open problem it leaves is the persistence of the rounding error, which error feedback addresses and UAQ does not.
 
-\todo{One sentence on the pre-registered verdicts once available.}
+In RL at 0.5B, UAQ's effects on accuracy were too small to resolve with three seeds, while its effect on the mismatch matched the BF16 control, as the theory predicts. Low-precision rollouts themselves cost 4.9 points of accuracy in our runs, more than QuRL reports; explaining and reducing that gap is the natural next problem. \todo{Add H1's verdict after seeds 4--5.}
