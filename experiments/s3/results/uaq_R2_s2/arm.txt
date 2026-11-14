@@ -1,0 +1,12 @@
+arm R2 (rollout: pilot.sh ARM=R1) | QURL_OPT=plain | QURL_S=1.5 | BASE_LR=1e-6
+{
+ "source": "Qwen/Qwen2.5-0.5B-Instruct",
+ "s": 1.5,
+ "qkv_tensors": 72,
+ "norm_gains": 24,
+ "dtype": "float32",
+ "logit_max_abs_diff": 0.000194549560546875,
+ "logit_rel_diff": 6.322058293592173e-06,
+ "bit_identical": false,
+ "torch": "2.11.0+cu130"
+}arm overrides: actor_rollout_ref.model.external_lib=qurl_verl actor_rollout_ref.actor.strategy=fsdp2 actor_rollout_ref.actor.optim.lr=1e-6 actor_rollout_ref.model.path=/localhome/local-minngo/qurl/models/qwen0.5b-instruct-uaq1.5

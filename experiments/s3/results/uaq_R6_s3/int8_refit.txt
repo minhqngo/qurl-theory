@@ -1,0 +1,872 @@
+[qurl int8 refit] sync 1: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 1: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 2: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 2: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 3: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 3: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 4: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 4: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 5: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 5: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 6: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 6: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 7: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 7: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 8: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 8: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 9: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 9: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 10: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 10: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 11: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 11: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 12: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 12: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 13: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 13: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 14: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 14: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 15: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 15: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 16: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 16: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 17: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 17: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 18: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 18: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 19: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 19: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 20: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 20: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 21: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 21: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 22: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 22: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 23: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 23: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 24: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 24: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 25: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 25: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 26: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 26: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 27: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 27: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 28: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 28: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 29: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 29: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 30: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 30: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 31: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 31: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 32: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 32: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 33: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 33: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 34: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 34: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 35: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 35: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 36: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 36: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 37: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 37: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 38: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 38: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 39: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 39: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 40: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 40: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 41: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 41: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 42: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 42: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 43: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 43: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 44: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 44: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 45: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 45: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 46: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 46: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 47: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 47: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 48: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 48: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 49: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 49: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 50: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 50: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 51: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 51: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 52: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 52: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 53: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 53: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 54: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 54: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 55: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 55: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 56: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 56: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 57: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 57: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 58: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 58: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 59: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 59: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 60: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 60: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 61: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 61: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 62: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 62: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 63: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 63: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 64: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 64: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 65: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 65: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 66: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 66: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 67: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 67: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 68: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 68: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 69: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 69: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 70: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 70: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 71: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 71: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 72: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 72: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 73: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 73: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 74: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 74: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 75: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 75: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 76: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 76: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 77: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 77: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 78: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 78: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 79: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 79: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 80: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 80: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 81: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 81: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 82: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 82: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 83: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 83: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 84: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 84: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 85: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 85: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 86: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 86: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 87: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 87: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 88: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 88: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 89: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 89: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 90: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 90: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 91: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 91: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 92: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 92: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 93: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 93: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 94: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 94: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 95: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 95: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 96: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 96: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 97: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 97: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 98: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 98: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 99: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 99: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 100: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 100: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 101: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 101: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 102: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 102: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 103: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 103: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 104: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 104: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 105: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 105: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 106: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 106: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 107: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 107: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 108: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 108: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 109: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 109: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 110: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 110: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 111: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 111: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 112: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 112: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 113: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 113: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 114: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 114: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 115: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 115: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 116: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 116: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 117: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 117: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 118: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 118: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 119: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 119: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 120: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 120: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 121: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 121: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 122: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 122: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 123: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 123: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 124: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 124: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 125: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 125: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 126: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 126: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 127: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 127: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 128: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 128: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 129: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 129: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 130: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 130: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 131: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 131: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 132: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 132: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 133: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 133: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 134: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 134: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 135: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 135: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 136: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 136: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 137: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 137: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 138: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 138: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 139: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 139: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 140: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 140: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 141: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 141: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 142: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 142: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 143: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 143: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 144: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 144: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 145: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 145: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 146: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 146: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 147: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 147: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 148: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 148: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 149: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 149: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 150: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 150: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 151: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 151: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 152: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 152: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 153: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 153: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 154: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 154: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 155: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 155: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 156: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 156: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 157: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 157: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 158: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 158: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 159: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 159: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 160: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 160: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 161: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 161: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 162: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 162: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 163: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 163: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 164: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 164: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 165: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 165: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 166: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 166: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 167: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 167: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 168: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 168: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 169: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 169: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 170: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 170: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 171: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 171: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 172: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 172: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 173: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 173: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 174: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 174: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 175: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 175: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 176: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 176: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 177: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 177: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 178: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 178: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 179: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 179: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 180: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 180: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 181: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 181: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 182: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 182: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 183: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 183: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 184: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 184: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 185: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 185: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 186: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 186: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 187: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 187: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 188: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 188: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 189: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 189: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 190: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 190: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 191: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 191: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 192: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 192: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 193: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 193: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 194: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 194: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 195: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 195: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 196: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 196: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 197: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 197: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 198: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 198: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 199: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 199: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 200: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 200: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 201: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 201: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 202: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 202: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 203: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 203: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 204: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 204: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 205: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 205: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 206: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 206: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 207: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 207: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 208: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 208: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 209: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 209: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 210: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 210: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 211: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 211: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 212: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 212: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 213: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 213: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 214: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 214: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 215: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 215: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 216: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 216: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 217: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 217: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 218: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 218: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 219: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 219: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 220: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 220: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 221: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 221: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 222: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 222: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 223: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 223: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 224: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 224: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 225: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 225: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 226: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 226: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 227: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 227: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 228: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 228: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 229: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 229: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 230: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 230: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 231: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 231: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 232: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 232: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 233: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 233: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 234: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 234: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 235: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 235: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 236: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 236: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 237: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 237: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 238: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 238: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 239: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 239: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 240: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 240: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 241: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 241: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 242: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 242: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 243: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 243: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 244: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 244: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 245: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 245: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 246: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 246: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 247: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 247: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 248: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 248: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 249: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 249: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 250: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 250: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 251: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 251: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 252: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 252: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 253: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 253: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 254: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 254: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 255: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 255: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 256: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 256: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 257: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 257: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 258: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 258: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 259: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 259: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 260: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 260: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 261: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 261: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 262: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 262: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 263: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 263: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 264: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 264: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 265: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 265: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 266: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 266: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 267: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 267: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 268: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 268: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 269: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 269: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 270: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 270: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 271: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 271: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 272: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 272: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 273: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 273: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 274: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 274: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 275: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 275: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 276: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 276: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 277: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 277: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 278: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 278: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 279: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 279: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 280: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 280: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 281: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 281: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 282: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 282: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 283: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 283: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 284: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 284: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 285: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 285: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 286: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 286: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 287: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 287: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 288: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 288: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 289: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 289: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 290: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 290: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 291: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 291: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 292: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 292: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 293: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 293: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 294: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 294: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 295: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 295: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 296: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 296: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 297: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 297: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 298: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 298: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 299: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 299: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 300: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 300: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 301: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 301: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 302: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 302: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 303: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 303: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 304: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 304: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 305: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 305: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 306: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 306: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 307: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 307: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 308: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 308: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 309: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 309: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 310: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 310: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 311: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 311: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 312: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 312: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 313: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 313: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 314: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 314: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 315: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 315: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 316: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 316: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 317: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 317: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 318: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 318: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 319: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 319: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 320: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 320: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 321: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 321: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 322: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 322: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 323: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 323: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 324: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 324: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 325: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 325: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 326: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 326: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 327: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 327: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 328: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 328: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 329: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 329: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 330: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 330: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 331: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 331: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 332: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 332: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 333: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 333: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 334: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 334: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 335: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 335: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 336: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 336: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 337: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 337: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 338: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 338: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 339: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 339: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 340: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 340: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 341: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 341: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 342: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 342: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 343: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 343: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 344: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 344: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 345: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 345: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 346: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 346: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 347: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 347: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 348: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 348: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 349: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 349: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 350: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 350: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 351: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 351: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 352: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 352: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 353: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 353: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 354: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 354: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 355: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 355: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 356: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 356: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 357: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 357: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 358: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 358: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 359: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 359: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 360: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 360: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 361: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 361: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 362: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 362: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 363: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 363: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 364: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 364: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 365: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 365: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 366: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 366: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 367: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 367: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 368: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 368: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 369: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 369: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 370: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 370: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 371: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 371: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 372: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 372: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 373: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 373: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 374: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 374: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 375: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 375: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 376: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 376: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 377: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 377: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 378: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 378: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 379: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 379: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 380: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 380: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 381: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 381: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 382: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 382: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 383: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 383: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 384: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 384: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 385: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 385: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 386: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 386: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 387: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 387: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 388: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 388: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 389: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 389: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 390: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 390: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 391: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 391: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 392: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 392: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 393: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 393: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 394: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 394: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 395: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 395: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 396: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 396: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 397: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 397: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 398: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 398: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 399: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 399: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 400: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 400: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 401: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 401: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 402: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 402: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 403: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 403: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 404: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 404: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 405: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 405: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 406: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 406: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 407: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 407: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 408: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 408: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 409: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 409: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 410: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 410: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 411: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 411: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 412: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 412: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 413: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 413: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 414: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 414: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 415: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 415: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 416: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 416: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 417: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 417: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 418: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 418: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 419: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 419: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 420: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 420: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 421: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 421: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 422: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 422: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 423: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 423: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 424: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 424: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 425: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 425: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 426: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 426: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 427: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 427: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 428: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 428: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 429: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 429: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 430: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 430: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 431: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 431: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 432: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 432: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 433: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 433: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 434: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 434: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 435: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 435: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path
+[qurl int8 refit] sync 436: 168 linear weights re-quantized to INT8, 122 other tensors via VeRL's load path (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] sync 436: 0 linear weights re-quantized to INT8, 1 other tensors via VeRL's load path

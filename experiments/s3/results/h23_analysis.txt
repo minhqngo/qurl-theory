@@ -5,11 +5,11 @@ results: C:\Users\minngo\personal\master-research\qurl-theory\experiments\s3\res
 
 run             late acc final acc reward AUC early rew   mean k3  entropy  status
 uaq_R1_s1          55.88     56.25      63.92     29.55  6.21e-04    0.116  complete
-uaq_R1_s2                                                                   missing
-uaq_R1_s3                                                                   missing
+uaq_R1_s2          54.83     53.98      64.96     36.77  7.20e-04    0.132  complete
+uaq_R1_s3          56.57     57.47      64.91     37.10  7.26e-04    0.128  complete
 uaq_R2_s1          55.69     56.10      64.54     36.97  6.32e-04    0.111  complete
-uaq_R2_s2                                                                   missing
-uaq_R2_s3                                                                   missing
+uaq_R2_s2          54.63     52.84      64.26     36.42  7.30e-04    0.122  complete
+uaq_R2_s3          53.95     55.65      64.28     37.49  5.81e-04    0.108  complete
 uaq_R3_s1          50.20     50.11      56.03     34.36  5.49e-02    0.259  complete
 uaq_R3_s2          51.42     49.58      57.43     43.74  5.52e-02    0.304  complete
 uaq_R3_s3          50.99     51.86      44.09      2.88  6.75e-02    0.281  complete
@@ -24,16 +24,26 @@ uaq_R5_s3          44.46     48.37      43.82      0.10  4.02e-02    0.294  comp
 uaq_R5_s4                                                                   missing
 uaq_R5_s5                                                                   missing
 uaq_R6_s1          48.72     49.43      55.60     41.25  3.70e-02    0.239  complete
-uaq_R6_s2                                                                   missing
-uaq_R6_s3                                                                   missing
+uaq_R6_s2          51.19     49.96      55.11     31.14  4.06e-02    0.352  complete
+uaq_R6_s3          47.76     47.01      30.01      0.01  2.00e-02    0.320  complete
 
 REGISTERED
 
 H2 test: (R4 - R3) - (R2 - R1), paired by seed
-  no verdict: 1 of 3 registered seeds complete for R4 R3 R2 R1
+  n = 3 seeds, t on 2 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)    margin +-2.0 pts; per seed -1.00 -2.18 +2.82; mean -0.12 (SD 2.62); 90% CI [-4.53, +4.29]; 95% CI [-6.62, +6.38] -> inconclusive
+  final accuracy             margin +-2.0 pts; per seed +2.20 +1.74 +1.14; mean +1.69 (SD 0.53); 90% CI [+0.80, +2.59]; 95% CI [+0.37, +3.02] -> H2 contradicted (difference detected)
+  reward AUC                 margin +-2.0 pts; per seed +0.98 -1.57 +13.75; mean +4.39 (SD 8.21); 90% CI [-9.46, +18.23]; 95% CI [-16.01, +24.79] -> inconclusive
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +0.01 -2.63 +30.81; mean +9.40 (SD 18.59); 90% CI [-21.94, +40.73]; 95% CI [-36.78, +55.57] -> inconclusive
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.044 1.119 1.151; ratio 1.104 (log SD 0.050); 90% CI [1.015, 1.201]; 95% CI [0.975, 1.250] -> H2 supported (equivalent within the margin)
 
 H3 test: R6 - R4, paired by seed
-  no verdict: 1 of 3 registered seeds complete for R6 R4
+  n = 3 seeds, t on 2 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)    margin +-2.0 pts; per seed -0.30 +2.15 -3.43; mean -0.53 (SD 2.80); 90% CI [-5.24, +4.19]; 95% CI [-7.47, +6.42] -> inconclusive
+  final accuracy             margin +-2.0 pts; per seed -2.73 -0.23 -4.17; mean -2.38 (SD 1.99); 90% CI [-5.74, +0.99]; 95% CI [-7.33, +2.58] -> inconclusive
+  reward AUC                 margin +-2.0 pts; per seed -2.02 -0.05 -27.20; mean -9.76 (SD 15.14); 90% CI [-35.28, +15.76]; 95% CI [-47.37, +27.85] -> inconclusive
+  early reward (steps 1-58)  margin +-2.0 pts; per seed -0.54 -9.62 -34.06; mean -14.74 (SD 17.34); 90% CI [-43.97, +14.49]; 95% CI [-57.80, +28.33] -> inconclusive
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 0.635 0.649 0.321; ratio 0.510 (log SD 0.400); 90% CI [0.260, 1.000]; 95% CI [0.189, 1.377] -> inconclusive
 
 DESCRIPTIVE (no verdict)
 
@@ -46,26 +56,48 @@ R4 - R3 (UAQ with INT8 rollouts)
   mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.063 1.134 0.923; ratio 1.036 (log SD 0.105); 90% CI [0.867, 1.238]; 95% CI [0.797, 1.346]
 
 R2 - R1 (UAQ with BF16 rollouts)
-  no verdict: 1 of 3 registered seeds complete for R2 R1
+  n = 3 seeds, t on 2 df
+  late accuracy (primary)    margin +-2.0 pts; per seed -0.18 -0.20 -2.62; mean -1.00 (SD 1.41); 90% CI [-3.37, +1.37]; 95% CI [-4.49, +2.49]
+  final accuracy             margin +-2.0 pts; per seed -0.15 -1.14 -1.82; mean -1.04 (SD 0.84); 90% CI [-2.45, +0.38]; 95% CI [-3.12, +1.05]
+  reward AUC                 margin +-2.0 pts; per seed +0.62 -0.70 -0.63; mean -0.24 (SD 0.74); 90% CI [-1.48, +1.01]; 95% CI [-2.07, +1.60]
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +7.42 -0.36 +0.39; mean +2.49 (SD 4.29); 90% CI [-4.75, +9.72]; 95% CI [-8.18, +13.15]
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.018 1.013 0.801; ratio 0.938 (log SD 0.137); 90% CI [0.745, 1.182]; 95% CI [0.668, 1.318]
 
 R6 - R3 (global learning rate x1.5)
-  no verdict: 1 of 3 registered seeds complete for R6 R3
+  n = 3 seeds, t on 2 df
+  late accuracy (primary)    margin +-2.0 pts; per seed -1.49 -0.23 -3.23; mean -1.65 (SD 1.51); 90% CI [-4.19, +0.89]; 95% CI [-5.39, +2.10]
+  final accuracy             margin +-2.0 pts; per seed -0.68 +0.38 -4.85; mean -1.72 (SD 2.77); 90% CI [-6.38, +2.94]; 95% CI [-8.59, +5.15]
+  reward AUC                 margin +-2.0 pts; per seed -0.43 -2.32 -14.08; mean -5.61 (SD 7.39); 90% CI [-18.08, +6.86]; 95% CI [-23.98, +12.76]
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +6.89 -12.60 -2.86; mean -2.86 (SD 9.75); 90% CI [-19.29, +13.57]; 95% CI [-27.07, +21.35]
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 0.675 0.736 0.296; ratio 0.528 (log SD 0.502); 90% CI [0.227, 1.231]; 95% CI [0.152, 1.838]
 
 EXPLORATORY (fixed 2026-11-11 after R5 seed 1 collapsed; does not replace the registered verdicts)
 
 collapsed runs per arm (late accuracy below 10%):
-  R1: 0 of 1 complete runs
-  R2: 0 of 1 complete runs
+  R1: 0 of 3 complete runs
+  R2: 0 of 3 complete runs
   R3: 0 of 3 complete runs
   R4: 0 of 3 complete runs
   R5: 0 of 3 complete runs
-  R6: 0 of 1 complete runs
+  R6: 0 of 3 complete runs
 
 H1 without collapsed seeds: R4 - R5
   no verdict: 3 of 5 registered seeds complete for R4 R5
 
 H2 without collapsed seeds
-  no verdict: 1 of 3 registered seeds complete for R4 R3 R2 R1
+  EXPLORATORY: seeds without a collapsed run: 1 2 3
+  n = 3 seeds, t on 2 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)    margin +-2.0 pts; per seed -1.00 -2.18 +2.82; mean -0.12 (SD 2.62); 90% CI [-4.53, +4.29]; 95% CI [-6.62, +6.38] -> inconclusive
+  final accuracy             margin +-2.0 pts; per seed +2.20 +1.74 +1.14; mean +1.69 (SD 0.53); 90% CI [+0.80, +2.59]; 95% CI [+0.37, +3.02] -> H2 contradicted (difference detected)
+  reward AUC                 margin +-2.0 pts; per seed +0.98 -1.57 +13.75; mean +4.39 (SD 8.21); 90% CI [-9.46, +18.23]; 95% CI [-16.01, +24.79] -> inconclusive
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +0.01 -2.63 +30.81; mean +9.40 (SD 18.59); 90% CI [-21.94, +40.73]; 95% CI [-36.78, +55.57] -> inconclusive
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 1.044 1.119 1.151; ratio 1.104 (log SD 0.050); 90% CI [1.015, 1.201]; 95% CI [0.975, 1.250] -> H2 supported (equivalent within the margin)
 
 H3 without collapsed seeds
-  no verdict: 1 of 3 registered seeds complete for R6 R4
+  EXPLORATORY: seeds without a collapsed run: 1 2 3
+  n = 3 seeds, t on 2 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)    margin +-2.0 pts; per seed -0.30 +2.15 -3.43; mean -0.53 (SD 2.80); 90% CI [-5.24, +4.19]; 95% CI [-7.47, +6.42] -> inconclusive
+  final accuracy             margin +-2.0 pts; per seed -2.73 -0.23 -4.17; mean -2.38 (SD 1.99); 90% CI [-5.74, +0.99]; 95% CI [-7.33, +2.58] -> inconclusive
+  reward AUC                 margin +-2.0 pts; per seed -2.02 -0.05 -27.20; mean -9.76 (SD 15.14); 90% CI [-35.28, +15.76]; 95% CI [-47.37, +27.85] -> inconclusive
+  early reward (steps 1-58)  margin +-2.0 pts; per seed -0.54 -9.62 -34.06; mean -14.74 (SD 17.34); 90% CI [-43.97, +14.49]; 95% CI [-57.80, +28.33] -> inconclusive
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 0.635 0.649 0.321; ratio 0.510 (log SD 0.400); 90% CI [0.260, 1.000]; 95% CI [0.189, 1.377] -> inconclusive
