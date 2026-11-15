@@ -108,7 +108,7 @@ P12 & Asynchronous RL + quantization & explore & med & systems relevance\\
 \item \textbf{Question.} Does UAQ change the quantized rollout model at all? If not, what does it change? Does re-quantization freeze the rollout model, and what should ``update-aware'' mean?
 \item \textbf{What it means.} It separates a number-format effect from an optimization effect. If UAQ is exactly a per-layer learning-rate change, its gains belong to learning-rate tuning, and the update problem has to be restated.
 \item \textbf{Impact.} It corrects a published mechanism and gives practitioners the right control (per-layer learning rates, in the parameterization view of \citealp{yang2021tp4}). The tools (homogeneity, the uniform-phase model, persistence) feed P3, P4 and P6.
-\item \textbf{Status (2026-11-11).} Theorems proved; Theorem~1 verified bit-for-bit on vLLM's INT8 kernel at three model sizes; Theorem~2 verified bit-for-bit in a training loop; the pre-registered RL experiment is running. See the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and the P1 experiments report (\texttt{p1\_experiments.tex}).
+\item \textbf{Status (2026-11-15).} Theorems proved; Theorem~1 verified bit-for-bit on vLLM's INT8 kernel at three model sizes; Theorem~2 verified bit-for-bit in a training loop. The pre-registered RL experiment is complete: its accuracy tests are inconclusive, UAQ's effect on the mismatch matches its BF16 effect (registered), and INT8 rollouts trail BF16 by about 5 points (exploratory). See the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and the P1 experiments report (\texttt{p1\_experiments.tex}).
 \end{itemize}
 
 \researchproblem{P2}{What does QuRL converge to?}
@@ -209,7 +209,7 @@ P12 & Asynchronous RL + quantization & explore & med & systems relevance\\
 % =====================================================================================
 \section{Plan (master's-thesis arc)}\label{sec:plan}
 \begin{enumerate}
-\item \textbf{P1 first} (started 2026-11-07). Theory complete; S1 and S2 done on the H100; S3's RL experiment running. Builds the toolkit and a quick result.
+\item \textbf{P1 first} (started 2026-11-07). Theory complete; S1, S2 and S3 done on the H100. Builds the toolkit and a quick result.
 \item \textbf{P3 + P4.} The theory of the mismatch and its growth, the scientific core: an exact toy model plus logged diagnostics on a small LLM.
 \item \textbf{P6, with P2 as its convergence framework.} The algorithmic contribution with a theorem; P5 follows naturally.
 \end{enumerate}

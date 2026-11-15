@@ -16,13 +16,13 @@ uaq_R3_s3          50.99     51.86      44.09      2.88  6.75e-02    0.281  comp
 uaq_R4_s1          49.02     52.16      57.62     41.79  5.83e-02    0.275  complete
 uaq_R4_s2          49.04     50.19      55.17     40.75  6.25e-02    0.341  complete
 uaq_R4_s3          51.19     51.18      57.22     34.07  6.23e-02    0.326  complete
-uaq_R4_s4                                                                   missing
-uaq_R4_s5                                                                   missing
+uaq_R4_s4          45.88     48.29      51.43     25.08  5.64e-02    0.336  complete
+uaq_R4_s5          52.98     54.06      57.98     33.60  5.03e-02    0.244  complete
 uaq_R5_s1          11.80     46.63       2.91      0.07  1.60e-02    0.435  complete
 uaq_R5_s2          49.95     50.42      56.12     36.25  6.27e-02    0.302  complete
 uaq_R5_s3          44.46     48.37      43.82      0.10  4.02e-02    0.294  complete
-uaq_R5_s4                                                                   missing
-uaq_R5_s5                                                                   missing
+uaq_R5_s4          50.77     49.36      53.93     34.41  6.99e-02    0.313  complete
+uaq_R5_s5          48.89     50.04      54.34     31.13  6.58e-02    0.364  complete
 uaq_R6_s1          48.72     49.43      55.60     41.25  3.70e-02    0.239  complete
 uaq_R6_s2          51.19     49.96      55.11     31.14  4.06e-02    0.352  complete
 uaq_R6_s3          47.76     47.01      30.01      0.01  2.00e-02    0.320  complete
@@ -77,12 +77,18 @@ collapsed runs per arm (late accuracy below 10%):
   R1: 0 of 3 complete runs
   R2: 0 of 3 complete runs
   R3: 0 of 3 complete runs
-  R4: 0 of 3 complete runs
-  R5: 0 of 3 complete runs
+  R4: 0 of 5 complete runs
+  R5: 0 of 5 complete runs
   R6: 0 of 3 complete runs
 
 H1 without collapsed seeds: R4 - R5
-  no verdict: 3 of 5 registered seeds complete for R4 R5
+  EXPLORATORY: seeds without a collapsed run: 1 2 3 4 5
+  n = 5 seeds, t on 4 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)    margin +-2.0 pts; per seed +37.23 -0.91 +6.73 -4.88 +4.09; mean +8.45 (SD 16.70); 90% CI [-7.47, +24.37]; 95% CI [-12.28, +29.19] -> inconclusive
+  final accuracy             margin +-2.0 pts; per seed +5.53 -0.23 +2.81 -1.06 +4.02; mean +2.21 (SD 2.80); 90% CI [-0.45, +4.88]; 95% CI [-1.26, +5.69] -> inconclusive
+  reward AUC                 margin +-2.0 pts; per seed +54.71 -0.95 +13.40 -2.50 +3.64; mean +13.66 (SD 23.77); 90% CI [-9.00, +36.32]; 95% CI [-15.86, +43.18] -> inconclusive
+  early reward (steps 1-58)  margin +-2.0 pts; per seed +41.72 +4.50 +33.97 -9.33 +2.47; mean +14.67 (SD 21.98); 90% CI [-6.29, +35.62]; 95% CI [-12.62, +41.96] -> inconclusive
+  mismatch k3 (log scale)    bounds 0.80-1.25; per seed 3.654 0.997 1.551 0.807 0.764; ratio 1.284 (log SD 0.648); 90% CI [0.692, 2.381]; 95% CI [0.574, 2.869] -> inconclusive
 
 H2 without collapsed seeds
   EXPLORATORY: seeds without a collapsed run: 1 2 3

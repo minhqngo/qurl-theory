@@ -20,7 +20,7 @@ Scoring the trained weights in both formats separates the third from the first t
 \begin{enumerate}[leftmargin=*,itemsep=1pt]
 \item Check any reparameterization at step 0. Theorem-level invariances can be verified bit for bit at power-of-two scales (\cref{sec:s1}).
 \item Compare a reparameterization with its matched optimizer settings (\cref{thm:reparam}), including the clipping norm, not with a global learning-rate change.
-\item Report several seeds with intervals. In this RL configuration, 4 of 18 runs stalled early, for 21 to 370 steps (\cref{sec:s3}).
+\item Report several seeds with intervals. In this RL configuration, 4 of 22 runs stalled early, for 21 to 370 steps (\cref{sec:s3}).
 \item Train the BF16 baseline with the same seeds, and score the trained full-precision weights as well as the quantized policy. Validation through the rollout engine scores only the latter.
 \item State every optimizer hyperparameter, including the critic's learning rate and any warmup. \Cref{sec:s3} shows that one unstated setting can decide between learning and collapse.
 \item To bound the cumulative effect of rollout quantization, use schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}). Larger update-to-grid ratios do not bound it.
@@ -32,7 +32,7 @@ Scoring the trained weights in both formats separates the third from the first t
 \item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model.
 \item \emph{What we could not inspect.} The authors' implementation was not available to us. Our statements about QuRL's figures rest on values read from their vector data.
 \item \emph{The reproduction.} Our GSM8K non-reproduction may reflect settings the paper does not state.
-\item \emph{Power.} Three seeds per arm resolve accuracy differences of several points only; H2 and H3 are inconclusive for that reason, as planned in their power analysis.
+\item \emph{Power.} Three seeds per arm, five for R4 and R5, resolve accuracy differences of several points only; H1--H3 are inconclusive for that reason, as their power analysis anticipated.
 \item \emph{Scoring.} Runs with INT8 rollouts were validated with the quantized policy, and no checkpoints were kept to score their BF16 weights.
 \end{itemize}
 
@@ -42,4 +42,4 @@ UAQ cannot reduce quantization error for absmax quantizers: the rescaling is inv
 
 Re-quantizing full-precision master weights does not freeze the rollout policy. It captures updates in expectation, at the rate we predict and measure. The open problem it leaves is the persistence of the rounding error, which error feedback addresses and UAQ does not.
 
-In RL at 0.5B, UAQ's effects on accuracy were too small to resolve with three seeds, while its effect on the mismatch matched the BF16 control, as the theory predicts. Low-precision rollouts themselves cost 4.9 points of accuracy in our runs, more than QuRL reports; explaining and reducing that gap is the natural next problem. \todo{Add H1's verdict after seeds 4--5.}
+In RL at 0.5B, UAQ's effects on accuracy were too small to resolve, against its matched settings (five seeds), a BF16 control and QuRL's control (three seeds each), while its effect on the mismatch matched the BF16 control, as the theory predicts. Low-precision rollouts themselves cost 4.9 points of accuracy in our runs, more than QuRL reports; explaining and reducing that gap is the natural next problem.

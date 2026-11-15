@@ -46,7 +46,62 @@ These analyses are labelled exploratory. That run later recovered, and with a la
 \item \textbf{Analysis script:} \texttt{h23\_analysis.py}, SHA-256 \nolinkurl{5ed1a3b280b340550b009e0e54c5d95ee2e00a00f2bddd74b7fa612af1dfb3e4}. It imports the frozen statistics of \texttt{h1\_analysis.py}.
 \end{itemize}
 
-\paragraph{Analysis report for H2 and H3.} The frozen \texttt{h23\_analysis.py} produced the report below on 2026-11-14, once R1--R6 with seeds 1--3 were complete. All 18 runs completed; none crashed or was repeated. We reproduce the report's header, run table and registered tests. Long lines are wrapped, and a line giving the local results path is omitted. The descriptive and exploratory sections are in the repository.
+\paragraph{Analysis report for H1.} The frozen \texttt{h1\_analysis.py} produced the report below on 2026-11-15, once all five pairs of R4 and R5 were complete. It was run with \texttt{-{}-seeds 1 2 3 4 5} for H1 and seeds 1--3 for the sensitivity contrast R4 $-$ R3. All 22 runs of the experiment completed; none crashed or was repeated. We reproduce the report in full except for a line giving the local results path and the seeds; long lines are wrapped.
+{\scriptsize
+\begin{verbatim}
+H1 analysis for S3, pre-registered 2026-11-11 (P1 note, section 7);
+    h1_analysis.py sha256 5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f
+
+run             late acc final acc reward AUC   mean k3  entropy  status
+uaq_R3_s1          50.20     50.11      56.03  5.49e-02    0.259  complete
+uaq_R3_s2          51.42     49.58      57.43  5.52e-02    0.304  complete
+uaq_R3_s3          50.99     51.86      44.09  6.75e-02    0.281  complete
+uaq_R3_s4                                                         missing
+uaq_R3_s5                                                         missing
+uaq_R4_s1          49.02     52.16      57.62  5.83e-02    0.275  complete
+uaq_R4_s2          49.04     50.19      55.17  6.25e-02    0.341  complete
+uaq_R4_s3          51.19     51.18      57.22  6.23e-02    0.326  complete
+uaq_R4_s4          45.88     48.29      51.43  5.64e-02    0.336  complete
+uaq_R4_s5          52.98     54.06      57.98  5.03e-02    0.244  complete
+uaq_R5_s1          11.80     46.63       2.91  1.60e-02    0.435  complete
+uaq_R5_s2          49.95     50.42      56.12  6.27e-02    0.302  complete
+uaq_R5_s3          44.46     48.37      43.82  4.02e-02    0.294  complete
+uaq_R5_s4          50.77     49.36      53.93  6.99e-02    0.313  complete
+uaq_R5_s5          48.89     50.04      54.34  6.58e-02    0.364  complete
+
+late accuracy per arm over its complete seeds (descriptive):
+  R3: mean 50.87, seed-to-seed SD 0.62 pts over 3 seeds
+  R4: mean 49.62, seed-to-seed SD 2.67 pts over 5 seeds
+  R5: mean 41.17, seed-to-seed SD 16.60 pts over 5 seeds
+
+H1 test: R4 - R5, paired by seed
+  n = 5 pairs, t on 4 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)  margin +-2.0 pts; per seed +37.23 -0.91 +6.73 -4.88 +4.09; mean +8.45 (SD 16.70);
+    90% CI [-7.47, +24.37]; 95% CI [-12.28, +29.19] -> inconclusive
+  final accuracy           margin +-2.0 pts; per seed +5.53 -0.23 +2.81 -1.06 +4.02; mean +2.21 (SD 2.80);
+    90% CI [-0.45, +4.88]; 95% CI [-1.26, +5.69] -> inconclusive
+  reward AUC               margin +-2.0 pts; per seed +54.71 -0.95 +13.40 -2.50 +3.64; mean +13.66 (SD 23.77);
+    90% CI [-9.00, +36.32]; 95% CI [-15.86, +43.18] -> inconclusive
+  mismatch k3 (ratio)      bounds 0.80-1.25; per seed 3.654 0.997 1.551 0.807 0.764;
+    geometric mean ratio 1.284 (log SD 0.648);
+    90% CI [0.692, 2.381]; 95% CI [0.574, 2.869] -> inconclusive
+  mean entropy             descriptive; per seed -0.160 +0.038 +0.032 +0.023 -0.120; mean difference -0.037
+
+Sensitivity, UAQ's own effect: R4 - R3, paired by seed
+  n = 3 pairs, t on 2 df; 90% CI decides equivalence, 95% CI decides difference
+  late accuracy (primary)  margin +-2.0 pts; per seed -1.18 -2.38 +0.20; mean -1.12 (SD 1.29);
+    90% CI [-3.30, +1.05]; 95% CI [-4.33, +2.08] -> inconclusive
+  final accuracy           margin +-2.0 pts; per seed +2.05 +0.61 -0.68; mean +0.66 (SD 1.37);
+    90% CI [-1.64, +2.96]; 95% CI [-2.73, +4.05] -> inconclusive
+  reward AUC               margin +-2.0 pts; per seed +1.59 -2.27 +13.13; mean +4.15 (SD 8.01);
+    90% CI [-9.35, +17.65]; 95% CI [-15.74, +24.05] -> inconclusive
+  mismatch k3 (ratio)      bounds 0.80-1.25; per seed 1.063 1.134 0.923;
+    geometric mean ratio 1.036 (log SD 0.105);
+    90% CI [0.867, 1.238]; 95% CI [0.797, 1.346] -> no effect beyond the margin
+  mean entropy             descriptive; per seed +0.017 +0.037 +0.045; mean difference +0.033
+\end{verbatim}}
+
+\paragraph{Analysis report for H2 and H3.} The frozen \texttt{h23\_analysis.py} produced its report on 2026-11-14, once R1--R6 with seeds 1--3 were complete, and again on 2026-11-15, after seeds 4--5 of R4 and R5, with identical H2 and H3 results. We reproduce the latter's header, run table and registered tests. Long lines are wrapped, and a line giving the local results path is omitted. The descriptive and exploratory sections are in the repository; the latter include the repeat of H1 without collapsed seeds, which equals the registered test because no run collapsed.
 {\scriptsize
 \begin{verbatim}
 H2 and H3 analyses for S3, pre-registered 2026-11-11 (P1 note, section 7)
@@ -66,13 +121,13 @@ uaq_R3_s3          50.99     51.86      44.09      2.88  6.75e-02    0.281  comp
 uaq_R4_s1          49.02     52.16      57.62     41.79  5.83e-02    0.275  complete
 uaq_R4_s2          49.04     50.19      55.17     40.75  6.25e-02    0.341  complete
 uaq_R4_s3          51.19     51.18      57.22     34.07  6.23e-02    0.326  complete
-uaq_R4_s4                                                                   missing
-uaq_R4_s5                                                                   missing
+uaq_R4_s4          45.88     48.29      51.43     25.08  5.64e-02    0.336  complete
+uaq_R4_s5          52.98     54.06      57.98     33.60  5.03e-02    0.244  complete
 uaq_R5_s1          11.80     46.63       2.91      0.07  1.60e-02    0.435  complete
 uaq_R5_s2          49.95     50.42      56.12     36.25  6.27e-02    0.302  complete
 uaq_R5_s3          44.46     48.37      43.82      0.10  4.02e-02    0.294  complete
-uaq_R5_s4                                                                   missing
-uaq_R5_s5                                                                   missing
+uaq_R5_s4          50.77     49.36      53.93     34.41  6.99e-02    0.313  complete
+uaq_R5_s5          48.89     50.04      54.34     31.13  6.58e-02    0.364  complete
 uaq_R6_s1          48.72     49.43      55.60     41.25  3.70e-02    0.239  complete
 uaq_R6_s2          51.19     49.96      55.11     31.14  4.06e-02    0.352  complete
 uaq_R6_s3          47.76     47.01      30.01      0.01  2.00e-02    0.320  complete
@@ -105,4 +160,3 @@ H3 test: R6 - R4, paired by seed
   mismatch k3 (log scale)    bounds 0.80-1.25; per seed 0.635 0.649 0.321; ratio 0.510 (log SD 0.400);
     90% CI [0.260, 1.000]; 95% CI [0.189, 1.377] -> inconclusive
 \end{verbatim}}
-\todo{Insert H1's report (\texttt{h1\_analysis.py --seeds 1 2 3 4 5}) after seeds 4--5.}

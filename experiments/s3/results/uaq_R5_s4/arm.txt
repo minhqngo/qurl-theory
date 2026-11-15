@@ -1,0 +1,2 @@
+arm R5 (rollout: pilot.sh ARM=R3) | QURL_OPT=r5 | QURL_S=1.5 | BASE_LR=1e-6
+arm overrides: actor_rollout_ref.model.external_lib=qurl_verl actor_rollout_ref.actor.strategy=fsdp2 actor_rollout_ref.actor.optim.lr=1e-6

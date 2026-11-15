@@ -196,7 +196,7 @@ ssh h100 "tar czf uaq_first.tgz --exclude='*.pt' -C qurl/s3 uaq_queue.log result
 scp h100:uaq_first.tgz experiments/s3/
 ```
 
-**Results so far (P1 experiments report §3.5).** The queue started its first run at 13:09 UTC on 2026-11-10, after the gate passed. The nine H1 runs (R3, R4 and R5 for seeds 1–3) were done at 06:53 UTC on 2026-11-12, when R1 seed 1 started. R1, R2 and R6 for seed 1 were done at 22:36 UTC on 2026-11-12, when R1 seed 2 started. The queue finished with R6 seed 3 at 03:23 UTC on 2026-11-14.
+**Results so far (P1 experiments report §3.5).** The queue started its first run at 13:09 UTC on 2026-11-10, after the gate passed. The nine H1 runs (R3, R4 and R5 for seeds 1–3) were done at 06:53 UTC on 2026-11-12, when R1 seed 1 started. R1, R2 and R6 for seed 1 were done at 22:36 UTC on 2026-11-12, when R1 seed 2 started. The queue finished with R6 seed 3 at 03:23 UTC on 2026-11-14. `uaq_seeds45.sh` then ran R4 and R5 for seeds 4–5 and finished at 21:24 UTC the same day: all 22 registered runs are complete.
 
 | Run | Arm | Seed | GSM8K test accuracy at step 435 | Best (step) | Run time |
 |---|---|---|---|---|---|
@@ -218,8 +218,55 @@ scp h100:uaq_first.tgz experiments/s3/
 | `uaq_R1_s3` | R1 | 3 | 57.5% | 57.5% (319) | 4.8 h |
 | `uaq_R2_s3` | R2 | 3 | 55.6% | 55.6% (232, 435) | 5.5 h |
 | `uaq_R6_s3` | R6 | 3 | 47.0% (0% until step 174) | 48.7% (319) | 4.5 h |
+| `uaq_R4_s4` | R4 | 4 | 48.3% (33.9% at step 29) | 49.4% (145) | 4.7 h |
+| `uaq_R5_s4` | R5 | 4 | 49.4% (38.6% at step 232) | 52.3% (406) | 4.2 h |
+| `uaq_R4_s5` | R4 | 5 | 54.1% | 54.1% (435) | 4.7 h |
+| `uaq_R5_s5` | R5 | 5 | 50.0% | 51.0% (232) | 4.3 h |
 
-Late accuracy (the H1 primary endpoint, mean of the last five validations, from `h1_analysis.py`): R1 55.9 / 54.8 / 56.6, R2 55.7 / 54.6 / 53.9, R3 50.2 / 51.4 / 51.0, R4 49.0 / 49.0 / 51.2, R5 11.8 / 49.9 / 44.5 and R6 48.7 / 51.2 / 47.8 for seeds 1–3. The H1 test withholds its verdict until seeds 4–5 are in. `h23_analysis.py` gave its registered H2 and H3 verdicts on 2026-11-14 (below). The R4 − R3 sensitivity contrast (seeds 1–3) is complete.
+Late accuracy (the H1 primary endpoint, mean of the last five validations, from `h1_analysis.py`): R1 55.9 / 54.8 / 56.6, R2 55.7 / 54.6 / 53.9, R3 50.2 / 51.4 / 51.0 and R6 48.7 / 51.2 / 47.8 for seeds 1–3; R4 49.0 / 49.0 / 51.2 / 45.9 / 53.0 and R5 11.8 / 49.9 / 44.5 / 50.8 / 48.9 for seeds 1–5. All registered verdicts are in: H1 on 2026-11-15 and H2/H3 on 2026-11-14 (below). All three are inconclusive on the primary endpoint; H2 is supported on mismatch.
+
+**Seeds 4–5 of R4 and R5, and the registered H1 verdict (H100, finished 2026-11-14, copied back 2026-11-15 as `uaq_s45.tgz`).**
+- **All four runs are clean:**
+  - R4 ran `mode plain` on the UAQ checkpoint;
+  - R5 ran `mode r5, s 1.5` (Q/K/V lr 1.5e-6, ε 6.67e-9, decay 0.0067; norm gains 6.67e-7, 1.5e-8, 0.015);
+  - the seeds were 4 → `rollout.seed=46` and 5 → 47;
+  - all 168 linear weights were re-quantized at every one of the 436 syncs on the CUTLASS kernel;
+  - no non-finite values, and each ended with the harmless DataLoader shutdown error;
+  - run times were 4.2–4.7 h.
+- **Registered verdict** (`h1_analysis.py --seeds 1 2 3 4 5`, frozen; `results/h1_analysis.txt`): R4 − R5 over five pairs.
+
+  | Endpoint | Per seed (1–5) | Mean | 90% CI | Outcome |
+  |---|---|---|---|---|
+  | Late accuracy (primary) | +37.2, −0.9, +6.7, −4.9, +4.1 | +8.5 (SD 16.7) | [−7.5, +24.4] | **inconclusive** |
+  | Final accuracy | +5.5, −0.2, +2.8, −1.1, +4.0 | +2.2 | [−0.5, +4.9] | inconclusive |
+  | Reward AUC | +54.7, −1.0, +13.4, −2.5, +3.6 | +13.7 | [−9.0, +36.3] | inconclusive |
+  | Mismatch ratio | 3.654, 0.997, 1.551, 0.807, 0.764 | 1.28 | [0.69, 2.38] | inconclusive |
+
+  - **Why inconclusive:**
+    - The large positive values come from R5's two stalls (seeds 1 and 3).
+    - In the three seeds where neither arm stalled (2, 4 and 5), R4 − R5 is −0.9, −4.9 and +4.1 points (exploratory).
+    - Equivalence within ±2 points was out of reach even without stalls. R4's late accuracy alone varied with an SD of 2.7 points over five seeds (45.9–53.0%), so a paired SD below about 2.1, which the power analysis required, was unlikely.
+  - **"Contradicted" did not happen:** it needed R4 − R5 of about 31–35 points in both seeds 4 and 5; they gave −4.9 and +4.1.
+  - **Exploratory repeat without collapsed seeds:** no run collapsed (R5 seed 1's 11.8% is above 10%), so it is identical to the registered test: inconclusive. `h23_analysis.py` was rerun to produce it. Only its run table and this H1 section changed; the H2/H3 results are unchanged.
+  - **Mismatch:** the stall seeds push the ratio above 1, since R5's stalls had low mismatch. In seeds 4–5, R5's mean k3 was the higher one (6.99e-2 and 6.58e-2, against R4's 5.64e-2 and 5.03e-2).
+  - **Entropy (descriptive):** R4 − R5 is −0.037 on average.
+- **No early stall in seeds 4–5:** every run validated at 33.9–44.3% at step 29.
+  - **R4 seed 4** started slowly: 33.9% at step 29, early reward 25.1, training score 0.3 first at step 27. It ended with R4's lowest late accuracy (45.9%), at a typical mismatch.
+  - **R4 seed 5** had the highest early entropy of any run (1.02 at step 11), yet R4's highest late accuracy (53.0%).
+  - **R5 seed 4** dipped once, by 8.4 points at step 232 (38.6%), at 1.01× its median mismatch.
+- **Stalls, final count:** 4 of 22 runs, all with INT8 rollouts (R3 seed 3, R5 seeds 1 and 3, R6 seed 3).
+  - **R4 against R5:** R5 2 of 5, R4 0 of 5. If both arms stalled equally often, both stalls would land in R5 with probability 0.22.
+  - **INT8 against BF16:** all four stalls would land in the 16 INT8 runs with probability 0.25.
+- **BF16 vs INT8:** every BF16 run (53.9–56.6% late) still ends above every INT8 run, including the four new ones (at most 53.0%, R4 seed 5).
+- **Correction: the arms are not level at step 29.**
+  - **At the first validation:** the INT8 runs without a stall are already lower on average, by 2.1 points in seeds 1–3 and by 4.0 points with seeds 4–5 (33.9–47.4% against 43.2–47.6%). The ranges overlap, which is why the earlier write-ups called the arms level.
+  - **Later:** the gap widens to 5–7.5 points over steps 58–145 and stays at 4.5–6.7 points afterwards.
+  - **Reading:** part of the gap could be a fixed cost of greedy decoding with the INT8 policy. Its growth, and a training-reward gap that is absent before step 30 and about 10 points from step 117 on, show that the runs also learn differently.
+  - **Updated ranges, over all twelve INT8 runs without a stall** (BF16 in brackets): end-of-training score 56–65% (72–73%), entropy 0.17–0.43 (0.05–0.07), KL from the reference 0.48–0.84 (0.20–0.30). Also:
+    - k3 rose 4.7–7.8-fold in the ten H1 runs without a stall;
+    - the Spearman correlation of k3 with entropy ranges from −0.56 to +0.13;
+    - in the fourteen INT8 runs that had learned by step 200, the trainer drifted 0.43–0.80 nats per token from the reference model while the rollout stayed 0.031–0.061 from the trainer, 9.7–17.2× closer (medians over steps 200–435).
+- **Validation dips:** the pooled dip–mismatch Spearman is +0.20 over 171 INT8 validations. Dips above 3 points occur in 7 of the 15 INT8 runs with validations after learning, against none of the 6 BF16 runs.
 
 **R1, R2 and R6, seeds 2–3, and the registered H2 and H3 verdicts (H100, finished 2026-11-14, copied back the same day as `uaq_r1r2r6_s23.tgz`).** One minute after the queue finished, `uaq_seeds45.sh` confirmed all 18 runs and started R4 seed 4 (UAQ checkpoint, `data.seed=4`, `rollout.seed=46`).
 - **All six runs are clean:**
@@ -257,7 +304,7 @@ Late accuracy (the H1 primary endpoint, mean of the last five validations, from 
     - the PPO-KL diagnostic is negative in all 40 INT8 window medians through step 174, and in none of the BF16 ones after step 10.
   - **Not consistent:** response length and run time. Seed 1's BF16 runs kept longer answers, but seed 2's shortened like the INT8 runs: 166–167 tokens over steps 200–435. The BF16 range is 166–279 tokens, against 151–186 for INT8. So the BF16 run times (4.6–5.5 h) follow answer length, not the rollout format.
   - **Validation:**
-    - level at step 29 (BF16 43.2–47.6%, INT8 without a stall 41.4–47.4%);
+    - overlapping at step 29 (BF16 43.2–47.6%, INT8 without a stall 41.4–47.4%), but already 2.1 points lower on average for INT8 (see the correction in the seeds 4–5 block);
     - fully separated over steps 87–145 (52.4–54.9% against 39.3–50.9%);
     - overlapping slightly from step 174 on (52.2–57.5% against 45.1–53.8%).
   - **The caveat stands:** INT8 accuracy is that of the INT8 engine, and no checkpoints are saved.
@@ -292,7 +339,7 @@ Late accuracy (the H1 primary endpoint, mean of the last five validations, from 
   - Neither stalled. The first step with a training score of 0.3 was 26 (R1) and 20 (R2).
 - **INT8 trails BF16 by about 5 points.** Late accuracy is 55.7–55.9% for the BF16 runs and 48.7–51.4% for the INT8 runs other than R5 seeds 1 and 3 (11.8% and 44.5%). R1 − R3 is 5.7 points in seed 1, and 5.0 against R3's three-seed mean.
   - **Against the paper:** the paper's QuRL INT8 trails its BF16 by 1.8 points. If the paper reports the best validation rather than the last, R3's best values (52.5, 53.8, 52.6) are close to its 53.55%, but R1's best is 56.3%, so the gap is still about 3.4 points.
-  - **When it opens:** the arms match at the first validation. At step 29, BF16 gives 43.2% and 46.9%, and the INT8 runs that did not stall give 41.4–47.4%.
+  - **When it opens:** the arms match at the first validation. At step 29, BF16 gives 43.2% and 46.9%, and the INT8 runs that did not stall give 41.4–47.4%. (Corrected in the seeds 4–5 block: on average INT8 is already 2–4 points lower at step 29.)
     - From step 87 on, BF16 leads: 52.9–54.6% against 39.3–50.9% over steps 87–145.
     - From step 174 on, BF16 gives 53.4–56.7% and those INT8 runs 45.1–53.8%.
   - **Training dynamics** (medians over steps 407–435, BF16 vs. the INT8 runs that did not stall):
@@ -420,7 +467,7 @@ The test of H1 (R4 ≡ R5 in distribution) was fixed before any R5 result; the P
 - **Secondary endpoints:** final accuracy, reward AUC, and the mismatch ratio with bounds 0.80–1.25.
 - **Sensitivity:** R4 − R3, UAQ's own effect.
 - **Frozen:** SHA-256 `5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f`. A change after registration is recorded in the note, and both versions' results are reported.
-- **Verdicts:** only once all registered pairs are complete. Seeds 4–5 were added on 2026-11-11, so the H1 test runs on seeds 1–5 (`--seeds 1 2 3 4 5`), and the R4 − R3 contrast on seeds 1–3.
+- **Verdicts:** only once all registered pairs are complete. Seeds 4–5 were added on 2026-11-11, so the H1 test runs on seeds 1–5 (`--seeds 1 2 3 4 5`), and the R4 − R3 contrast on seeds 1–3. Run on 2026-11-15 with all five pairs, it returned **inconclusive** (see the results above).
 - **Exploratory, added after R5 seed 1 collapsed (before any other R4/R5 seed):** collapsed runs per arm, where collapsed means late accuracy below 10%, and the registered test repeated on the pairs where neither run collapsed. These are reported as exploratory and do not replace the registered verdict.
 - **Tested:** `--self-test` checks the t quantiles and the decision logic. End-to-end runs on synthetic results with known answers, including missing and truncated runs, gave the expected verdicts.
 ```bash

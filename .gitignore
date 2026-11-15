@@ -12,7 +12,6 @@ __pycache__/
 latex/*.log
 latex/figures/*.log
 paper/*.log
-paper/figures/*.log
 
 # Large or regenerable experiment outputs
 # - tensor dumps (INT8 refit checks)
