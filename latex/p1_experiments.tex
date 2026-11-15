@@ -18,6 +18,7 @@
 \item \textbf{In a training loop (S2)}, Theorem~2 holds bit-for-bit, in a QuRL-style loop and in VeRL; clipping rule~(c) is necessary.
 \item \textbf{In RL (S3)}, QuRL's GSM8K result (Table~1) did not reproduce at the stated learning rate $10^{-5}$; at $10^{-6}$ the setup learns. The pre-registered RL test of ``UAQ $=$ per-layer learning rates'' is complete: 22 runs, R1--R6 for seeds 1--3 and R4, R5 for seeds 4--5. All three hypotheses are inconclusive on late accuracy, as the power analysis predicted; for H1 (R4 against R5, five seeds) the two R5 stalls and the seed-to-seed spread both stand in the way. On mismatch H2 is supported: UAQ changed the INT8 mismatch by about the same factor as the BF16 one (ratio of ratios 1.10, 90\% CI $[1.015, 1.20]$), so it does not reduce the quantization mismatch during RL either. Early stalls hit 4 of the 22 runs, all with INT8 rollouts. The INT8 rollout model follows the trainer.
 \item \textbf{INT8 rollouts cost about 5 points here (S3, exploratory).} With BF16 rollouts the setup matches the published baselines (R1: 54.8--56.6\% late accuracy over three seeds; the paper's 55.35\%, VeRL's 56.7\%). QuRL's INT8 rollouts trail by 4.9 points averaged over UAQ (95\% CI $[2.3, 7.6]$), against the paper's 1.8, and every BF16 run ends above every INT8 run. The gap is 2--4 points at the first validation and 4.5--7.5 points from step 58 on, with lower training reward, higher entropy and more drift from the reference model. INT8 accuracy is scored on the INT8 engine.
+\item \textbf{On stored checkpoints (E2, static part, pre-registered)}, Assumption~U holds at the rounding boundary in all 21 cells (7 projection types of the 0.5B, 1.5B and 7B models), and Lemma~1's condition $\sigma/\Delta\ge1$ holds in every row. U's test in the bulk fails narrowly in one cell (0.052 against 0.05); an exploratory simulation traces the deviations to BF16 storage. The instrumented RL run for E2's dynamic tests is in progress.
 \item \textbf{Overall} (\cref{sec:assessment}), nothing in the experiments contradicts a theoretical result. The largest gaps are E2 (tracking and persistence on real checkpoints) and E3 (what drives the mismatch rise); the INT8 accuracy gap is what E3 and P6 would have to explain and close.
 \end{itemize}
 
@@ -30,12 +31,12 @@ The theory note answers five questions (its Section~2); the stages below test th
 \item \textbf{Q1. Does UAQ change the rollout model?} Theorem~1: no, for QuRL's W8A8 and any quantizer that is homogeneous on its groups. Tested in float64 (T) and on vLLM's kernels (S1).
 \item \textbf{Q2. What does UAQ change in training?} Theorem~2 and Corollary~3: only per-layer learning rates ($\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW). Tested in float64 (T), bit-for-bit in a training loop and in VeRL (S2), and in distribution over seeds in full RL runs (S3, hypotheses H1--H3).
 \item \textbf{Q3. Do re-quantized master weights freeze?} Propositions~3--5: no; updates are captured in expectation. Tested in float64 (T) and by a first look in S3; E2 is the full test.
-\item \textbf{Q4. What is the real issue?} Propositions~6--7: the rounding error persists across steps, and error feedback bounds its cumulative effect. Tested in float64 (T); E2 and E3 are planned.
+\item \textbf{Q4. What is the real issue?} Propositions~6--7: the rounding error persists across steps, and error feedback bounds its cumulative effect. Tested in float64 (T); E2 tests them on a real run (in progress), and E3 is left to P4.
 \item \textbf{Q5. Do the answers hold on a real RL stack?} Stages S1--S5 below.
 \end{itemize}
 
 \begin{center}\small
-\begin{tabularx}{\linewidth}{@{}l l L l@{}}
+\begin{tabularx}{\linewidth}{@{}l l L >{\raggedright\arraybackslash}p{3.6cm}@{}}
 \toprule
 Stage & Question & What runs & Status\\
 \midrule
@@ -44,7 +45,7 @@ S1 & Q1 on real kernels & step-0 identity test in vLLM, three model sizes & done
 S2 & Q2, exactly & deterministic 20-step QuRL loop, UAQ vs.\ Theorem~2 settings at $s=2$ & done\\
 S3 & Q5: H1--H3 & GSM8K PPO in VeRL: R1--R6 $\times$ 3 seeds ($+2$ for R4, R5); Table~1 reproduction & done (22 of 22)\\
 S4 & H1 closest to the paper & DAPO-style math RL with a 1.5B model & planned\\
-S5 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & planned\\
+S5 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & E2 static done, run in progress; E3 left to P4\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -138,10 +139,60 @@ Otherwise inconclusive. If both conditions hold: ``equivalent within $\delta$, s
 \item \textbf{Code.} \texttt{experiments/s3/h1\_analysis.py}, run with \texttt{-{}-seeds 1 2 3 4 5}; SHA-256:\\ \texttt{\small 5ac6da470e152a7b1680921bdcb2c1281d09cc52b63ce015f144c9c05f368f6f}.\\ \texttt{experiments/s3/h23\_analysis.py}, which reuses \texttt{h1\_analysis.py}'s arithmetic; SHA-256:\\ \texttt{\small 5ed1a3b280b340550b009e0e54c5d95ee2e00a00f2bddd74b7fa612af1dfb3e4}.\\ Each report repeats the hashes.
 \end{itemize}
 
+\subsection{E2: tracking and persistence on real weights (pre-registered 2026-11-15)}\label{sec:e2}
+Fixed before any E2 data were analysed. \emph{Seen beforehand:} the smoke test's dump check (syncs 1--4; it reports only that the dumps match the rollout's codes and the largest weight change, about $4\times10^{-6}$ per step), and a laptop test of the static script on Qwen2.5-0.5B-Instruct, whose numbers are quoted below and do not count as a test.
+\begin{itemize}
+\item \textbf{What it tests.} Assumption~U and Propositions~3--7 of the theory note on the synced FP32 master weights of a real QuRL run, where T used float64 simulations. P3 and P7's error-feedback bound are exact and serve as consistency checks.
+\item \textbf{Data.}
+  \begin{itemize}
+  \item \emph{Static:} the decoder linear weights of Qwen2.5-0.5B-Instruct, Qwen2.5-Math-1.5B and Qwen2.5-Math-7B, as stored (BF16).
+  \item \emph{Dynamic:} one run of arm R3 with S3's own call (seed~1, $\eta=10^{-6}$, 435 steps), with a vLLM worker extension (\texttt{experiments/e2/e2\_dump.py}) that records the synced FP32 master weights. It saves the full state at syncs 1, 2, 3, 5, 9, 17, 33, 65, 66, 129, 257, 258, 435 and 436 (sync $k$ holds the weights after step $k-1$), and 16 fixed rows of every linear weight in layers 0, 6, 12, 18 and 23 at every sync.
+  \item \emph{Smoke test:} the dumps are the weights the rollout quantized; layer~0's live INT8 codes equal the quantizer applied to the dump at every sync.
+  \end{itemize}
+\item \textbf{Quantities.} All in grid units, with the rollout quantizer's arithmetic: $\Delta=$ row absmax $\times\mathrm{fl}_{32}(1/127)$, $q=w/\Delta$, $c=\mathrm{round}(q)$, phase $\varphi=q-c$. Each row's absmax element is left out. Every sync uses its own grid, so the exact change $u$ of $q$ between syncs includes the grid's motion when a row's absmax moves. To first order that motion is $-(c+\varphi)\,\delta\Delta/\Delta$, which for large codes exceeds the weight's own update.
+\item \textbf{Predictions and decision rules.}
+
+\smallskip
+{\footnotesize
+\begin{tabularx}{\linewidth}{@{}l L L@{}}
+\toprule
+Claim & Measurement & Rule\\
+\midrule
+U1: U near the boundary & share of $|\varphi|\ge0.45$, divided by 0.10 & in $[0.95,1.05]$ for each projection type of each checkpoint, and at each full-dump sync\\
+U2: U in the bulk, small codes & largest deviation of 40 bin densities from 1, $|c|\le15$ & $\le0.05$, as for U1\\
+Lemma~1 & share of rows with $\sigma/\Delta<1$ & below 1\% (static)\\
+P3: bounded lag & $\max|e_k-e_0|/\max(\Delta_k,\Delta_0)$ & $\le1$ (exact)\\
+P4a: one-step capture & flip share $F$ over $P=\mathrm{mean}\min(1,|u|)$, $u=q_{k+1}-q_k$ & in $[0.90,1.10]$: with all elements for the pairs from sync 65 on, and for every pair without the elements that were exact ties at sync~1\\
+P4b & observed against predicted flip rate in bins of $|u|$ (slope through the origin) & in $[0.90,1.10]$\\
+P4c: captured in expectation & $\sum\Delta c\,u/\sum u^2$ & in $[0.95,1.05]$\\
+P6a: stationary size & $\Var(\varphi_k)/\Var(\varphi_0)$ & in $[0.98,1.02]$ at every full-dump sync\\
+P6b: persistence & $\Corr(\varphi_k,\varphi_0)$ in 20 bins of $a=\fracpart|q_k-q_0|$, against the bin mean of $1-6a(1-a)$ & largest deviation $\le0.05$ over bins with $\ge10^4$ elements\\
+P6c & the same along $k$, from the row samples & largest deviation $\le0.05$ over syncs\\
+P7a & error feedback's partial sums & $|\sum e_k|\le\Delta_K/2$ (exact)\\
+P7b & stochastic rounding's partial sums & rms over $\sqrt{K/6}$ in $[0.90,1.10]$ at the last sync\\
+P5: tracking in policy space & OLS slope of $\Delta\log\mu$ on $\Delta\log\pi$ over probe tokens & in $[0.90,1.10]$ for every cumulative pair (sync 1, $s'$) with $s'\ge9$ and for the pooled one-step pairs\\
+P5$'$: not frozen & the same slope & $>0.5$\\
+\bottomrule
+\end{tabularx}\par}
+\item \textbf{Policy-space measurement.} The probe set is 128 GSM8K training prompts (a fixed random subset), each with one response sampled at temperature~1 from $\theta_0$. For each full-dump sync, $\log\pi$ comes from an FP32 forward pass with the dumped weights. $\log\mu$ comes from the same model with the rollout's W8A8 quantizer applied as deterministic FP32 fake quantization: per-row INT8 weights and per-token INT8 activations, with embeddings, norms and the output head unquantized.
+\item \textbf{Deviations expected in advance.}
+  \begin{itemize}
+  \item \emph{BF16 lattice.} Near a row's maximum, BF16 spacing is 0.5--1 grid step, so weights with large codes sit on a coarse lattice. U2 is therefore claimed only for $|c|\le15$. The laptop test of 0.5B showed bin deviations up to 0.35 for $|c|\ge64$, against 0.03--0.05 for $|c|\le15$ and a near-boundary ratio of 1.007.
+  \item \emph{Exact ties.} About 0.2\% of the stored weights sit exactly on a rounding boundary (0.18\% in that test), and any update flips about half of them. So $F/P$ exceeds 1 in the first pairs with all elements, and the rule for those pairs leaves the ties out. By sync 65 the ties have drifted apart, and the rule uses all elements.
+  \item \emph{Moving grids.} $u$ includes the grid's motion. The fixed-grid prediction $\mathrm{mean}\min(1,|\delta|/\Delta)$ is reported next to it, so the size of that motion is visible.
+  \end{itemize}
+\item \textbf{Reading.} A failure of P4 or P6 where U1 holds would contradict Proposition~4 or~6 as stated. A failure of P5$'$ would support QuRL's claim~(i), that the rollout freezes. A failure of U limits where the propositions apply rather than refuting them.
+\item \textbf{Also reported, without rules.} $\nu=\eta/\Delta$ per layer at 0.5B, 1.5B and 7B (the link to 7B); the correlation of phase and update; RTN's and error feedback's partial sums; and each one-step pair's slope.
+\item \textbf{Code (frozen).} In \texttt{experiments/e2/}; each script has a self-test with known answers. On Gaussian weights all rules pass; on weights placed on the grid, U1 and P4 fail. A gradient step gives a policy-space slope of 1.03, and frozen rollout weights give 0.00. SHA-256:\\
+\texttt{e2\_static.py} \texttt{\small 0db4ecece22b552caa49cecc83dbac474f8a929db7748d8bb7121af194cb40c4};\\
+\texttt{e2\_dynamic.py} \texttt{\small 9ec9dca1f693962b3f7ffe1a2cdd3a2dc930c469de0ba857656451f7f2556fb3};\\
+\texttt{e2\_policy.py} \texttt{\small af8f517022cda4b496af6425a4558480d6975750a2871a50a0d3695c7c2ec49c}.
+\end{itemize}
+
 \subsection{Planned: S4 and S5}\label{sec:planned}
 \begin{itemize}
 \item \textbf{S4.} DAPO-style \citep{yu2025dapo} math RL with a 1.5B model (Qwen2.5-Math-1.5B or R1-Distill-1.5B, \citealp{luo2025deepscaler}) at $\eta=10^{-6}$, about 300 steps: R3--R5 $\times$ 3 seeds, then R1 and R2. This is closest to the paper's UAQ ablation (DAPO at 7B). Metrics: reward, exact full-vocabulary KL, per-layer $\nu$, MATH500 Avg@32 (AIME24 secondary: 30 problems are too noisy at 1.5B).
-\item \textbf{S5 $=$ E2 + E3.} \emph{E2}, on saved checkpoints: code-flip fraction vs.\ Proposition~4's prediction $\frac1n\sum_j\min(1,|\delta_j|/\Delta_j)$; $\Corr(e_k,e_0)$ vs.\ Proposition~6; correlation of $\Delta\log\mu$ and $\Delta\log\pi$; phase histograms for Assumption~U. \emph{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability.
+\item \textbf{S5 $=$ E2 + E3.} \emph{E2}, on saved checkpoints: code-flip fraction vs.\ Proposition~4's prediction $\frac1n\sum_j\min(1,|\delta_j|/\Delta_j)$; $\Corr(e_k,e_0)$ vs.\ Proposition~6; correlation of $\Delta\log\mu$ and $\Delta\log\pi$; phase histograms for Assumption~U. Designed and pre-registered in \cref{sec:e2}; the static results are in \cref{sec:e2-results}. \emph{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability. What drives the mismatch growth is research problem P4's question, so E3 is left to P4; its one P1 part, the stationary size of the weight error, is P6a of E2.
 \item \textbf{Link to 7B.} Early in Adam training each element moves by about $\eta$ per step, so $\nu_l\approx\eta/\Delta_l$, computable from the 7B checkpoint without training it. Choosing S4's learning rate to match the 7B distribution of $\nu_l$ puts the small runs in the same tracking regime (Proposition~4 depends only on $|d|/\Delta$).
 \item \textbf{Why not paper scale.} A 7B full fine-tune needs about 112\,GB for weights, gradients and Adam state alone; R3--R5 $\times$ 3 seeds would take 1{,}400--2{,}700 H100-hours. H1 at 7B is future work.
 \end{itemize}
@@ -407,9 +458,63 @@ Mean over seeds, in points (accuracy, reward) or as a ratio ($k_3$), with the 90
 \item \textbf{Update tracking, first look.} All 168 linear weights were re-quantized at each of the 436 syncs in all sixteen INT8 runs, on the CUTLASS kernel. In the INT8 pilot, one PPO step at $10^{-6}$ flipped 0.21\% of layer 0's Q/K/V codes, against 0.20\% predicted by $|d|/\Delta$ (Proposition~4). Row by row the agreement is loose (correlation 0.2--0.4); E2 is the full test.
 \end{itemize}
 
+\subsection{E2, static part: U holds at the rounding boundary}\label{sec:e2-results}
+\textbf{Status (2026-11-15).} The static part is done: the decoder linear weights of the three stored checkpoints, with the rules of \cref{sec:e2}. The instrumented R3 run is in progress (step 197 of 435 at the last check, no stall), and the weight-space and policy-space analyses follow it. A cell is one projection type of one checkpoint, 21 in all. The 0.5B numbers were seen before registration in the laptop test and agree with it, so only the 1.5B and 7B cells are fresh tests.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}L l l l l@{}}
+\toprule
+Rule & 0.5B & 1.5B & 7B & Verdict\\
+\midrule
+U1: share of $|\varphi|\ge0.45$ over 0.10, in $[0.95,1.05]$ & 1.003--1.011 & 0.999--1.010 & 1.002--1.004 & \textbf{holds}, 21 of 21\\
+U2: largest of 40 bin deviations, $|c|\le15$, at most 0.05 & 0.026--0.045 & 0.025--0.052 & 0.015--0.029 & \textbf{fails}, 20 of 21\\
+Lemma~1: share of rows with $\sigma/\Delta<1$, below 1\% & 0 & 0 & 0 & \textbf{holds}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{itemize}
+\item \textbf{U holds at the rounding boundary.} The near-boundary ratio is 0.999--1.011 in every cell, with the exact ties counted as the rule says. Without them it is 0.985--0.993: the ties sit on the boundary itself, and the band next to it holds slightly less than uniform. Exact ties are 0.18\%, 0.15\% and 0.12\% of the elements at 0.5B, 1.5B and 7B.
+\item \textbf{U2 fails narrowly, in one cell:} Qwen2.5-Math-1.5B's \texttt{up\_proj}, at 0.0516. The other 20 cells lie between 0.015 and 0.046, and \texttt{gate\_proj} and \texttt{up\_proj} are the highest at 0.5B and 1.5B. Larger codes deviate more: 0.07--0.13 for $16\le|c|\le63$ and 0.31--0.42 for $64\le|c|\le126$, the BF16 lattice anticipated in \cref{sec:e2}. By the registered reading, a failure of U limits where the propositions apply; it does not refute them.
+\item \textbf{Lemma~1's condition holds in every row, by a wide margin.} Median $\sigma/\Delta$ is 28--36, and 99\% of rows have $\sigma/\Delta\ge3.9$; the lowest 1\% quantile is in 7B's \texttt{gate\_proj}, whose outlier rows reach $\max/\rms=32.5$. The theory note's estimate of 6--25 assumed $\max/\rms$ of 5--20; measured, its median is 3.6--4.5 in every cell.
+\item \textbf{The link to 7B} (\cref{sec:planned}): $\nu=\eta/\Delta$ at $\eta=10^{-6}$, reported without a rule.
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+& 0.5B & 1.5B & 7B\\
+\midrule
+Median over rows & $1.78\times10^{-3}$ & $8.50\times10^{-4}$ & $1.26\times10^{-3}$\\
+10--90\% over rows & $1.21$--$2.27\times10^{-3}$ & $0.66$--$1.02\times10^{-3}$ & $0.96$--$1.51\times10^{-3}$\\
+Median by decoder layer & $1.67$--$1.87\times10^{-3}$ & $0.82$--$0.94\times10^{-3}$ & $1.22$--$1.49\times10^{-3}$\\
+\bottomrule
+\end{tabular}
+\end{center}
+At the same learning rate, S3's 0.5B runs sit at $1.4\times$ the 7B median, and a 1.5B run would sit at $0.67\times$. Matching the 7B median at 1.5B needs $\eta\approx1.5\times10^{-6}$. By Proposition~4, an update of size $\eta$ flips a code with probability $\nu$: about one code in 560 at 0.5B, 1{,}200 at 1.5B and 790 at 7B.
+\end{itemize}
+
+\textbf{Exploratory, not registered: the deviations are those of BF16 storage.} A CPU simulation (\texttt{experiments/e2/bf16\_lattice\_sim.py}) passes synthetic Gaussian rows through the static script's own statistics, once in FP32 and once rounded to BF16 as a checkpoint stores them, with 24M elements per run.
+\begin{center}\footnotesize
+\begin{tabularx}{\linewidth}{@{}L l l l l l@{}}
+\toprule
+& & & \multicolumn{3}{c@{}}{Largest bin deviation}\\
+\cmidrule(l){4-6}
+Rows & U1 & Exact ties & $|c|\le15$ & 16--63 & 64--126\\
+\midrule
+Synthetic, FP32 & 0.9995 & 0.0002\% & 0.005 & 0.004 & 0.011\\
+Synthetic, BF16; row scales spread over 0.75--3 octaves & 1.006--1.009 & 0.15--0.20\% & 0.023--0.032 & 0.073--0.089 & 0.31--0.34\\
+Synthetic, BF16; all rows on one scale & 1.014--1.015 & 0.21--0.23\% & 0.070--0.074 & 0.122 & 0.37--0.38\\
+Real checkpoints (21 cells) & 0.999--1.011 & 0.07--0.26\% & 0.015--0.052 & 0.070--0.127 & 0.31--0.42\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{itemize}
+\item \textbf{BF16 rounding alone reproduces the real deviations} in every column. Without it the phases are uniform up to counting noise: 0.005 is the largest of 40 bins, each with a standard deviation of 0.002.
+\item \textbf{Other shapes agree.} Student-$t$ rows (5 degrees of freedom) and rows of length 896 or 3584 give the same picture ($|c|\le15$: 0.024--0.027). The simulation does not predict which cell is highest; the failing cell lies between the spread and the equal-scale cases.
+\item \textbf{Reading.} BF16 stores the weights on a lattice whose spacing, in grid units, grows with the code, from about $|c|/256$ to $|c|/128$. Lemma~1 assumes a density, so it cannot see this. On the stored checkpoints, U therefore holds at the boundary to within 1.5\%, with or without the ties. In the bulk of small codes the largest bin deviation is 1.5--5.2\%, depending on the cell, which is the size BF16 storage alone produces.
+\item \textbf{What it means for the dynamic tests.} Training moves the FP32 master weights off the lattice, so U2 may improve over the run; the dynamic analysis reports U1 and U2 at every full-dump sync. Whether the lattice matters at the scale of a single update, with $|u|$ of order $10^{-3}$ grid steps, far below U1's band of 0.05, is what P4a measures. Its rule leaves out the exact ties in the early pairs.
+\end{itemize}
+
 % =====================================================================================
 \section{What the experiments say about the theory}\label{sec:assessment}
-\emph{As of 2026-11-15: T, S1, S2 and all 22 runs of S3.} Nothing in the experiments contradicts a theoretical result. The exact results hold wherever they can be tested exactly. S3 adds real-stack evidence that UAQ does not lower the mismatch during training, now also as a registered result (H2's mismatch endpoint), and that the INT8 rollout follows the trainer. Its accuracy tests of Corollary~3 are underpowered: H1, H2 and H3 all came out inconclusive, as predicted. Propositions~6--7 are tested only in float64. The largest S3 result lies outside the theory's claims: INT8 rollouts cost about 5 points of accuracy here.
+\emph{As of 2026-11-15: T, S1, S2, all 22 runs of S3, and the static part of E2.} Nothing in the experiments contradicts a theoretical result. The exact results hold wherever they can be tested exactly. S3 adds real-stack evidence that UAQ does not lower the mismatch during training, now also as a registered result (H2's mismatch endpoint), and that the INT8 rollout follows the trainer. Its accuracy tests of Corollary~3 are underpowered: H1, H2 and H3 all came out inconclusive, as predicted. Propositions~6--7 are tested only in float64. The largest S3 result lies outside the theory's claims: INT8 rollouts cost about 5 points of accuracy here.
 \begin{itemize}
 \item \textbf{Theorem~1 holds on the real kernel.} Log-probabilities are bit-identical at $s=2$ on vLLM's INT8 kernel at all three sizes (\cref{sec:s1-results}).
   \begin{itemize}
@@ -430,6 +535,7 @@ Mean over seeds, in points (accuracy, reward) or as a ratio ($k_3$), with the 90
   \item \textbf{Tracking.} In the fourteen INT8 runs of S3 that had learned by step 200, the trainer moved 0.43--0.80 nats per token from the reference model, its starting point, over steps 200--435 (medians). The INT8 rollout stayed 0.031--0.061 from the trainer ($k_3$), 9.7--17.2$\times$ closer. A frozen rollout would show a mismatch of the order of the drift.
   \item \textbf{Learning.} The INT8 model learns: its validation accuracy, generated by the INT8 engine, reaches about 50\%, against 54--57\% with BF16 rollouts. Tracking does not prevent the accuracy gap below.
   \item \textbf{Quantitative test.} The pilot's flip rate matches Proposition~4 in aggregate (0.21\% vs.\ 0.20\%) but loosely row by row. The full test, E2, needs weight snapshots; the S3 runs keep only layer 0's codes after the first two syncs.
+  \item \textbf{Assumption~U on stored checkpoints} (\cref{sec:e2-results}). The rounding phase is uniform at the boundary to within 1.5\% in all three models, and Lemma~1's condition holds in every row. In the bulk, BF16 storage leaves deviations of up to 5.2\%, one of them above the registered limit of 5\%. Whether the lattice matters at the scale of one update is for E2's dynamic part (P4a).
   \end{itemize}
 \item \textbf{Propositions~6--7: tested only in float64.} S3 sharpens the question Proposition~6 raises.
   \begin{itemize}
@@ -461,8 +567,9 @@ Claim & Theory & Evidence so far & Status\\
 \midrule
 UAQ leaves the rollout model unchanged & Thm.~1 & float64; vLLM INT8 bit-identical at $s=2$ (3 sizes); no change at $s=1.5$; in RL, R4's mean $k_3$ within 0.80--1.25 of R3's, and H2's registered mismatch test supported (ratio of ratios 1.10) & established\\
 UAQ $=$ per-layer learning rates & Thm.~2, Cor.~3 & float64; bit-identical 20-step loop; VeRL check; H1 (registered, 5 seeds): R4 $-$ R5 $=+8.5$ points late, 90\% CI $[-7.5, 24.4]$ & exact equivalence established; H1 in RL inconclusive\\
-Updates are captured & Props.~3--5 & float64; S3 pilot 0.21\% vs.\ 0.20\%; in RL the INT8 rollout follows the trainer & supported; E2 pending\\
-Error is persistent; error feedback bounds it & Props.~6--7 & float64 & theory; E2, P6 pending\\
+Rounding phase is uniform & Assum.~U, Lem.~1 & E2 static, 21 cells (0.5B, 1.5B, 7B): boundary share within 1.1\% of uniform in all; bulk ($|c|\le15$) within 5\% in 20 (one at 5.2\%, from BF16 storage); $\sigma/\Delta\ge1$ in every row & holds at the boundary; bulk test failed narrowly\\
+Updates are captured & Props.~3--5 & float64; S3 pilot 0.21\% vs.\ 0.20\%; in RL the INT8 rollout follows the trainer & supported; E2 running\\
+Error is persistent; error feedback bounds it & Props.~6--7 & float64 & theory; E2 running, P6 pending\\
 UAQ's effect is not quantization-specific & Cor.~3 & H2 (registered, 3 seeds): late accuracy $-0.1$ points, 90\% CI $[-4.5, 4.3]$; mismatch ratio of ratios 1.10, $[1.015, 1.20]$; final accuracy $+1.7$ (secondary) & accuracy inconclusive; mismatch supported\\
 A global learning rate is the wrong control & Thm.~2 & H3 (registered, 3 seeds): R6 $-$ R4 $=-0.5$ points late, $[-5.2, 4.2]$; inconclusive on every endpoint & inconclusive\\
 QuRL's Table~1 at $\eta=10^{-5}$ & --- & not reproduced & open (ask the authors)\\
