@@ -1,0 +1,28 @@
+E2 exploratory: first updates from BF16 storage (22.0M elements per run; Adam on noise gradients, 4 updates per sync; +- is 1/sqrt(flips))
+BF16    sync    1   U1 1.0109   dev |c|<=15 0.0297   ties 2.25e-03
+BF16    sync    2   U1 1.0120   dev |c|<=15 0.0306   ties 2.91e-06
+BF16    sync    3   U1 1.0117   dev |c|<=15 0.0264   ties 3.32e-06
+BF16    sync   65   U1 1.0095   dev |c|<=15 0.0054   ties 2.36e-06
+BF16    sync   66   U1 1.0094   dev |c|<=15 0.0052   ties 3.00e-06
+BF16    pair   1-2   P 3.772e-03   F/P 1.2091   F/P no ties 0.9133 (+- 0.0036)   cal slope 0.9369   capture 0.9382
+BF16    pair   2-3   P 2.322e-03   F/P 1.0667   F/P no ties 0.9610 (+- 0.0045)   cal slope 0.9686   capture 0.9685
+BF16    pair  65-66  P 1.311e-03   F/P 1.0172   F/P no ties 0.9947 (+- 0.0059)   cal slope 0.9953   capture 0.9955
+BF16    pair 1-2 F/P no ties by code: |c| 0-15: 0.962 (25057 flips), |c| 16-63: 0.846 (40972 flips), |c| 64-126: 1.152 (9563 flips)
+FP32    sync    1   U1 1.0001   dev |c|<=15 0.0055   ties 2.46e-06
+FP32    sync    2   U1 1.0001   dev |c|<=15 0.0046   ties 2.32e-06
+FP32    sync    3   U1 1.0001   dev |c|<=15 0.0055   ties 3.05e-06
+FP32    sync   65   U1 1.0005   dev |c|<=15 0.0075   ties 3.00e-06
+FP32    sync   66   U1 1.0004   dev |c|<=15 0.0065   ties 2.77e-06
+FP32    pair   1-2   P 3.772e-03   F/P 0.9990   F/P no ties 0.9987 (+- 0.0035)   cal slope 1.0014   capture 1.0004
+FP32    pair   2-3   P 2.322e-03   F/P 1.0047   F/P no ties 1.0046 (+- 0.0044)   cal slope 1.0082   capture 1.0079
+FP32    pair  65-66  P 1.312e-03   F/P 0.9921   F/P no ties 0.9921 (+- 0.0059)   cal slope 0.9919   capture 0.9928
+FP32    pair 1-2 F/P no ties by code: |c| 0-15: 1.003 (26136 flips), |c| 16-63: 0.995 (48299 flips), |c| 64-126: 1.006 (8420 flips)
+BF16 s1 sync    1   U1 1.0093   dev |c|<=15 0.0286   ties 2.16e-03
+BF16 s1 sync    2   U1 1.0105   dev |c|<=15 0.0304   ties 2.50e-06
+BF16 s1 sync    3   U1 1.0106   dev |c|<=15 0.0273   ties 2.46e-06
+BF16 s1 sync   65   U1 1.0083   dev |c|<=15 0.0069   ties 2.18e-06
+BF16 s1 sync   66   U1 1.0082   dev |c|<=15 0.0067   ties 2.64e-06
+BF16 s1 pair   1-2   P 3.787e-03   F/P 1.1987   F/P no ties 0.9143 (+- 0.0036)   cal slope 0.9344   capture 0.9364
+BF16 s1 pair   2-3   P 2.331e-03   F/P 1.0619   F/P no ties 0.9634 (+- 0.0045)   cal slope 0.9714   capture 0.9732
+BF16 s1 pair  65-66  P 1.317e-03   F/P 1.0204   F/P no ties 0.9950 (+- 0.0059)   cal slope 0.9884   capture 0.9887
+BF16 s1 pair 1-2 F/P no ties by code: |c| 0-15: 0.953 (24887 flips), |c| 16-63: 0.855 (41558 flips), |c| 64-126: 1.142 (9535 flips)

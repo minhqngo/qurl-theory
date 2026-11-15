@@ -1,0 +1,138 @@
+E2 weight-space analysis (e2_dynamic.py)
+full dumps at syncs [1, 2, 3, 5, 9, 17, 33, 65, 66, 129, 257, 258, 435, 436]
+
+Assumption U at each full-dump sync (codes |c| < 127):
+ sync    elements near/0.10  dev all dev |c|<=15      ties Var(phi)*12
+    1   357514098    1.0071   0.0623      0.0361  1.83e-03      1.0008
+    2   357514036    1.0082   0.0259      0.0308  2.51e-06      1.0008
+    3   357513968    1.0081   0.0237      0.0287  2.20e-06      1.0007
+    5   357513913    1.0082   0.0221      0.0217  2.32e-06      1.0007
+    9   357513823    1.0082   0.0195      0.0152  2.23e-06      1.0007
+   17   357513729    1.0081   0.0162      0.0095  2.34e-06      1.0006
+   33   357513541    1.0075   0.0122      0.0046  2.04e-06      1.0006
+   65   357513294    1.0064   0.0088      0.0026  2.23e-06      1.0005
+   66   357513297    1.0064   0.0087      0.0025  2.18e-06      1.0005
+  129   357513012    1.0048   0.0059      0.0016  2.12e-06      1.0004
+  257   357512723    1.0031   0.0037      0.0012  1.99e-06      1.0003
+  258   357512718    1.0030   0.0037      0.0011  2.23e-06      1.0003
+  435   357512509    1.0018   0.0020      0.0013  2.27e-06      1.0002
+  436   357512505    1.0018   0.0020      0.0010  2.16e-06      1.0002
+
+Proposition 4, one-step pairs (flip share F, prediction P = mean min(1, |u|)):
+     pair          F          P     F/P F/P no ties P fixed grid cal slope  capture corr(phi,u)
+      1-2  4.151e-03  3.552e-03  1.1685      0.9124    3.476e-03    0.9297   0.9311      0.0001
+      2-3  2.284e-03  2.170e-03  1.0527      0.9620    2.111e-03    0.9688   0.9691      0.0006
+    65-66  1.148e-03  1.136e-03  1.0111      0.9875    1.100e-03    0.9867   0.9868      0.0001
+  257-258  1.217e-03  1.214e-03  1.0021      0.9911    1.176e-03    0.9903   0.9905      0.0001
+  435-436  1.172e-03  1.169e-03  1.0024      0.9944    1.133e-03    0.9946   0.9942      0.0001
+
+Propositions 3 and 6 against sync 1 (no sync-1 ties):
+ sync Var ratio  bins max |dev|  lag max   Corr / prediction by a-bin (bins with >= 1e4)
+    2    1.0000     1    0.0018   1.0000   0.98/0.98
+    3    1.0000     2    0.0020   1.0000   0.97/0.97 0.67/0.67
+    5    1.0001     2    0.0051   1.0000   0.96/0.96 0.66/0.65
+    9    1.0001     3    0.0037   1.0000   0.95/0.95 0.65/0.65 0.39/0.39
+   17    1.0001     4    0.0198   1.0000   0.93/0.93 0.66/0.66 0.38/0.38 0.18/0.16
+   33    1.0002     5    0.0090   1.0000   0.91/0.91 0.66/0.66 0.38/0.38 0.17/0.16 -0.03/-0.03
+   65    1.0002     6    0.0121   1.0000   0.90/0.89 0.64/0.64 0.39/0.39 0.16/0.16 -0.03/-0.03 -0.17/-0.18
+   66    1.0002     6    0.0079   1.0000   0.89/0.89 0.64/0.64 0.39/0.39 0.16/0.16 -0.03/-0.03 -0.18/-0.18
+  129    1.0003     8    0.0074   1.0000   0.88/0.88 0.63/0.63 0.39/0.38 0.16/0.16 -0.03/-0.03 -0.19/-0.19 -0.30/-0.31 -0.39/-0.40
+  257    1.0005    11    0.0034   1.0000   0.87/0.87 0.61/0.61 0.38/0.37 0.16/0.16 -0.02/-0.03 -0.18/-0.18 -0.31/-0.31 -0.40/-0.40 -0.47/-0.46 -0.49/-0.49 -0.50/-0.50
+  258    1.0005    11    0.0034   1.0000   0.87/0.87 0.61/0.61 0.38/0.37 0.16/0.16 -0.02/-0.03 -0.18/-0.18 -0.31/-0.31 -0.40/-0.40 -0.46/-0.46 -0.49/-0.49 -0.50/-0.50
+  435    1.0007    13    0.0073   1.0000   0.87/0.86 0.60/0.60 0.37/0.36 0.16/0.15 -0.03/-0.03 -0.18/-0.18 -0.31/-0.31 -0.40/-0.40 -0.46/-0.46 -0.50/-0.49 -0.49/-0.50 -0.47/-0.47 -0.41/-0.41
+  436    1.0007    13    0.0039   1.0000   0.87/0.86 0.60/0.60 0.37/0.36 0.16/0.15 -0.03/-0.03 -0.18/-0.18 -0.31/-0.31 -0.40/-0.40 -0.46/-0.46 -0.50/-0.49 -0.49/-0.50 -0.47/-0.47 -0.41/-0.41
+
+Row samples: 436 syncs, 818630 elements
+P6c: max |Corr(phi_k, phi_0) - prediction| over syncs 0.0031; Corr at syncs 2: 0.978/0.979, 10: 0.944/0.945, 34: 0.902/0.904, 130: 0.824/0.826, 436: 0.691/0.692
+P7 rms partial sum / Delta_0 at K = 1: RTN 0.289, SR 0.408, EF 0.289, 10: RTN 2.849, SR 1.291, EF 0.289, 100: RTN 27.682, SR 4.087, EF 0.288, 436: RTN 114.954, SR 8.528, EF 0.289
+EF max |sum e| / (Delta_K/2) 1.000000; SR rms / sqrt(K/6) 1.0004
+
+Decision rules (pre-registered):
+  PASS  U1 sync 1: near-boundary share / 0.10 in [0.95, 1.05]: 1.0071
+  PASS  U2 sync 1: codes |c|<=15, largest bin deviation <= 0.05: 0.0361
+  PASS  U1 sync 2: near-boundary share / 0.10 in [0.95, 1.05]: 1.0082
+  PASS  U2 sync 2: codes |c|<=15, largest bin deviation <= 0.05: 0.0308
+  PASS  U1 sync 3: near-boundary share / 0.10 in [0.95, 1.05]: 1.0081
+  PASS  U2 sync 3: codes |c|<=15, largest bin deviation <= 0.05: 0.0287
+  PASS  U1 sync 5: near-boundary share / 0.10 in [0.95, 1.05]: 1.0082
+  PASS  U2 sync 5: codes |c|<=15, largest bin deviation <= 0.05: 0.0217
+  PASS  U1 sync 9: near-boundary share / 0.10 in [0.95, 1.05]: 1.0082
+  PASS  U2 sync 9: codes |c|<=15, largest bin deviation <= 0.05: 0.0152
+  PASS  U1 sync 17: near-boundary share / 0.10 in [0.95, 1.05]: 1.0081
+  PASS  U2 sync 17: codes |c|<=15, largest bin deviation <= 0.05: 0.0095
+  PASS  U1 sync 33: near-boundary share / 0.10 in [0.95, 1.05]: 1.0075
+  PASS  U2 sync 33: codes |c|<=15, largest bin deviation <= 0.05: 0.0046
+  PASS  U1 sync 65: near-boundary share / 0.10 in [0.95, 1.05]: 1.0064
+  PASS  U2 sync 65: codes |c|<=15, largest bin deviation <= 0.05: 0.0026
+  PASS  U1 sync 66: near-boundary share / 0.10 in [0.95, 1.05]: 1.0064
+  PASS  U2 sync 66: codes |c|<=15, largest bin deviation <= 0.05: 0.0025
+  PASS  U1 sync 129: near-boundary share / 0.10 in [0.95, 1.05]: 1.0048
+  PASS  U2 sync 129: codes |c|<=15, largest bin deviation <= 0.05: 0.0016
+  PASS  U1 sync 257: near-boundary share / 0.10 in [0.95, 1.05]: 1.0031
+  PASS  U2 sync 257: codes |c|<=15, largest bin deviation <= 0.05: 0.0012
+  PASS  U1 sync 258: near-boundary share / 0.10 in [0.95, 1.05]: 1.0030
+  PASS  U2 sync 258: codes |c|<=15, largest bin deviation <= 0.05: 0.0011
+  PASS  U1 sync 435: near-boundary share / 0.10 in [0.95, 1.05]: 1.0018
+  PASS  U2 sync 435: codes |c|<=15, largest bin deviation <= 0.05: 0.0013
+  PASS  U1 sync 436: near-boundary share / 0.10 in [0.95, 1.05]: 1.0018
+  PASS  U2 sync 436: codes |c|<=15, largest bin deviation <= 0.05: 0.0010
+  PASS  P4a' pair 1-2: F / P in [0.90, 1.10] (without sync-1 ties): 0.9124
+  PASS  P4b pair 1-2: calibration slope in [0.90, 1.10]: 0.9297
+  FAIL  P4c pair 1-2: capture slope in [0.95, 1.05]: 0.9311
+  PASS  P4a' pair 2-3: F / P in [0.90, 1.10] (without sync-1 ties): 0.9620
+  PASS  P4b pair 2-3: calibration slope in [0.90, 1.10]: 0.9688
+  PASS  P4c pair 2-3: capture slope in [0.95, 1.05]: 0.9691
+  PASS  P4a pair 65-66: F / P in [0.90, 1.10] (all elements): 1.0111
+  PASS  P4a' pair 65-66: F / P in [0.90, 1.10] (without sync-1 ties): 0.9875
+  PASS  P4b pair 65-66: calibration slope in [0.90, 1.10]: 0.9867
+  PASS  P4c pair 65-66: capture slope in [0.95, 1.05]: 0.9868
+  PASS  P4a pair 257-258: F / P in [0.90, 1.10] (all elements): 1.0021
+  PASS  P4a' pair 257-258: F / P in [0.90, 1.10] (without sync-1 ties): 0.9911
+  PASS  P4b pair 257-258: calibration slope in [0.90, 1.10]: 0.9903
+  PASS  P4c pair 257-258: capture slope in [0.95, 1.05]: 0.9905
+  PASS  P4a pair 435-436: F / P in [0.90, 1.10] (all elements): 1.0024
+  PASS  P4a' pair 435-436: F / P in [0.90, 1.10] (without sync-1 ties): 0.9944
+  PASS  P4b pair 435-436: calibration slope in [0.90, 1.10]: 0.9946
+  PASS  P4c pair 435-436: capture slope in [0.95, 1.05]: 0.9942
+  PASS  P3 sync 2: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 2: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0000
+  PASS  P6b sync 2: max |Corr - (1-6a(1-a))| <= 0.05 over 1 bins: 0.0018
+  PASS  P3 sync 3: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 3: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0000
+  PASS  P6b sync 3: max |Corr - (1-6a(1-a))| <= 0.05 over 2 bins: 0.0020
+  PASS  P3 sync 5: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 5: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0001
+  PASS  P6b sync 5: max |Corr - (1-6a(1-a))| <= 0.05 over 2 bins: 0.0051
+  PASS  P3 sync 9: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 9: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0001
+  PASS  P6b sync 9: max |Corr - (1-6a(1-a))| <= 0.05 over 3 bins: 0.0037
+  PASS  P3 sync 17: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 17: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0001
+  PASS  P6b sync 17: max |Corr - (1-6a(1-a))| <= 0.05 over 4 bins: 0.0198
+  PASS  P3 sync 33: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 33: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0002
+  PASS  P6b sync 33: max |Corr - (1-6a(1-a))| <= 0.05 over 5 bins: 0.0090
+  PASS  P3 sync 65: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 65: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0002
+  PASS  P6b sync 65: max |Corr - (1-6a(1-a))| <= 0.05 over 6 bins: 0.0121
+  PASS  P3 sync 66: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 66: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0002
+  PASS  P6b sync 66: max |Corr - (1-6a(1-a))| <= 0.05 over 6 bins: 0.0079
+  PASS  P3 sync 129: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 129: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0003
+  PASS  P6b sync 129: max |Corr - (1-6a(1-a))| <= 0.05 over 8 bins: 0.0074
+  PASS  P3 sync 257: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 257: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0005
+  PASS  P6b sync 257: max |Corr - (1-6a(1-a))| <= 0.05 over 11 bins: 0.0034
+  PASS  P3 sync 258: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 258: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0005
+  PASS  P6b sync 258: max |Corr - (1-6a(1-a))| <= 0.05 over 11 bins: 0.0034
+  PASS  P3 sync 435: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 435: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0007
+  PASS  P6b sync 435: max |Corr - (1-6a(1-a))| <= 0.05 over 13 bins: 0.0073
+  PASS  P3 sync 436: max |e_k - e_0| / max(Delta) <= 1: 1.0000
+  PASS  P6a sync 436: Var(phi_k) / Var(phi_0) in [0.98, 1.02]: 1.0007
+  PASS  P6b sync 436: max |Corr - (1-6a(1-a))| <= 0.05 over 13 bins: 0.0039
+  PASS  P6c rows: max over syncs |Corr(phi_k, phi_0) - mean(1-6a(1-a))| <= 0.05: 0.0031
+  PASS  P7a rows: error feedback |sum e| <= Delta_K / 2: 1.000000
+  PASS  P7b rows: SR rms partial sum / sqrt(K/6) in [0.90, 1.10]: 1.0004

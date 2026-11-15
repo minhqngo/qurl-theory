@@ -1,0 +1,25 @@
+step   total          gen old_log_prob          ref       values          adv update_criti update_actor update_weigh  score resp_len clipped   tok/s
+   1    60.1          6.1          7.8          7.6          1.6          0.3          3.2         22.2          2.9  0.012    307.4   0.078    1764
+   2    47.2          4.1          7.3          7.3          1.5          0.2          3.0         20.7          2.9  0.000    285.4   0.090    2107
+   3    43.4          4.1          6.1          6.9          1.1          0.2          2.8         19.0          2.9  0.000    232.1   0.035    1975
+
+step time: first 60.1 s; median of the rest 45.3 s (min 43.4, max 47.2)
+  gen             median     4.1 s (   9% of a step)
+  old_log_prob    median     6.7 s (  15% of a step)
+  ref             median     7.1 s (  16% of a step)
+  values          median     1.3 s (   3% of a step)
+  adv             median     0.2 s (   0% of a step)
+  update_critic   median     2.9 s (   6% of a step)
+  update_actor    median    19.8 s (  44% of a step)
+  update_weights  median     2.9 s (   6% of a step)
+validation (greedy, test set): 16.0 s
+  step 3: val-core/openai/gsm8k/acc/mean@1 = 0.0000
+
+rollout vs. trainer (mean over steps; min-max):
+  mismatch KL (k3, per token)                1.824e-02  (1.036e-02-2.791e-02)
+  mismatch KL (k1, per token)                1.747e-02  (9.666e-03-2.705e-02)
+  TIS: share of tokens with rho > C          4.130e-03  (2.041e-03-6.725e-03)
+  ACR: share of tokens kept beyond 1 + eps   1.732e-05  (0.000e+00-5.195e-05)
+  largest rho in a batch                     1.513e+01  (6.985e+00-2.697e+01)
+
+projection for 435 steps: 5.47 h of training + 15 validations = 5.54 h

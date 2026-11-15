@@ -1,0 +1,13 @@
+E2 run e2_r3_s1: arm R3, 435 steps, seed 1, 2026-11-15T03:31:50+00:00
+full dumps at syncs 1,2,3,5,9,17,33,65,66,129,257,258,435,436 (14; sync k holds the weights after step k-1)
+row samples: layers 0,6,12,18,23, 16 rows per matrix, every sync
+disk: need about 34 GB, 1490 GB available
+  code: cf3f4d242f46c976972aa6064456709d  /localhome/local-minngo/qurl/e2/e2_dump.py
+  code: d2a97790247a981ddb79426ee1010582  /localhome/local-minngo/qurl/e2/e2_run.sh
+  code: 87385d9ada5c8c3855d304742228440a  /localhome/local-minngo/qurl/s3/arm.sh
+  code: 524cab4589cddf0b3f510cc0e39d1e9a  /localhome/local-minngo/qurl/s3/pilot.sh
+  code: 9822bdb457abd43de932babc88038662  /localhome/local-minngo/qurl/s3/qurl_verl/acr.py
+  code: 55dfc4b12c3483de2956fefefd87426d  /localhome/local-minngo/qurl/s3/qurl_verl/__init__.py
+  code: 47d3e98e46c6ceb15cbef1ba8c544945  /localhome/local-minngo/qurl/s3/qurl_verl/int8_rollout.py
+  code: 97814a75bfa37712177e8e79b1430642  /localhome/local-minngo/qurl/s3/qurl_verl/r5_optim.py
+E2 run e2_r3_s1 done 2026-11-15T08:02:11+00:00: 14 full dumps, 436 row files, 35G
