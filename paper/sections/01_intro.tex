@@ -34,7 +34,7 @@ This paper examines UAQ and the weight-update argument from first principles and
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item \emph{Rollouts:} with vLLM's CUTLASS INT8 W8A8 kernel, UAQ at $s=2$ leaves per-token log-probabilities bit-identical for Qwen2.5 models of 0.5B, 1.5B and 7B parameters. At $s=1.5$ it leaves the mismatch unchanged: ratios of 0.99--1.01, where an $s$-fold reduction would give 0.67.
   \item \emph{Training:} a QuRL-style loop with matched settings reproduces UAQ bit for bit over 80 AdamW updates, as does VeRL's FSDP2 actor. Dropping the clipping rule, or matching only the learning rates, diverges at the first update.
-  \item \emph{Update capture:} on a real PPO step, 0.21\% of INT8 codes flip where \cref{prop:capture} predicts 0.20\%.
+  \item \emph{Tracking and persistence} (pre-registered; \cref{sec:e2}): over a full PPO run, re-quantization captures 97--99\% of each update from the second on. The rounding error persists as predicted: after 435 steps it correlates 0.691 with its initial value, against 0.692 predicted. Error feedback bounds its partial sums on the real weight path, and the INT8 policy follows the trainer with slope 0.93, where a frozen one would give 0. The first update from the BF16 checkpoint is captured at 93\%, an effect of BF16 storage.
   \end{itemize}
 \item \textbf{A reproduction and a pre-registered test} (\cref{sec:s3}).
   \begin{itemize}[leftmargin=*,itemsep=1pt]

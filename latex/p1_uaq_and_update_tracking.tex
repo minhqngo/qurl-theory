@@ -3,7 +3,7 @@
 
 \title{P1: UAQ and Update Tracking\\in Quantized-Rollout Reinforcement Learning}
 \author{Theory note for research problem P1 (draft)}
-\date{7 November 2026; reorganized 11 November 2026; experiments split off 12 November 2026}
+\date{7 November 2026; reorganized 11 November 2026; experiments split off 12 November 2026; E2's results added 15 November 2026}
 
 \begin{document}
 \maketitle
@@ -15,7 +15,13 @@
 \item UAQ leaves the quantized rollout model exactly unchanged (\cref{thm:invariance}). Where UAQ changes a quantized model at all, it does so through a different rounding pattern, never by an $s$-fold error reduction (\cref{rem:scope}).
 \item UAQ's whole effect on training is a per-layer learning-rate change: $\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW (\cref{thm:reparam}). QuRL + UAQ is therefore identical to QuRL with these settings (\cref{cor:pipeline}), and the ``$s^2$ improvement'' is $s$ under Adam (\cref{cor:ratio}).
 \item Re-quantized master weights do not freeze; updates are captured in expectation (\cref{prop:lag,prop:capture,prop:layer}). The real issue is that the rounding error persists across steps (\cref{prop:persistence}). Error feedback is the scheme whose cumulative error stays bounded (\cref{prop:schemes}).
-\item \textbf{Evidence.} The companion experiments report (\texttt{p1\_experiments.tex}) tests these results in float64, on vLLM's kernels, in an exact training loop and in pre-registered RL runs. So far \cref{thm:invariance,thm:reparam} hold bit-for-bit on the real stack, and nothing contradicts any result; its Section~4 goes through the evidence claim by claim.
+\item \textbf{Evidence.} The companion experiments report (\texttt{p1\_experiments.tex}) tests these results in float64, on vLLM's kernels, in an exact training loop and in pre-registered RL runs. So far:
+  \begin{itemize}
+  \item \cref{thm:invariance,thm:reparam} hold bit-for-bit on the real stack;
+  \item on the master weights of an instrumented RL run (E2), \cref{prop:persistence,prop:schemes} hold, and so does \cref{prop:capture} from the second update on (\cref{rem:bf16});
+  \item nothing contradicts any result where its assumptions hold.
+  \end{itemize}
+  The report's Section~4 goes through the evidence claim by claim.
 \end{itemize}
 
 \tableofcontents
@@ -179,11 +185,21 @@ For a coordinate with grid step $\Delta$, write $w/\Delta=c+\varphi$, $c\in\Z$, 
 \end{assumptionU}
 
 \begin{lemma}[When U holds]\label{lem:phase}
-If $w$ has density $p$ with characteristic function $\hat p$, the phase density $f$ satisfies $\sup_\varphi|f(\varphi)-1|\le\sum_{m\ne0}|\hat p(2\pi m/\Delta)|$. For a Gaussian (or mixture) with standard deviation at least $\sigma$, the bound is $2\sum_{m\ge1}e^{-2\pi^2m^2\sigma^2/\Delta^2}<10^{-8}$ already at $\sigma=\Delta$ \citep{widrow2008quantization,sripad1977necessary}. Per-row absmax INT8 has $\sigma/\Delta\approx127/(\max/\rms)$, about 6--25 if rows have $\max/\rms\approx5$--20 (to be checked on real checkpoints). U fails if weights sit on grid points, e.g.\ after QAT on the same grid.
+If $w$ has density $p$ with characteristic function $\hat p$, the phase density $f$ satisfies $\sup_\varphi|f(\varphi)-1|\le\sum_{m\ne0}|\hat p(2\pi m/\Delta)|$. For a Gaussian (or mixture) with standard deviation at least $\sigma$, the bound is $2\sum_{m\ge1}e^{-2\pi^2m^2\sigma^2/\Delta^2}<10^{-8}$ already at $\sigma=\Delta$ \citep{widrow2008quantization,sripad1977necessary}. Per-row absmax INT8 has $\sigma/\Delta\approx127/(\max/\rms)$. On the Qwen2.5 checkpoints of 0.5B, 1.5B and 7B parameters, $\max/\rms$ has a median of 3.6--4.5 per projection type, so $\sigma/\Delta$ is 28--36, and no row has $\sigma/\Delta<1$ (experiments report, E2). U fails if weights sit on grid points, e.g.\ after QAT on the same grid.
 \end{lemma}
 \begin{proof}
 $f(\varphi)=\sum_k\Delta\,p(\Delta(k+\varphi))$ is 1-periodic with Fourier coefficients $\hat p(2\pi m/\Delta)$ and $\hat p(0)=1$ (Poisson summation).
 \end{proof}
+
+\begin{remark}[BF16 storage]\label{rem:bf16}
+\Cref{lem:phase} assumes a density. Weights stored in BF16 have none: they sit on a lattice whose spacing, in grid units, is $|c|/256$ to $|c|/128$ for code $c$.
+\begin{itemize}
+\item U then holds at the resolution of a few hundredths of a grid step, but not at the scale of a single update.
+\item Next to a rounding boundary, the stored weights sit either on it (exact ties, 0.07--0.26\% of the weights on the three checkpoints above) or at discrete distances that are often larger than one update. So fewer weights lie within one update of a boundary than U assumes.
+\item Training with FP32 master weights moves the weights off the lattice within a few steps.
+\end{itemize}
+In E2 (experiments report), \cref{prop:capture}'s capture slope is 0.93 for the first update from the BF16 checkpoint, 0.97 for the second and 0.99 from step 64 on. A simulation reproduces the first two values from BF16 storage alone.
+\end{remark}
 
 \begin{proposition}[Bounded lag; no assumption]\label{prop:lag}
 For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for all $k$, so $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$. The quantized trajectory never falls more than one grid step behind: no freezing.
@@ -218,12 +234,12 @@ Under U with a fixed grid:
 (i) A uniform phase shifted by an independent amount, modulo 1, is uniform. (ii) With $\varphi'=\varphi+a-\mathbf 1[\varphi\ge\tfrac12-a]$, $\E[\varphi\varphi']=\tfrac1{12}-\int_{1/2-a}^{1/2}\varphi\,d\varphi=\tfrac1{12}-\tfrac{a(1-a)}2$; divide by $\E\varphi^2=\tfrac1{12}$.
 \end{proof}
 
-\paragraph{Consequence.} Weight quantization error does not grow during training. A growing train--rollout mismatch (QuRL Fig.~3a) must come from a growing grid (outliers), growing sensitivity (Fisher, Jacobians), growing activation error, or changing contexts. This is research problem P4.
+\paragraph{Consequence.} Weight quantization error does not grow during training. A growing train--rollout mismatch (QuRL Fig.~3a) must come from a growing grid (outliers), growing sensitivity (Fisher, Jacobians), growing activation error, or changing contexts. This is research problem P4. In E2's run the weight error kept its size and the weight grids moved by at most 1.3\% for 99\% of rows, while the mismatch on a fixed set of probe tokens rose 3.5-fold. On fixed contexts, that leaves sensitivity and activation error.
 
 \begin{corollary}[Persistence time]\label{cor:persistence-time}
 The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$: after $\approx0.092\,\Delta/|d|$ steps of coherent drift, or $\approx\tfrac\pi2(0.092\,\Delta/|d|)^2$ steps of random-walk drift.
 \end{corollary}
-Reading QuRL's App.~A curves as cumulative relative norms (update $\approx0.002$, quantization error $\approx0.0097$ after ${\sim}900$ steps) gives $a\approx0.06$ and $\Corr(e_{900},e_0)\approx0.66$ ($\approx0.32$ if the plotted values are squared ratios). Either way, the error at the end of training is still substantially correlated with the error at the start.
+Reading QuRL's App.~A curves as cumulative relative norms (update $\approx0.002$, quantization error $\approx0.0097$ after ${\sim}900$ steps) gives $a\approx0.06$ and $\Corr(e_{900},e_0)\approx0.66$ ($\approx0.32$ if the plotted values are squared ratios). Either way, the error at the end of training is still substantially correlated with the error at the start. E2 measures this directly: after 435 steps at $\eta=10^{-6}$ the correlation is 0.691, against 0.692 predicted from the measured displacements.
 
 \begin{proposition}[Rollout-quantization schemes]\label{prop:schemes}
 For any master-weight path $\theta_k$:

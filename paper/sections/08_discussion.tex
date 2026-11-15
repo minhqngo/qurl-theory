@@ -10,7 +10,7 @@ Choosing per-layer learning-rate multipliers for RL fine-tuning is an open quest
 
 \paragraph{Low-precision rollouts were not free in our setup.} With INT8 rollouts, TIS and ACR, the quantized policy's GSM8K accuracy was 4.9 points below BF16 training (95\% CI $[2.3, 7.6]$), against the 1.8 points QuRL reports. The difference built up during training, with lower reward, higher entropy and a larger drift from the reference model, while the residual mismatch stayed 40--100$\times$ the BF16 floor (\cref{sec:s3}). Three explanations remain open:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item the persistent rounding error of \cref{prop:persistence} biases the updates;
+\item the persistent rounding error of \cref{prop:persistence}, which we measure on a real run (\cref{sec:e2}), biases the updates;
 \item TIS's truncation leaves a bias that grows with the mismatch;
 \item scoring with the quantized policy costs accuracy that the BF16 weights would not lose.
 \end{itemize}
@@ -28,8 +28,8 @@ Scoring the trained weights in both formats separates the third from the first t
 
 \paragraph{Limitations.}
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \emph{Assumptions of the theory.} The invariance assumes scales recomputed from the rescaled tensors. The reparameterization assumes exact arithmetic and identical data; on real stacks it predicts equality in distribution. The tracking results assume uniform rounding phases.
-\item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model.
+\item \emph{Assumptions of the theory.} The invariance assumes scales recomputed from the rescaled tensors. The reparameterization assumes exact arithmetic and identical data; on real stacks it predicts equality in distribution. The tracking results assume uniform rounding phases. Checkpoints stored in BF16 violate this at the scale of one update, so the first update from such a checkpoint is captured at 93\% (\cref{sec:e2}).
+\item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model. For tracking, the relevant quantity, the update-to-grid ratio at a given learning rate, is within a factor of 1.4 of the 7B model's (\cref{sec:e2}).
 \item \emph{What we could not inspect.} The authors' implementation was not available to us. Our statements about QuRL's figures rest on values read from their vector data.
 \item \emph{The reproduction.} Our GSM8K non-reproduction may reflect settings the paper does not state.
 \item \emph{Power.} Three seeds per arm, five for R4 and R5, resolve accuracy differences of several points only; H1--H3 are inconclusive for that reason, as their power analysis anticipated.
@@ -40,6 +40,6 @@ Scoring the trained weights in both formats separates the third from the first t
 
 UAQ cannot reduce quantization error for absmax quantizers: the rescaling is invisible to them, exactly so on the hardware kernel QuRL targets. Its effect on training is a per-layer learning-rate change, which a matched optimizer reproduces bit for bit.
 
-Re-quantizing full-precision master weights does not freeze the rollout policy. It captures updates in expectation, at the rate we predict and measure. The open problem it leaves is the persistence of the rounding error, which error feedback addresses and UAQ does not.
+Re-quantizing full-precision master weights does not freeze the rollout policy. Over a full run it captures updates at the rate we predict, except for the first update from a BF16 checkpoint. The open problem it leaves is the persistence of the rounding error, which we measure on a real run as predicted, and which error feedback addresses and UAQ does not.
 
 In RL at 0.5B, UAQ's effects on accuracy were too small to resolve, against its matched settings (five seeds), a BF16 control and QuRL's control (three seeds each), while its effect on the mismatch matched the BF16 control, as the theory predicts. Low-precision rollouts themselves cost 4.9 points of accuracy in our runs, more than QuRL reports; explaining and reducing that gap is the natural next problem.

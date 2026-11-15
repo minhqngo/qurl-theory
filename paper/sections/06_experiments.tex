@@ -1,6 +1,6 @@
 \section{Experiments on real stacks}\label{sec:experiments}
 
-All experiments run on one NVIDIA H100 NVL (94\,GB). \Cref{app:details} gives the full configurations. \todo{link an anonymized repository with code and raw outputs.}
+All experiments run on one NVIDIA H100 NVL (94\,GB); the exploratory simulation of \cref{sec:e2} runs on a CPU. \Cref{app:details} gives the full configurations. \todo{link an anonymized repository with code and raw outputs.}
 
 \subsection{UAQ leaves quantized rollouts unchanged}\label{sec:s1}
 
@@ -109,18 +109,6 @@ R3 & no UAQ, plain settings & 0/20; 0/20 & weights after step 1 & $1.36\times10^
   \item R5 with ordinary clipping differed in 99.98\% of the Q/K/V weights; its first gradient norm was 2.791 against 3.859.
   \end{itemize}
 \end{itemize}
-
-\subsection{Update capture on a real PPO step}\label{sec:capture}
-
-\Cref{prop:capture} predicts that a sub-grid update flips a code with probability $|d|/\Delta$. We checked this in VeRL with INT8 W8A8 rollouts that re-quantize the FP32 master weights at every weight sync (\cref{app:verl}). Before training, the codes and scales are bit-identical to an independent quantization of the checkpoint.
-
-After the first PPO step on Qwen2.5-0.5B-Instruct (four AdamW updates at $\eta=10^{-6}$), 0.21\% of layer~0's Q/K/V codes had flipped.
-\begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \emph{Prediction:} we estimate $|d|$ for each row from the move of its absmax element (median $2\times10^{-6}$). \Cref{prop:capture} then predicts 0.20\%, or 0.24\% when the shift of the grid itself is counted.
-\item \emph{By projection,} observed vs.\ predicted: Q 0.16\% vs.\ 0.15\%, K 0.29\% vs.\ 0.18\%, V 0.53\% vs.\ 0.58\%.
-\item \emph{Row by row} the agreement is loose (correlation 0.2--0.4), because $|d|$ is estimated from a single element per row.
-\end{itemize}
-This is an aggregate check on one layer and one step. It confirms the mechanism: re-quantization captures sub-grid updates at the predicted rate, so the rollout model is not frozen.
 
 \subsection{GSM8K PPO: a reproduction attempt and the UAQ experiment}\label{sec:s3}
 
@@ -263,7 +251,7 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
 \paragraph{The INT8 mismatch grows although the weight error cannot.} In the ten H1 runs (R3--R5) without a stall, the sampled-token mismatch ($k_3$) rose 4.7--7.8-fold, from $1.0$--$1.2\times10^{-2}$ at step 1 to window medians of $5.5$--$8.4\times10^{-2}$ over steps 60--175. It then fell, ending at $3.6$--$6.3\times10^{-2}$ over steps 400--435 in every H1 run but the one that stalled until step 373. That is still about 40--100$\times$ the BF16 arms' mismatch over the same steps ($6.1$--$8.4\times10^{-4}$).
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item In the twelve INT8 runs without a stall, it tracked neither the policy's entropy (Spearman $-0.56$ to $0.13$) nor its KL from the reference model ($-0.39$ to $0.38$).
-\item By \cref{prop:persistence}, the weight rounding error is stationary. The growth must therefore come from sensitivity, activations or contexts (\cref{sec:tracking}).
+\item By \cref{prop:persistence} the weight rounding error is stationary, and \cref{sec:e2} confirms this on a real run, in which the mismatch on fixed probe tokens still rises 3.5-fold. The growth must therefore come from sensitivity, activations or contexts (\cref{sec:tracking}).
 \item Attributing it requires per-layer error and activation logging, which we leave to future work.
 \end{itemize}
 
@@ -273,4 +261,86 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
 \item \textbf{R5 stalled in 2 of 5 runs, R4 in none.} If both stalled equally often, this would happen with probability 0.22.
 \item \textbf{Not the mismatch level.} R3 seed~3's stall had the highest mismatch of any run, the other three the lowest.
 \item \textbf{Not evidence against H1.} By \cref{cor:pipeline}, R4 and R5 run the same algorithm, and stalls also occur under R3's and R6's plain settings. They do weaken H1's test: both large R4 $-$ R5 differences come from R5 stalls.
+\end{itemize}
+
+\subsection{Tracking and persistence over a full run}\label{sec:e2}
+
+\paragraph{Protocol (pre-registered).} We test Assumption~U and \cref{prop:lag,prop:capture,prop:persistence,prop:schemes} on the weights of a real run, \cref{prop:layer} in policy space, and \cref{lem:uniform-phase}'s condition on stored checkpoints. The rules were fixed and the analysis scripts hashed before any of these data were analysed (\cref{app:prereg}).
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Run:} one more run of arm R3 of \cref{sec:s3} (QuRL INT8, seed~1, 435 steps), with a vLLM worker extension that records the FP32 master weights at each weight sync. It saves the full state at 14 syncs (1, 2, 3, 5, 9, 17, 33, 65, 66, 129, 257, 258, 435 and 436), which gives five one-step pairs, and 16 fixed rows of every linear weight in five layers at every sync (\cref{app:e2-details}).
+\item \emph{Check:} at every recorded sync, layer~0's live INT8 codes equal the quantizer applied to the recorded weights, so the records are the weights the rollout quantized. The run's late accuracy, 50.6\%, is close to that of the uninstrumented run with the same seed (50.2\%).
+\item \emph{Quantities:} grid units, with the rollout quantizer's arithmetic: $\Delta$ is the row absmax times $\mathrm{fl}_{32}(1/127)$, $q=w/\Delta$, $c=\mathrm{round}(q)$ and $\varphi=q-c$. Each sync has its own grid, so the change $u$ of $q$ between syncs includes the grid's motion. Each row's absmax element is left out, which leaves 357.5M weights per sync.
+\item \emph{Policy space:} 128 GSM8K training prompts with one response each from the initial policy (30{,}155 tokens). For each recorded state, $\log\pi$ comes from an FP32 forward pass, and $\log\mu$ from the same weights under the rollout's W8A8 quantizer, applied as deterministic fake quantization.
+\item \emph{Stored checkpoints:} the decoder linear weights of the three models of \cref{sec:s1}, as stored in BF16.
+\end{itemize}
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabularx}{\linewidth}{@{}L l l@{}}
+\toprule
+Prediction and registered rule & Measured & Outcome\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Stored checkpoints: 7 projection types of 3 models}}\\
+U at the boundary: share of $|\varphi|\ge0.45$ over 0.10, in $[0.95,1.05]$ & 0.999--1.011 & holds, 21 of 21\\
+U in the bulk: largest of 40 bin deviations for $|c|\le15$, at most 0.05 & 0.015--0.052 & fails in 1 of 21\\
+\Cref{lem:uniform-phase}'s condition: rows with $\sigma/\Delta<1$, below 1\% & none & holds\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{The run's master weights: 14 recorded syncs, 5 one-step pairs}}\\
+U at every sync, both rules above & 1.002--1.008; 0.036 to 0.001 & holds, 28 of 28\\
+\Cref{prop:lag}: largest lag over $\max(\Delta_k,\Delta_0)$, at most 1 & 0.999997 & holds (exact)\\
+\Cref{prop:capture}: flip share over prediction, in $[0.90,1.10]$; without the sync-1 ties, and with all weights from sync 65 & 0.912--0.994; 1.002--1.011 & holds, 8 of 8\\
+\Cref{prop:capture}: calibration slope, in $[0.90,1.10]$ & 0.930--0.995 & holds, 5 of 5\\
+\Cref{prop:capture}: capture slope, in $[0.95,1.05]$ & 0.931, 0.969, 0.987, 0.990, 0.994 & \textbf{fails} at the first pair\\
+\Cref{prop:persistence}: variance ratio in $[0.98,1.02]$; correlation within 0.05 of $1-6a(1-a)$ & 1.0000--1.0007; at most 0.020 & holds, 27 of 27\\
+\Cref{prop:schemes}: error feedback's partial sum within $\Delta_K/2$; stochastic rounding's rms over $\sqrt{K/6}$, in $[0.90,1.10]$ & 1.000000; 1.0004 & holds, 2 of 2\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Policy space: slope of $\Delta\log\mu$ on $\Delta\log\pi$}}\\
+First-order tracking, in $[0.90,1.10]$: cumulative pairs from sync 9; pooled one-step pairs & 0.8985--1.0115; 1.169 & fails in 2 of 11\\
+Not frozen: above 0.5 & 0.8985--1.169 & holds, 11 of 11\\
+\bottomrule
+\end{tabularx}
+\caption{Pre-registered tests of the tracking theory (\cref{sec:e2}). Measured values are ranges over cells, syncs or pairs. The one-step pairs are syncs 1--2, 2--3, 65--66, 257--258 and 435--436. The persistence row covers the variance ratio and the binned correlations at 13 syncs, and the correlation along all 436 syncs of the row samples.}\label{tab:e2}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_e2.pdf}
+\caption{Tracking and persistence on the instrumented run. (a) Correlation of the rounding phase with its initial value in bins of the cumulative displacement $a=\fracpart(|q_k-q_0|)$, at the 13 recorded syncs after the first (dots; bins with at least $10^4$ weights), against \cref{prop:persistence}'s $1-6a(1-a)$ (line). Each bin is drawn where the line equals the bin's mean prediction, so its vertical distance from the line is the tested deviation. (b) Capture slope $\sum\Delta c\,u/\sum u^2$ of the five one-step pairs, with the registered band (shaded), and the same statistic for synthetic rows stored in BF16 (two seeds) or in FP32 and moved by Adam.}\label{fig:e2}
+\end{figure}
+
+\paragraph{Results} (\cref{tab:e2,fig:e2}). On the run, 87 of the 88 weight-space checks and 20 of the 22 policy-space checks pass.
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Re-quantization captures updates at the predicted rate from the second update on.} The capture slope is 0.969 at the second pair and 0.987--0.994 from step 64 on.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item From step 64 on, the flip share with all weights differs from the prediction $\mathrm{mean}\min(1,|u|)$ by at most 1.1\%.
+  \item Late in training, a PPO step flips about 0.12\% of the INT8 codes.
+  \item The phase is uncorrelated with the update ($|r|\le0.0006$).
+  \end{itemize}
+\item \textbf{The first update from the BF16 checkpoint is captured at 93\%,} below the registered band. U passed its registered test at sync~1, so by the pre-registered reading this failure counts against \cref{prop:capture}. An exploratory analysis places the cause in the assumption instead.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item One update moves $q$ by about 0.004 grid steps, 14 times less than the band of U's boundary test. A checkpoint stored in BF16 puts the weights on a lattice whose spacing, in grid units, is $|c|/256$ to $|c|/128$.
+  \item Next to a rounding boundary the stored weights sit either on it (exact ties, 0.18\% of all weights, which the rule leaves out) or at discrete distances that are often larger than one update. So at the scale of one update, U fails.
+  \item A CPU simulation stores synthetic rows in BF16 and moves them with Adam (\cref{app:e2-details}). It reproduces the run's first two pairs to within 0.008 (\cref{fig:e2}b), while the same rows stored in FP32 show no shortfall.
+  \item Training removes the lattice: the bulk phase deviation falls from 0.036 at sync~1 to 0.001 at sync~436.
+  \end{itemize}
+\item \textbf{The rounding error persists as \cref{prop:persistence} predicts} (\cref{fig:e2}a).
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Its correlation with the initial error follows $1-6a(1-a)$ within 0.02 in every displacement bin at every recorded sync.
+  \item After 435 steps it is still 0.691, against 0.692 predicted from the measured displacements.
+  \item Its variance stays within 0.07\% of its initial value, and the grids hardly move. By the end of the run no weight had moved by more than $4.8\times10^{-4}$, so the absmax of 99\% of rows changed by at most 1.3\%.
+  \end{itemize}
+\item \textbf{Error feedback bounds the cumulative error on the real weight path} (\cref{prop:schemes}). After $K=436$ syncs, the rms partial sum of the errors is:
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item $115\,\Delta_0$ for RTN, 0.91 of the fully persistent value $K\Delta_0/\sqrt{12}$;
+  \item $8.53\,\Delta_0$ for stochastic rounding, against $\sqrt{K/6}\,\Delta_0=8.52\,\Delta_0$;
+  \item $0.289\,\Delta_0$ for error feedback, about $\Delta_0/\sqrt{12}$ at every $K$.
+  \end{itemize}
+\item \textbf{The rollout policy follows the trainer.} Over the run, the INT8 policy's log-probabilities move with slope 0.934 ($r=0.983$) against the full-precision policy's; a frozen rollout would give 0.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item The registered first-order test, a slope within $\pm10\%$ of 1, passes in 9 of 10 cumulative pairs. The slopes sit about 7\% below 1, which the theory does not predict.
+  \item Late in training, one-step changes are dominated by the rollout's own error. The spread of $\Delta\log\mu$ is 1.7 times that of $\Delta\log\pi$ at the first pair and 8.2 times at the last, and the last pair alone lifts the pooled one-step slope to 1.17.
+  \end{itemize}
+\item \textbf{The mismatch grows although the weight error does not.} On the fixed probe tokens, the mean $|\log\mu-\log\pi|$ rises 3.5-fold over the run, from 0.057 to 0.20, while the weight error keeps its size and the grids barely move. On fixed contexts, the growth must therefore come from the policy's sensitivity or the activation error, not from the weights. The probe tokens also become less likely under the trained policy.
+\item \textbf{Stored checkpoints meet \cref{lem:uniform-phase}'s condition by a wide margin.} No row of the three models has $\sigma/\Delta<1$; the median is 28--36, because $\max/\rms$ has a median of only 3.6--4.5. U holds at the rounding boundary in all 21 cells, and the bulk test fails narrowly in one (0.052 against 0.05), again from BF16 storage.
+\item \textbf{The tracking regime at 0.5B is close to that at 7B.} At $\eta=10^{-6}$ the median update-to-grid ratio $\nu=\eta/\Delta$ over rows is $1.8\times10^{-3}$ at 0.5B, $0.85\times10^{-3}$ at 1.5B and $1.3\times10^{-3}$ at 7B.
 \end{itemize}

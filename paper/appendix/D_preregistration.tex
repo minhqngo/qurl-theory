@@ -1,4 +1,4 @@
-\section{Pre-registration of the UAQ experiment}\label{app:prereg}
+\section{Pre-registrations}\label{app:prereg}
 
 The analyses below were fixed in writing, and their scripts frozen and hashed, before the data they test were seen. We report what had been seen at each point.
 
@@ -159,4 +159,117 @@ H3 test: R6 - R4, paired by seed
     90% CI [-43.97, +14.49]; 95% CI [-57.80, +28.33] -> inconclusive
   mismatch k3 (log scale)    bounds 0.80-1.25; per seed 0.635 0.649 0.321; ratio 0.510 (log SD 0.400);
     90% CI [0.260, 1.000]; 95% CI [0.189, 1.377] -> inconclusive
+\end{verbatim}}
+
+\paragraph{Tracking and persistence (fixed 2026-11-15, before any of its data were analysed).}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Seen beforehand:} the smoke test's dump check, which reports only that the records match the rollout's codes and how far the weights moved; and a test run of the checkpoint statistics on the 0.5B model. So the 0.5B checkpoint's results do not count as a fresh test.
+\item \textbf{Rule names} follow the numbering of our working notes: P3 is \cref{prop:lag}, P4 \cref{prop:capture}, P5 \cref{prop:layer} read in policy space, P6 \cref{prop:persistence} and P7 \cref{prop:schemes}.
+\item \textbf{Rules.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item U1: the share of $|\varphi|\ge0.45$, divided by 0.10, lies in $[0.95,1.05]$. U2: for codes $|c|\le15$, the largest deviation of 40 bin densities from 1 is at most 0.05. Both apply to every projection type of every stored checkpoint and at every recorded sync.
+  \item \Cref{lem:uniform-phase}: fewer than 1\% of the rows of a stored checkpoint have $\sigma/\Delta<1$.
+  \item P3: $\max|e_k-e_0|/\max(\Delta_k,\Delta_0)\le1$ (exact).
+  \item P4a: $F/P$ in $[0.90,1.10]$, with all weights for the pairs from sync 65 on, and for every pair without the weights that were exact ties at sync~1 (P4a$'$). P4b: the calibration slope in $[0.90,1.10]$. P4c: the capture slope in $[0.95,1.05]$.
+  \item P5: the slope in $[0.90,1.10]$ for every cumulative pair $(1,s')$ with $s'\ge9$ and for the pooled one-step pairs. P5$'$: the same slopes above 0.5.
+  \item P6a: $\Var(\varphi_k)/\Var(\varphi_0)$ in $[0.98,1.02]$ at every recorded sync. P6b: every binned correlation within 0.05 of its prediction. P6c: the same along the 436 syncs of the row samples.
+  \item P7a: error feedback's $|\sum_k e_k|\le\Delta_K/2$ (exact). P7b: stochastic rounding's rms partial sum over $\sqrt{K/6}$ in $[0.90,1.10]$ at the last sync.
+  \end{itemize}
+\item \textbf{Deviations expected in advance.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item BF16 storage puts large codes on a coarse lattice, so U2 was claimed only for $|c|\le15$.
+  \item About 0.2\% of the stored weights are exact ties, and any update flips about half of them; the first pairs' flip-share rule leaves them out.
+  \item The moving grid is part of $u$; the fixed-grid prediction is reported next to $P$.
+  \end{itemize}
+\item \textbf{Reading.} A failure of P4 or P6 where U1 holds would contradict the proposition as stated. A failure of P5$'$ would support QuRL's claim that the rollout freezes. A failure of U limits where the propositions apply rather than refuting them.
+\item \textbf{Scripts,} each with a self-test of known answers. On Gaussian weights every rule passes, and on weights placed on the grid U1 and P4 fail. In policy space, a gradient step gives a slope of 1.03 and frozen rollout weights give 0.00.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item \texttt{e2\_static.py}, SHA-256 \nolinkurl{0db4ecece22b552caa49cecc83dbac474f8a929db7748d8bb7121af194cb40c4};
+  \item \texttt{e2\_dynamic.py}, SHA-256 \nolinkurl{9ec9dca1f693962b3f7ffe1a2cdd3a2dc930c469de0ba857656451f7f2556fb3};
+  \item \texttt{e2\_policy.py}, SHA-256 \nolinkurl{af8f517022cda4b496af6425a4558480d6975750a2871a50a0d3695c7c2ec49c}.
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Analysis reports for the tracking run.} The frozen \texttt{e2\_dynamic.py} (weight space, on the CPU) and \texttt{e2\_policy.py} (policy space, on the GPU) ran on 2026-11-15, after the run had ended. Of their 110 rule lines, three read FAIL: P4c for pair 1--2 (0.9311), P5 for the cumulative pair 1--258 ($0.8985\pm0.0011$) and P5 for the pooled one-step pairs ($1.1691\pm0.0100$). We reproduce both reports' tables, without the per-bin correlations of the persistence table, which \cref{fig:e2}a plots. Long lines are wrapped. The reports number propositions as the rule names above do.
+{\scriptsize
+\begin{verbatim}
+E2 weight-space analysis (e2_dynamic.py)
+full dumps at syncs [1, 2, 3, 5, 9, 17, 33, 65, 66, 129, 257, 258, 435, 436]
+
+Assumption U at each full-dump sync (codes |c| < 127):
+ sync    elements near/0.10  dev all dev |c|<=15      ties Var(phi)*12
+    1   357514098    1.0071   0.0623      0.0361  1.83e-03      1.0008
+    2   357514036    1.0082   0.0259      0.0308  2.51e-06      1.0008
+    3   357513968    1.0081   0.0237      0.0287  2.20e-06      1.0007
+    5   357513913    1.0082   0.0221      0.0217  2.32e-06      1.0007
+    9   357513823    1.0082   0.0195      0.0152  2.23e-06      1.0007
+   17   357513729    1.0081   0.0162      0.0095  2.34e-06      1.0006
+   33   357513541    1.0075   0.0122      0.0046  2.04e-06      1.0006
+   65   357513294    1.0064   0.0088      0.0026  2.23e-06      1.0005
+   66   357513297    1.0064   0.0087      0.0025  2.18e-06      1.0005
+  129   357513012    1.0048   0.0059      0.0016  2.12e-06      1.0004
+  257   357512723    1.0031   0.0037      0.0012  1.99e-06      1.0003
+  258   357512718    1.0030   0.0037      0.0011  2.23e-06      1.0003
+  435   357512509    1.0018   0.0020      0.0013  2.27e-06      1.0002
+  436   357512505    1.0018   0.0020      0.0010  2.16e-06      1.0002
+
+Proposition 4, one-step pairs (flip share F, prediction P = mean min(1, |u|)):
+     pair          F          P     F/P F/P no ties P fixed grid cal slope  capture corr(phi,u)
+      1-2  4.151e-03  3.552e-03  1.1685      0.9124    3.476e-03    0.9297   0.9311      0.0001
+      2-3  2.284e-03  2.170e-03  1.0527      0.9620    2.111e-03    0.9688   0.9691      0.0006
+    65-66  1.148e-03  1.136e-03  1.0111      0.9875    1.100e-03    0.9867   0.9868      0.0001
+  257-258  1.217e-03  1.214e-03  1.0021      0.9911    1.176e-03    0.9903   0.9905      0.0001
+  435-436  1.172e-03  1.169e-03  1.0024      0.9944    1.133e-03    0.9946   0.9942      0.0001
+
+Propositions 3 and 6 against sync 1 (no sync-1 ties):
+ sync Var ratio  bins max |dev|  lag max
+    2    1.0000     1    0.0018   1.0000
+    3    1.0000     2    0.0020   1.0000
+    5    1.0001     2    0.0051   1.0000
+    9    1.0001     3    0.0037   1.0000
+   17    1.0001     4    0.0198   1.0000
+   33    1.0002     5    0.0090   1.0000
+   65    1.0002     6    0.0121   1.0000
+   66    1.0002     6    0.0079   1.0000
+  129    1.0003     8    0.0074   1.0000
+  257    1.0005    11    0.0034   1.0000
+  258    1.0005    11    0.0034   1.0000
+  435    1.0007    13    0.0073   1.0000
+  436    1.0007    13    0.0039   1.0000
+
+Row samples: 436 syncs, 818630 elements
+P6c: max |Corr(phi_k, phi_0) - prediction| over syncs 0.0031; Corr at syncs 2: 0.978/0.979,
+    10: 0.944/0.945, 34: 0.902/0.904, 130: 0.824/0.826, 436: 0.691/0.692
+P7 rms partial sum / Delta_0 at K = 1: RTN 0.289, SR 0.408, EF 0.289, 10: RTN 2.849, SR 1.291,
+    EF 0.289, 100: RTN 27.682, SR 4.087, EF 0.288, 436: RTN 114.954, SR 8.528, EF 0.289
+EF max |sum e| / (Delta_K/2) 1.000000; SR rms / sqrt(K/6) 1.0004
+\end{verbatim}}
+{\scriptsize
+\begin{verbatim}
+E2 policy-space analysis (e2_policy.py)
+full dumps at syncs [1, 2, 3, 5, 9, 17, 33, 65, 66, 129, 257, 258, 435, 436]
+
+     pair  tokens   sd d_pi    slope      se  intercept      r resid share
+      1-2   30155 1.083e-01   1.0039  0.0081  -1.15e-03  0.583      1.9585
+      2-3   30155 6.236e-02   0.9096  0.0140   5.33e-04  0.351      5.9066
+    65-66   30155 1.469e-01   1.0321  0.0140  -7.14e-03  0.391      5.8934
+  257-258   30155 9.664e-02   0.6352  0.0278   2.39e-02  0.131     23.4123
+  435-436   30155 8.229e-02   2.7143  0.0443   6.24e-02  0.333     62.0980
+1-step all  150775 1.039e-01   1.1691  0.0100   2.10e-02  0.288     15.1568
+      1-2   30155 1.083e-01   1.0039  0.0081  -1.15e-03  0.583      1.9585
+      1-3   30155 1.519e-01   0.9691  0.0058  -5.70e-04  0.695      1.0044
+      1-5   30155 1.648e-01   0.9153  0.0055   7.70e-05  0.693      0.9117
+      1-9   30155 2.208e-01   0.9555  0.0044   1.18e-04  0.783      0.5786
+     1-17   30155 2.891e-01   0.9915  0.0034  -9.45e-04  0.863      0.3385
+     1-33   30155 8.013e-01   0.9151  0.0017  -3.27e-03  0.951      0.0966
+     1-65   30155 1.335e+00   0.9236  0.0013  -4.46e-03  0.970      0.0590
+     1-66   30155 1.271e+00   0.9321  0.0015  -7.30e-03  0.963      0.0718
+    1-129   30155 1.431e+00   0.9241  0.0013  -6.80e-03  0.973      0.0533
+    1-257   30155 2.403e+00   0.9291  0.0011  -8.70e-03  0.979      0.0419
+    1-258   30155 2.440e+00   0.8985  0.0011  -1.27e-03  0.978      0.0463
+    1-435   30155 3.056e+00   1.0115  0.0011  -3.00e-02  0.983      0.0366
+    1-436   30155 3.017e+00   0.9337  0.0010  -1.13e-02  0.983      0.0344
+mean |log mu - log pi| by sync: 1: 5.734e-02, 2: 6.008e-02, 3: 5.962e-02, 5: 6.039e-02, 9: 6.467e-02,
+    17: 6.416e-02, 33: 8.668e-02, 65: 1.103e-01, 66: 1.117e-01, 129: 1.102e-01, 257: 1.603e-01,
+    258: 1.678e-01, 435: 2.012e-01, 436: 1.926e-01
 \end{verbatim}}

@@ -17,7 +17,9 @@ Let $w$ have density $p$ with characteristic function $\hat p$. Then the density
 For a Gaussian, or a mixture of Gaussians each with standard deviation at least $\sigma$, the bound is $2\sum_{m\ge1}e^{-2\pi^2m^2\sigma^2/\Delta^2}$. That is below $10^{-8}$ already at $\sigma=\Delta$.
 \end{lemma}
 
-For per-row absmax INT8, $\sigma/\Delta\approx127/(\max/\rms)$, which is about 6--25 if weight rows have $\max/\rms$ between 5 and 20. In that range U holds essentially exactly for the population distribution, as classical quantization-noise theory predicts \citep{widrow2008quantization,sripad1977necessary}. U fails when weights sit on grid points, for example after quantization-aware training on the same grid.
+For per-row absmax INT8, $\sigma/\Delta\approx127/(\max/\rms)$. On the Qwen2.5 checkpoints of 0.5B, 1.5B and 7B parameters, $\max/\rms$ has a median of 3.6--4.5, so $\sigma/\Delta$ is 28--36, and no row has $\sigma/\Delta<1$ (\cref{sec:e2}). At such values U holds essentially exactly for the population distribution, as classical quantization-noise theory predicts \citep{widrow2008quantization,sripad1977necessary}.
+
+U fails when weights sit on grid points, for example after quantization-aware training on the same grid. At fine scales it also fails for weights stored in BF16. These have no density: they sit on a lattice whose spacing, in grid units, is $|c|/256$ to $|c|/128$ for code $c$. U then holds at a resolution of a few hundredths of a grid step, but not at the scale of a single update, until training with FP32 master weights moves the weights off the lattice (\cref{sec:e2}).
 
 \begin{proposition}[Bounded lag; no assumption]\label{prop:lag}
 For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for every $k$. Hence $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$.
@@ -68,7 +70,7 @@ The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$. W
 \item the visited contexts change.
 \end{itemize}
 
-What re-quantization does create is \emph{persistence}. With QuRL's App.~A magnitudes (a cumulative relative update of about 0.002 against a relative quantization error of about 0.0097 after about 900 steps), $\Corr(e_{900},e_0)$ is still about 0.3--0.7, depending on how the figure is read. Any first-order bias of the update in $e_k$ then acts as a nearly constant drift rather than as noise that averages out.
+What re-quantization does create is \emph{persistence}. With QuRL's App.~A magnitudes (a cumulative relative update of about 0.002 against a relative quantization error of about 0.0097 after about 900 steps), $\Corr(e_{900},e_0)$ is still about 0.3--0.7, depending on how the figure is read. On our instrumented run at $\eta=10^{-6}$ it is 0.69 after 435 steps, as predicted (\cref{sec:e2}). Any first-order bias of the update in $e_k$ then acts as a nearly constant drift rather than as noise that averages out.
 
 \begin{table}[t]
 \centering\footnotesize

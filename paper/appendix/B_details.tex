@@ -63,7 +63,7 @@
 \item \textbf{Exactness check in VeRL.} The plug-in was checked on the H100 inside VeRL's FSDP2 engine (\cref{sec:s2}): R5 and an R4 repeat were bit-identical to R4 after three updates. Each run of the UAQ experiment starts only after this check passes.
 \end{itemize}
 
-\subsection{GSM8K PPO configuration (\texorpdfstring{\cref{sec:s3}}{Section 6.4})}
+\subsection{GSM8K PPO configuration (\texorpdfstring{\cref{sec:s3}}{Section 6.3})}
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}l L@{}}
 \toprule
@@ -85,3 +85,35 @@ Run time & 4.2--5.5\,h per run in the UAQ experiment, 104\,h for its 22 runs; 2.
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\subsection{Tracking and persistence run (\texorpdfstring{\cref{sec:e2}}{Section 6.4})}\label{app:e2-details}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Recording.} A subclass of the INT8 refit extension (\cref{app:verl}), otherwise unchanged, copies each synced FP32 linear weight before quantizing it. Sync $k$ carries the weights after step $k-1$.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Full states, about 2\,GB each, at the 14 syncs of \cref{sec:e2}.
+  \item At every sync, 16 fixed rows of each of the seven linear weights of layers 0, 6, 12, 18 and 23: 818{,}630 weights once the absmax elements are removed.
+  \item At each full sync, layer~0's live Q/K/V codes and scales.
+  \end{itemize}
+  The records take 35\,GB; the run took 4.5\,h.
+\item \textbf{Dump check.} At each of the 14 full syncs, every linear weight is present in FP32 under the same name as at sync~1. Layer~0's live INT8 codes and scales equal the quantizer applied to the record, and the row samples equal the matching rows of the full record.
+\item \textbf{Ties.} 0.18\% of the weights of the BF16 checkpoint lie exactly on a rounding boundary ($|\varphi|=\tfrac12$), against $2\times10^{-6}$ after one step (FP32 round-off). An update moves a tie to one side or the other, so it flips with probability about $\tfrac12$ whatever its size. The registered rules for the first pairs therefore leave out the weights that were ties at sync~1.
+\item \textbf{Capture statistics,} for each one-step pair:
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item the flip share $F$ against $P=\mathrm{mean}\min(1,|u|)$;
+  \item the calibration slope, a count-weighted slope through the origin of observed against predicted flip rates in quarter-decade bins of $|u|$ with at least $10^4$ weights;
+  \item the capture slope $\sum\Delta c\,u/\sum u^2$.
+  \end{itemize}
+\item \textbf{Persistence} against sync~1, without its ties: $\Corr(\varphi_k,\varphi_0)$ in 20 bins of $a=\fracpart(|q_k-q_0|)$, each compared with its mean of $1-6a(1-a)$, over bins with at least $10^4$ weights; and the same along all 436 syncs, from the row samples.
+\item \textbf{Partial sums,} on the row samples along the recorded path: RTN, stochastic rounding with fresh seeded dither, and error feedback, in units of each row's $\Delta$ at sync~1.
+\item \textbf{Policy space.} 128 GSM8K training prompts (a fixed random subset), with one response each sampled at temperature 1 from the initial weights, at most 256 tokens long.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item For $\log\mu$, each linear weight is replaced by its INT8 codes times its row scale. The input of each linear layer is quantized per token (absmax over 127, round half to even), and embeddings, normalization and the output head stay unquantized, as in the rollout engine.
+  \item The slope is an OLS fit of $\Delta\log\mu$ on $\Delta\log\pi$ over tokens. Its standard error, 0.001--0.004 for the cumulative pairs, treats the tokens as independent and is therefore too small; no rule uses it.
+  \end{itemize}
+\item \textbf{Simulation} (exploratory, on a CPU). It uses 22.0M synthetic Gaussian weights in rows of 896, with row scales log-uniform over three octaves.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Each row's $\nu$ is drawn log-normally to match the 0.5B checkpoint (median $1.78\times10^{-3}$).
+  \item The rows are rounded to BF16 or kept in FP32, then moved by Adam on pure-noise gradients, four updates per sync as in the run. This gives predicted flip shares 6--15\% above the run's.
+  \item The statistics are those of the frozen analysis script, imported unchanged.
+  \end{itemize}
+\end{itemize}
