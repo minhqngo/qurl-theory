@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qurl"
+version = "0.1.0"
+description = "QuRL for VeRL: INT8 W8A8 rollout refit, TIS/ACR loss, UAQ checkpoints and the Theorem 2 (R5) optimizer"
+readme = "README.md"
+requires-python = ">=3.10"
+# Tested with torch 2.11, transformers 5.9, VeRL 0.9.1 and vLLM 0.24 (Python 3.12).
+dependencies = ["torch>=2.6"]
+
+[project.optional-dependencies]
+uaq = ["transformers>=4.51", "safetensors"]
+# qurl.verl patches and subclasses VeRL internals and relies on vLLM 0.24's INT8 layer layout: keep these versions.
+verl = ["verl>=0.9.1,<0.10", "vllm>=0.24,<0.25"]
+test = ["pytest>=8", "numpy", "transformers>=4.51", "tokenizers", "safetensors"]
+
+[project.scripts]
+qurl-uaq-checkpoint = "qurl.uaq:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+qurl = ["int8_w8a8_config.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "gpu: needs CUDA (skipped without it)",
+    "verl: needs VeRL 0.9.1 importable (skipped without it); some also import vLLM",
+    "originals: compares with the experiment code this package was refactored from (skipped if it is absent)",
+    "slow: spawns several processes (FSDP2 on the CPU with gloo)",
+]
