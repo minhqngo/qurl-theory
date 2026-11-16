@@ -1,17 +1,20 @@
-"""The INT8 refit: the rollout model's INT8 W8A8 layers, re-quantized from the trainer's weights at every weight sync.
+"""QuRL's quantized rollout: vLLM's INT8 W8A8 layers, re-quantized from the trainer's weights at every weight sync.
+
+In QuRL, the old actor is quantized for rollout, theta_hat_old = Q(theta_old), while the trainer keeps full-precision
+weights (paper, Sec. 4): after every training step, the new weights are synced to the rollout engine and quantized
+again.
 
 vLLM side. The rollout engine is launched as an INT8 W8A8 compressed-tensors model with the config in
 int8_w8a8_config.json (quantization_config()): channel-wise symmetric INT8 weights, dynamic per-token symmetric INT8
-activations, lm_head kept in BF16. With VeRL's dummy load format every linear layer starts with garbage codes, which
-the first weight sync overwrites.
+activations, lm_head kept in BF16; the KV cache is not quantized (as in the paper). With VeRL's dummy load format every
+linear layer starts with garbage codes, which the first weight sync overwrites.
 
 Weight sync. In vLLM 0.24, a compressed-tensors W8A8 INT8 layer holds an int8 `weight` and a float32 `weight_scale`
 [out, 1]; after process_weights_after_loading, both the CUTLASS (H100) and the Triton (fallback) kernel keep `weight`
 as a transposed [in, out] view of the [out, in] codes. Int8Refit.load quantizes each synced q/k/v/o/gate/up/down weight
-row by row (qurl.quant.quantize_rows: the quantizer of Theorem 1) and writes codes and scales into that shard's rows of
-the live layer. Per-row scales make the fused shards (q/k/v in qkv_proj, gate/up in gate_up_proj) independent, so each
-tensor is handled as it arrives. Every other tensor (embeddings, norms, biases) is handed back, for VeRL's ordinary
-load path.
+row by row (qurl.quant.quantize_rows) and writes codes and scales into that shard's rows of the live layer. Per-row
+scales make the fused shards (q/k/v in qkv_proj, gate/up in gate_up_proj) independent, so each tensor is handled as it
+arrives. Every other tensor (embeddings, norms, biases) is handed back, for VeRL's ordinary load path.
 
 Checks, all of which raise:
   - tensor parallelism: a row-parallel layer (o_proj, down_proj) would hold a slice of every row, and a per-row scale
@@ -21,12 +24,6 @@ Checks, all of which raise:
     before its sync is complete means the previous sync was not);
   - a synced linear weight without an INT8 layer to receive it (loading BF16 values into int8 parameters would
     silently corrupt the rollout model).
-
-Optional outputs, configured by RefitConfig (environment variables in VeRL; each written by one replica only, the
-first to claim it):
-  - the per-sync log of qurl.synclog (QURL_E3_PATH);
-  - a test dump of layer 0's fused QKV codes and scales at the first two syncs of the run's first attempt
-    (QURL_INT8_DUMP_DIR), to check the refit against an independent quantization of the starting checkpoint.
 """
 from __future__ import annotations
 
@@ -39,7 +36,6 @@ from dataclasses import dataclass
 import torch
 
 from .quant import quantize_rows
-from .synclog import SyncLog, claim
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "int8_w8a8_config.json")
 
@@ -53,8 +49,6 @@ FUSED = {"q_proj": ("qkv_proj", 0), "k_proj": ("qkv_proj", 1), "v_proj": ("qkv_p
 """Trainer projection -> (vLLM module that holds it, shard index within the fused module, or None)."""
 
 WEIGHTS_PER_LAYER = 7
-DUMP_MODULE_SUFFIX = "layers.0.self_attn.qkv_proj"
-DUMP_SYNCS = 2
 
 
 def quantization_config() -> dict:
@@ -88,29 +82,6 @@ def match_linear(name: str) -> LinearTarget | None:
                         shard=shard)
 
 
-@dataclass(frozen=True)
-class RefitConfig:
-    """The refit's optional outputs.
-
-    log_path    per-sync log (qurl.synclog), JSON lines; written by the replica that claims `<log_path>.<attempt>.claim`
-    dump_dir    test dump of layer 0's fused QKV codes at the first DUMP_SYNCS syncs of the run's first attempt
-    attempt     an id per launch, so that a resumed run claims the log afresh
-    start_step  the training step the attempt starts from (0, or the checkpoint a resumed attempt loads); sync k of an
-                attempt is the weight change of step start_step + k - 1, and ties are detected only at step 0
-    """
-    log_path: str | None = None
-    dump_dir: str | None = None
-    attempt: str = "0"
-    start_step: int = 0
-
-    @classmethod
-    def from_env(cls, environ: Mapping[str, str] | None = None) -> RefitConfig:
-        """From QURL_E3_PATH, QURL_INT8_DUMP_DIR, QURL_RUN_ATTEMPT and QURL_START_STEP."""
-        env = os.environ if environ is None else environ
-        return cls(log_path=env.get("QURL_E3_PATH") or None, dump_dir=env.get("QURL_INT8_DUMP_DIR") or None,
-                   attempt=env.get("QURL_RUN_ATTEMPT", "0"), start_step=int(env.get("QURL_START_STEP", "0")))
-
-
 class Int8Refit:
     """One rollout replica's refit state, created at its first weight sync.
 
@@ -119,8 +90,7 @@ class Int8Refit:
     but 1 is refused.
     """
 
-    def __init__(self, modules: Mapping[str, torch.nn.Module], *, tp_world_size: int = 1,
-                 config: RefitConfig = RefitConfig()):
+    def __init__(self, modules: Mapping[str, torch.nn.Module], *, tp_world_size: int = 1):
         if tp_world_size != 1:
             raise RuntimeError(f"[qurl int8 refit] tensor parallelism ({tp_world_size}) is not supported: per-row "
                                f"scales of row-parallel layers need whole rows; run the rollout with "
@@ -131,20 +101,10 @@ class Int8Refit:
         if self.expected != WEIGHTS_PER_LAYER * self.layers:
             raise RuntimeError(f"[qurl int8 refit] expected {WEIGHTS_PER_LAYER} INT8 weights per layer, found "
                                f"{self.expected} for {self.layers} layers")
-        self.config = config
         self.sync = 0
         self.count = 0
         self.info = ""
         self._seen: set[str] = set()
-        self._dumped_shards: set[int | None] = set()
-        self._device = next(iter(int8.values())).weight.device if int8 else None
-        self.log = (SyncLog(config.log_path, self.layers, attempt=config.attempt, start_step=config.start_step)
-                    if config.log_path and claim(f"{config.log_path}.{config.attempt}.claim") else None)
-        # The dump is of the run's starting weights: only the first attempt writes it (a resumed attempt starts from a
-        # checkpoint, and its sync 1 would overwrite the dump with trained weights).
-        self.dump_dir = (config.dump_dir if config.dump_dir
-                         and not os.path.exists(os.path.join(config.dump_dir, "sync1_qkv_layer0.pt"))
-                         and claim(os.path.join(config.dump_dir, f"claim.{config.attempt}")) else None)
 
     def load(self, weights: Iterable[tuple[str, torch.Tensor]],
              modules: Mapping[str, torch.nn.Module]) -> list[tuple[str, torch.Tensor]]:
@@ -177,16 +137,11 @@ class Int8Refit:
         self.sync += 1
         self.count = 0
         self._seen = set()
-        self._dumped_shards = set()
-        if self.log is not None:
-            self.log.start_sync(self._device)
 
     def _finish_sync(self) -> None:
-        """All weights of this sync arrived: print the replica's line and, in the logging replica, write the log."""
+        """All weights of this sync arrived: print the replica's line."""
         print(f"[qurl int8 refit] pid {os.getpid()} sync {self.sync}: {self.count} linear weights "
               f"re-quantized to INT8{self.info}", flush=True)
-        if self.log is not None:
-            self.log.write(self.sync)
 
     def _write(self, name: str, target: LinearTarget, layer: torch.nn.Module, tensor: torch.Tensor) -> None:
         codes_t = layer.weight.data            # [in, out] view of the [out, in] codes (CUTLASS and Triton)
@@ -198,17 +153,7 @@ class Int8Refit:
             scheme = getattr(layer, "scheme", None)          # compressed-tensors attaches the scheme to the layer
             kernel = type(getattr(scheme, "kernel", None)).__name__
             self.info = f" (synced weights arrive as {tensor.dtype}; INT8 kernel {kernel})"
-        w = tensor.to(codes_t.device)
-        codes, scale = quantize_rows(w)
-        if self.log is not None:
-            self.log.add(target.layer, target.proj, w, codes, scale)
+        codes, scale = quantize_rows(tensor.to(codes_t.device))
         codes_t.t()[r0:r1].copy_(codes)
         layer.weight_scale.data[r0:r1].copy_(scale)
         self.count += 1
-        if self.dump_dir and target.module.endswith(DUMP_MODULE_SUFFIX) and self.sync <= DUMP_SYNCS:
-            self._dumped_shards.add(target.shard)
-            if len(self._dumped_shards) == len(layer.logical_widths):
-                os.makedirs(self.dump_dir, exist_ok=True)
-                torch.save({"codes": codes_t.t().cpu().clone(), "scale": layer.weight_scale.data.cpu().clone(),
-                            "logical_widths": list(layer.logical_widths), "module": target.module},
-                           os.path.join(self.dump_dir, f"sync{self.sync}_qkv_layer0.pt"))

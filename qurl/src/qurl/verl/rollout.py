@@ -1,4 +1,4 @@
-"""QuRL's INT8 W8A8 rollout in VeRL v0.9.1 + vLLM 0.24: a colocated vLLM worker extension with the INT8 refit.
+"""QuRL's quantized rollout in VeRL v0.9.1 + vLLM 0.24: a colocated vLLM worker extension with the INT8 refit.
 
 Hydra overrides (qurl.overrides builds them):
   actor_rollout_ref.rollout.tensor_model_parallel_size=1
@@ -6,15 +6,13 @@ Hydra overrides (qurl.overrides builds them):
   +actor_rollout_ref.rollout.engine_kwargs.vllm.hf_overrides=<{quantization_config: ..., max_position_embeddings: ...}>
   +actor_rollout_ref.rollout.engine_kwargs.vllm.worker_extension_cls=qurl.verl.rollout.QuRLWorkerExtension
 With tensor_model_parallel_size=1, VeRL starts one vLLM replica per GPU and sends each the full weights, so the refit
-(qurl.refit.Int8Refit) runs unchanged in every replica. The refit's optional outputs come from the environment
-(qurl.refit.RefitConfig.from_env, read at the first sync): QURL_E3_PATH (per-sync log), QURL_INT8_DUMP_DIR (test
-dump), QURL_RUN_ATTEMPT and QURL_START_STEP.
+(qurl.refit.Int8Refit) runs unchanged in every replica.
 """
 from __future__ import annotations
 
 from verl.workers.rollout.vllm_rollout.utils import vLLMColocateWorkerExtension
 
-from ..refit import Int8Refit, RefitConfig
+from ..refit import Int8Refit
 
 
 def tp_world_size() -> int:
@@ -50,7 +48,7 @@ class QuRLWorkerExtension(vLLMColocateWorkerExtension):
         modules = dict(self.model_runner.model.named_modules())
         refit = getattr(self, "_qurl_refit", None)
         if refit is None:   # per-replica state, created at the first sync
-            refit = Int8Refit(modules, tp_world_size=tp_world_size(), config=RefitConfig.from_env())
+            refit = Int8Refit(modules, tp_world_size=tp_world_size())
             self._qurl_refit = refit
         rest = refit.load(weights, modules)
         if rest:

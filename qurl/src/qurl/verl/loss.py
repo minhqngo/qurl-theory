@@ -1,7 +1,7 @@
 """QuRL's TIS + ACR objective as a VeRL policy loss: actor_rollout_ref.actor.policy_loss.loss_mode=qurl_acr.
 
-The per-token arithmetic is qurl.loss.tis_acr_terms (QuRL Eq. 9); this module reads the clip settings from VeRL's actor
-config, aggregates the losses with VeRL's agg_loss and reports VeRL's PPO metrics plus three of its own:
+The per-token arithmetic is qurl.loss.tis_acr_terms (paper, Eqs. 5 and 9); this module reads the clip settings from
+VeRL's actor config, aggregates the losses with VeRL's agg_loss and reports VeRL's PPO metrics plus three of its own:
   qurl/tis_trunc_frac   share of tokens whose TIS weight was truncated (rho > C)
   qurl/acr_kept_frac    share of tokens ACR keeps that plain PPO clipping would drop
   qurl/rho_max          largest rho in the micro-batch
@@ -26,7 +26,7 @@ TIS_C_DEFAULT = 2.0
 
 
 def tis_c() -> float:
-    """The TIS cap C, from QURL_TIS_C (default 2.0, QuRL's)."""
+    """The TIS cap C, from QURL_TIS_C (default 2.0, the experiments' value; the paper does not state its C)."""
     return float(os.environ.get("QURL_TIS_C", str(TIS_C_DEFAULT)))
 
 

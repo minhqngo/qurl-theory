@@ -60,13 +60,6 @@ def load_original_acr(monkeypatch) -> types.ModuleType:
         return load_source(ORIGINAL_PKG / "acr.py", "original_acr")
 
 
-def load_original_r5(monkeypatch) -> types.ModuleType:
-    """The original r5_optim.py, with QURL_OPT unset so that loading it does not patch VeRL."""
-    with monkeypatch.context() as m:
-        m.delenv("QURL_OPT", raising=False)
-        return load_source(ORIGINAL_PKG / "r5_optim.py", "original_r5_optim")
-
-
 def load_original_uaq() -> types.ModuleType:
     return load_source(ORIGINALS / "make_uaq_checkpoint.py", "original_make_uaq_checkpoint")
 
@@ -74,7 +67,7 @@ def load_original_uaq() -> types.ModuleType:
 # ---- tiny models ----------------------------------------------------------------------------------------------------
 def tiny_qwen2(seed: int = 0, layers: int = 2):
     """A tiny random Qwen2 in FP32 (eager attention). The input-layernorm gains and the q/k/v biases are random, so
-    that gamma's group matters and a rescaling that forgets the biases' role changes the model."""
+    that UAQ's gain rescaling matters and a rescaling that forgets the biases' role changes the model."""
     from transformers import Qwen2Config, Qwen2ForCausalLM
 
     torch.manual_seed(seed)
@@ -109,15 +102,6 @@ def write_tiny_checkpoint(path: Path, seed: int = 0) -> None:
     tiny_qwen2(seed).to(torch.bfloat16).save_pretrained(path, safe_serialization=True)
 
 
-def to_uaq(model, s: float) -> None:
-    """UAQ by hand (independent of qurl.uaq): q/k/v weights / s, input-layernorm gains * s."""
-    with torch.no_grad():
-        for layer in model.model.layers:
-            for proj in (layer.self_attn.q_proj, layer.self_attn.k_proj, layer.self_attn.v_proj):
-                proj.weight.div_(s)
-            layer.input_layernorm.weight.mul_(s)
-
-
 # ---- independent references -----------------------------------------------------------------------------------------
 def np_quantize_rows(w: torch.Tensor) -> tuple[np.ndarray, np.ndarray]:
     """Per-row absmax INT8 in numpy float32: scale = absmax * fl32(1/127), codes = round-half-even(W / scale)."""
@@ -128,16 +112,9 @@ def np_quantize_rows(w: torch.Tensor) -> tuple[np.ndarray, np.ndarray]:
     return codes, scale
 
 
-def np_tie_mask(w: torch.Tensor, tol: float = 1e-4) -> np.ndarray:
-    """Weights within `tol` grid steps of a rounding boundary, W / scale in float32 (numpy)."""
-    x = w.detach().float().cpu().numpy()
-    _, scale = np_quantize_rows(w)
-    q = x / scale
-    return np.abs(q - np.rint(q)) >= np.float32(0.5 - tol)
-
-
 def bf16_with_ties(shape: tuple[int, int], g: torch.Generator, std: float = 0.02) -> torch.Tensor:
-    """A BF16 weight matrix with both kinds of exact rounding-boundary ties a BF16 checkpoint has.
+    """A BF16 weight matrix with both kinds of exact rounding-boundary ties a BF16 checkpoint has, where two
+    quantizer implementations most easily disagree (round half to even, and the rounding of the scale):
 
       - every 4th row: two weights at +-absmax / 2 (W / scale = +-63.5, up to the FP32 rounding of the scale);
       - row 1: absmax 254 * 2^-14, so that its scale is exactly 2^-13 and every odd multiple of 2^-14 is a tie.
@@ -280,88 +257,3 @@ def live_rows(model: torch.nn.Module, layer: int, proj: str) -> tuple[torch.Tens
     r0 = sum(lin.logical_widths[:shard])
     r1 = r0 + lin.logical_widths[shard]
     return lin.codes()[r0:r1], lin.weight_scale.data[r0:r1]
-
-
-# ---- multi-rank R5 worker (spawned by test_r5.py) -------------------------------------------------------------------
-def r5_rank_worker(rank: int, world: int, init_file: str, steps: int, result_file: str) -> None:
-    """One rank of the FSDP2 check of qurl.r5 on the CPU (gloo): the clip norm over sharded gradients, and R4 vs R5."""
-    import json
-    import os
-
-    import torch.distributed as dist
-    from torch.distributed.device_mesh import init_device_mesh
-    from torch.distributed.fsdp import fully_shard
-    from torch.distributed.tensor import DTensor
-
-    from qurl import r5
-
-    os.environ.setdefault("OMP_NUM_THREADS", "1")
-    torch.set_num_threads(1)
-    dist.init_process_group("gloo", init_method=f"file://{init_file}", rank=rank, world_size=world)
-    mesh = init_device_mesh("cpu", (world,))
-
-    def shard(model):
-        for layer in model.model.layers:
-            fully_shard(layer, mesh=mesh)
-        fully_shard(model, mesh=mesh)
-        return model
-
-    def batch(step):
-        gen = torch.Generator().manual_seed(1000 * rank + step)
-        ids = torch.randint(0, 96, (3, 17), generator=gen)
-        return ids[:, :-1], ids[:, 1:]
-
-    def loss_of(model, x, y):
-        out = model(input_ids=x).logits
-        return torch.nn.functional.cross_entropy(out.reshape(-1, out.shape[-1]), y.reshape(-1))
-
-    # 1. total_norm on sharded gradients against a float64 reference from the full gradients
-    norms_ok = True
-    model = shard(tiny_qwen2(seed=1))
-    loss_of(model, *batch(0)).backward()
-    named = list(model.named_parameters())
-    full = {n: (p.grad.full_tensor() if isinstance(p.grad, DTensor) else p.grad).double() for n, p in named}
-    norm_checks = []
-    for s in (1.0, 1.5, 2.0):
-        got = r5.total_norm(r5.clip_factors(named, s))
-        ref = torch.sqrt(sum((f * full[n].norm()) ** 2 for (n, _), (_, f) in zip(named, r5.clip_factors(named, s))))
-        allv = [torch.zeros(1, dtype=torch.float64) for _ in range(world)]
-        dist.all_gather(allv, got.reshape(1))
-        same = all(torch.equal(v, allv[0]) for v in allv)
-        rel = abs(float(got) - float(ref)) / float(ref)
-        norm_checks.append({"s": s, "same_on_all_ranks": same, "rel_diff": rel})
-        norms_ok &= same and rel < 1e-6
-
-    # 2. R4 (UAQ weights, plain groups, ordinary clip) vs R5 (Theorem 2(b) groups, rule (c)) at s = 2
-    def run_arm(arm, lr=1e-2, eps=1e-8, wd=0.1, clip=0.05, s=2.0):
-        m = tiny_qwen2(seed=0)
-        if arm in ("R4", "R4r"):
-            to_uaq(m, s)
-        shard(m)
-        nm = list(m.named_parameters())
-        groups, _ = r5.param_groups(nm, lr, eps, wd, s if arm in ("R5", "R5o") else 1.0)
-        opt = torch.optim.AdamW(groups, betas=(0.9, 0.999))
-        clipf = r5.clip_factors(nm, s if arm == "R5" else 1.0)
-        grad_norms = []
-        for k in range(steps):
-            opt.zero_grad(set_to_none=True)
-            loss_of(m, *batch(k)).backward()
-            grad_norms.append(r5.clip_and_step(opt, clipf, clip))
-        back = s if arm in ("R4", "R4r") else 1.0
-        params = {n: r5.to_original_coordinates(n, (p.full_tensor() if isinstance(p, DTensor) else p).detach(), back)
-                  for n, p in nm}
-        return params, grad_norms
-
-    res = {arm: run_arm(arm) for arm in ("R4", "R4r", "R5", "R5o")}
-    if rank == 0:
-        ref_p, ref_n = res["R4"]
-        arms = {}
-        for arm in ("R4r", "R5", "R5o"):
-            p, n = res[arm]
-            arms[arm] = {"bit_identical": all(torch.equal(ref_p[k], p[k]) for k in ref_p), "norms_equal": n == ref_n}
-        result = {"norm_checks": norm_checks, "norms_ok": norms_ok, "arms": arms, "norms_R4": ref_n,
-                  "clip_bound": all(x > 0.05 for x in ref_n)}
-        with open(result_file, "w") as f:
-            json.dump(result, f)
-    dist.barrier()
-    dist.destroy_process_group()

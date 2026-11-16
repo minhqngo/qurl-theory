@@ -1,20 +1,20 @@
-"""QuRL for VeRL: the INT8 W8A8 rollout refit, the TIS/ACR loss, UAQ checkpoints and the R5 optimizer.
+"""QuRL for VeRL: the training algorithm of "QuRL: Efficient Reinforcement Learning with Quantized Rollout".
 
-QuRL (Li et al., ICLR 2026) runs RL with an INT8 W8A8 rollout model in vLLM, re-quantized from the trainer's weights at
-every weight sync, corrects the rollout-trainer mismatch with token-level truncated importance sampling (TIS) and an
-adaptive clipping range (ACR), and proposes Update-Aware Quantization (UAQ). The theory note
-(latex/p1_uaq_and_update_tracking.tex) shows that UAQ leaves the INT8 rollout unchanged (Theorem 1) and equals a
-per-layer learning-rate, Adam-epsilon and weight-decay change under AdamW (Theorem 2), which arm R5 implements.
+QuRL (Li et al., ICLR 2026, arXiv:2602.13953) accelerates RL by rolling out with a quantized copy of the actor:
+  - the old actor's weights and activations are quantized for rollout (here INT8 W8A8 in vLLM), re-quantized from the
+    trainer's full-precision weights at every weight sync;
+  - the policy loss is the decoupled PPO objective with the quantized actor as the behavior policy and the
+    full-precision old actor as the proximal policy, weighted by truncated importance sampling (TIS) and with the
+    adaptive clipping range (ACR);
+  - Update-Aware Quantization (UAQ) rescales W_{Q,K,V} by 1/s and the input-layernorm gain by s once, before training.
 
-Framework-free modules (torch only; qurl.uaq's command line also needs transformers):
-  qurl.quant      per-row absmax INT8 quantizer, and the weights on a rounding boundary (ties)
-  qurl.refit      the INT8 refit of vLLM's layers at every weight sync, with its completeness checks
-  qurl.synclog    the refit's per-sync log: code flips, row-scale changes, quantization error, ties
-  qurl.loss       QuRL's TIS weight and ACR clip bound, as per-token PPO losses
-  qurl.r5         Theorem 2(b)-(c): per-group optimizer settings and clipping rule (c) (arm R5)
-  qurl.uaq        UAQ checkpoints, with the exact s = 2 probe
+Modules (torch only; qurl.uaq's command line also needs transformers):
+  qurl.quant      per-row absmax INT8 quantizer of the rollout weights
+  qurl.refit      the INT8 refit of vLLM's layers at every weight sync, with its checks
+  qurl.loss       the TIS weight and ACR clip bound, as per-token PPO losses
+  qurl.uaq        UAQ checkpoints, with an exact s = 2 probe
   qurl.overrides  the Hydra overrides that wire the package into VeRL
 VeRL integration (VeRL v0.9.1, vLLM 0.24): qurl.verl, the trainer plugin (`actor_rollout_ref.model.external_lib`),
 and qurl.verl.rollout.QuRLWorkerExtension, vLLM's worker extension.
 """
-__version__ = "0.1.0"
+__version__ = "0.2.0"

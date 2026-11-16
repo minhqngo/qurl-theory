@@ -1,10 +1,11 @@
 """UAQ checkpoints: W_{Q,K,V} / s and the input-layernorm gain * s, stored in FP32, with an exact check.
 
-QuRL's Update-Aware Quantization (UAQ) rescales, in every decoder layer, the Q, K and V projection weights by 1/s and
-the preceding RMSNorm gain (input_layernorm) by s (s = 1.5 in the paper). The q/k/v biases stay as they are:
-(s * gamma * n(x)) (W / s)^T + b = (gamma * n(x)) W^T + b. The model's function is unchanged, and so is its per-row
-absmax INT8 quantization (Theorem 1 of latex/p1_uaq_and_update_tracking.tex). Training it is training the original
-model with per-layer learning rates, Adam epsilons and weight decays (Theorem 2), which qurl.r5 implements.
+QuRL's Update-Aware Quantization (UAQ; paper, Sec. 4.3) is a one-time weight adjustment before RL training: invariant
+scaling WX = (W / s)(sX) of the Q, K and V projections, with the activation scale absorbed into the preceding RMSNorm
+gain (input_layernorm), and s = 1.5. The paper chooses s > 1 to shrink the weight quantization error and enlarge the
+weight updates relative to it. The q/k/v biases stay as they are: (s * gamma * n(x)) (W / s)^T + b = (gamma * n(x))
+W^T + b, so the model's function is unchanged. The theory note (latex/p1_uaq_and_update_tracking.tex, Section 3)
+analyses what the rescaling does to the INT8 rollout and to training.
 
 The checkpoint is stored in FP32, so W / s is rounded once, in FP32. BF16 storage would re-round it (about 4% of the
 INT8 codes change at s = 1.5 that way). VeRL's FSDP actor keeps FP32 master weights, so it starts from exactly these.

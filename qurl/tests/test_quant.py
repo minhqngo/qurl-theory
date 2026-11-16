@@ -1,4 +1,4 @@
-"""qurl.quant.quantize_rows: the per-row absmax INT8 quantizer of the refit (Theorem 1's quantizer)."""
+"""qurl.quant.quantize_rows: the per-row absmax INT8 quantizer of QuRL's rollout weights."""
 import numpy as np
 import pytest
 import torch
@@ -64,7 +64,7 @@ def test_power_of_two_scale_and_round_half_even():
 
 @pytest.mark.parametrize("k", [-3, -1, 1, 4])
 def test_homogeneous_under_powers_of_two(k):
-    """Theorem 1 with exact arithmetic: W * 2^k has the same codes and 2^k times the scales (a zero row keeps 1)."""
+    """Homogeneity with exact arithmetic: W * 2^k has the same codes and 2^k times the scales (a zero row keeps 1)."""
     for w in CASES.values():
         codes, scale = quantize_rows(w)
         c2, s2 = quantize_rows(w.float() * 2.0 ** k)

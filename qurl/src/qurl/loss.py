@@ -1,10 +1,13 @@
-"""QuRL's token-level TIS weight and adaptive clipping range (ACR), as per-token PPO losses (QuRL, Eq. 9).
+"""QuRL's policy loss: token-level TIS with the adaptive clipping range (ACR), as per-token PPO losses.
 
-QuRL weights the PPO objective by the truncated importance-sampling (TIS) weight min(rho, C), with rho = pi_old / mu
-(pi_old: the trainer's proximal probability; mu: the quantized rollout's), and raises the upper clip bound of a token
-whose weight was truncated to (1 + eps_high) / min(1, C / rho) = (1 + eps_high) * max(1, rho / C). Everything else is
-VeRL's vanilla PPO loss (core_algos.compute_policy_loss_vanilla), including the dual clip at clip_ratio_c for negative
-advantages. With no truncated token (rho <= C everywhere) the losses are the vanilla losses times rho, bit for bit.
+QuRL trains with the decoupled PPO objective (paper, Eq. 4): the behavior policy mu, which sampled the tokens, is the
+quantized old actor (the INT8 rollout), and the proximal policy pi_old, which the ratio is clipped against, is the
+full-precision old actor. It weights the objective by the truncated importance-sampling (TIS) weight min(rho, C),
+with rho = pi_old / mu (Eq. 5), and ACR raises the upper clip bound of a token whose weight was truncated to
+(1 + eps_high) / r with r = min(1, C / rho), that is (1 + eps_high) * max(1, rho / C) (Eq. 9). Everything else is
+VeRL's vanilla PPO loss (core_algos.compute_policy_loss_vanilla), including the decoupled clip range (eps_low,
+eps_high) and the dual clip at clip_ratio_c for negative advantages. With no truncated token (rho <= C everywhere) the
+losses are the vanilla losses times rho, bit for bit: TIS alone.
 
 This module holds the per-token arithmetic only; qurl.verl.loss aggregates it with VeRL's agg_loss and registers it as
 VeRL's loss_mode=qurl_acr.
