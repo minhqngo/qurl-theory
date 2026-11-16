@@ -1,10 +1,10 @@
-"""qurl.quant.quantize_rows: the per-row absmax INT8 quantizer of QuRL's rollout weights."""
+"""qurl.quant.quantize_rows: the per-row absmax INT8 quantizer of QuRL's rollout."""
 import numpy as np
 import pytest
 import torch
 
 from qurl.quant import QMAX, quantize_rows
-from qurl_test_support import load_original_int8_rollout, np_quantize_rows
+from qurl_test_support import bf16_with_ties, load_original_int8_rollout, np_quantize_rows
 
 
 def weight_cases():
@@ -14,6 +14,7 @@ def weight_cases():
     return {
         "fp32": torch.randn(64, 96, generator=g) * 0.02,
         "bf16": (torch.randn(64, 96, generator=g) * 0.02).to(torch.bfloat16),
+        "bf16 with exact ties": bf16_with_ties((64, 96), g),
         "fp16": (torch.randn(32, 40, generator=g) * 0.02).to(torch.float16),
         "heavy-tailed": torch.randn(48, 80, generator=g) ** 3 * 0.01,
         "zero row": zero_row,

@@ -1,13 +1,13 @@
-"""INT8 W8A8 fake quantization of a Hugging Face model: QuRL's quantized rollout without vLLM.
+"""INT8 W8A8 fake quantization of a Hugging Face model: QuRL's quantized rollout, simulated in PyTorch.
 
 While int8_rollout(model) is active, every linear layer of the model except lm_head computes
     y = (Q(x) @ Q(W)^T) + b,
 with Q the per-row absmax INT8 quantizer of qurl.quant: applied to W it gives channel-wise weight scales, fixed when
-the context is entered; applied to x, per token, it gives dynamic token-wise activation scales. This is the scheme of
-the paper (Sec. 5) and of vLLM's compressed-tensors INT8 W8A8 kernels. The integer product is computed as an FP32
-matrix product of the codes (exact up to FP32 accumulation), then scaled by the token and channel scales. lm_head
-stays in full precision, as in the vLLM config (ignore: [lm_head]); embeddings, norms and attention are not quantized,
-and neither is the KV cache.
+the context is entered; applied to x, per token, it gives dynamic token-wise activation scales. This is the paper's
+scheme (Sec. 5), which it runs on vLLM's INT8 kernels. Here the integer product is computed as an FP32 matrix product
+of the codes (exact up to FP32 accumulation), then scaled by the token and channel scales: the same numbers, without
+the speedup. lm_head stays in full precision, as in the experiments' INT8 rollouts; embeddings, norms and attention
+are not quantized, and neither is the KV cache.
 
 Entering the context quantizes the current weights, so entering it at every rollout re-quantizes the trained weights:
 QuRL's theta_hat_old = Q(theta_old) at every RL step. The codes are kept as int8 (a quarter of the FP32 weights'

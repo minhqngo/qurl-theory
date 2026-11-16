@@ -4,35 +4,28 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qurl"
-version = "0.2.0"
-description = "QuRL (arXiv:2602.13953) for VeRL: INT8 W8A8 quantized rollout, TIS + ACR policy loss, UAQ checkpoints"
+version = "0.3.0"
+description = "QuRL (arXiv:2602.13953) in plain PyTorch: INT8 W8A8 quantized rollout, TIS + ACR policy loss, UAQ"
 readme = "README.md"
 requires-python = ">=3.10"
-# Tested with torch 2.11, transformers 5.9, VeRL 0.9.1 and vLLM 0.24 (Python 3.12).
+# Tested with torch 2.11 and transformers 5.9 (Python 3.12).
 dependencies = ["torch>=2.6"]
 
 [project.optional-dependencies]
-uaq = ["transformers>=4.51", "safetensors"]
 train = ["transformers>=4.51", "safetensors"]
-# qurl.verl subclasses VeRL internals and relies on vLLM 0.24's INT8 layer layout: keep these versions.
-verl = ["verl>=0.9.1,<0.10", "vllm>=0.24,<0.25"]
 test = ["pytest>=8", "numpy", "transformers>=4.51", "tokenizers", "safetensors"]
 
 [project.scripts]
-qurl-uaq-checkpoint = "qurl.uaq:main"
 qurl-train = "qurl.train:main"
+qurl-uaq-checkpoint = "qurl.uaq:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.package-data]
-qurl = ["int8_w8a8_config.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
     "gpu: needs CUDA (skipped without it)",
-    "verl: needs VeRL 0.9.1 importable (skipped without it); some also import vLLM",
     "originals: compares with the experiment code this package was refactored from (skipped if it is absent)",
 ]

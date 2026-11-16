@@ -1,4 +1,6 @@
-"""qurl.loss and qurl.verl.loss: QuRL's TIS weight and ACR clip bound (QuRL Eq. 9)."""
+"""qurl.loss: QuRL's TIS weight and ACR clip bound (the paper's Eqs. 5 and 9)."""
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 import torch
@@ -8,7 +10,6 @@ from qurl_test_support import load_original_acr
 
 C = 2.0
 CLIP = dict(clip_ratio_low=0.2, clip_ratio_high=0.28, clip_ratio_c=10.0)
-AGG_MODES = ["token-mean", "token-sum", "seq-mean-token-sum", "seq-mean-token-mean", "seq-mean-token-sum-norm"]
 
 
 def random_batch(seed, dtype=torch.float32, b=6, t=19, max_rho=None):
@@ -28,8 +29,8 @@ def random_batch(seed, dtype=torch.float32, b=6, t=19, max_rho=None):
 
 
 def reference_losses(old, new, adv, rho, low, high, c_dual, cap):
-    """QuRL Eq. 9 per token, written independently in float64 numpy: -min(rho, C) * PPO's dual-clipped objective,
-    with the upper clip bound raised to (1 + eps_high) / min(1, C / rho)."""
+    """Eq. 9 per token, written independently in float64 numpy: -min(rho, C) * PPO's dual-clipped objective, with the
+    upper clip bound raised to (1 + eps_high) / min(1, C / rho)."""
     old, new, adv, rho = (x.double().numpy() for x in (old, new, adv, rho))
     r = np.exp(np.clip(new - old, -20.0, 20.0))
     with np.errstate(divide="ignore"):
@@ -40,7 +41,7 @@ def reference_losses(old, new, adv, rho, low, high, c_dual, cap):
 
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
-def test_core_matches_float64_reference(seed):
+def test_matches_float64_reference(seed):
     old, new, adv, rho, mask = random_batch(seed, torch.float64, b=16, t=33)
     t = tis_acr_terms(old, new, adv, rho, tis_c=C, **CLIP)
     ref = reference_losses(old, new, adv, rho, 0.2, 0.28, 10.0, C)
@@ -53,6 +54,18 @@ def test_core_matches_float64_reference(seed):
     assert torch.equal(t.tis_weight, rho.clamp(max=C))
 
 
+def test_without_truncation_it_is_tis_on_ppo():
+    """rho <= C everywhere: the TIS weight is rho and ACR's bound is exactly 1 + eps_high, i.e. plain PPO with the
+    dual clip, weighted by rho."""
+    old, new, adv, rho, mask = random_batch(3, max_rho=1.9)
+    t = tis_acr_terms(old, new, adv, rho, tis_c=C, **CLIP)
+    assert torch.equal(t.tis_weight, rho) and torch.equal(t.upper, torch.full_like(rho, 1.28))
+    ratio = torch.exp(torch.clamp(new - old, -20.0, 20.0))
+    clipped = torch.maximum(-adv * ratio, -adv * torch.clamp(ratio, 0.8, 1.28))
+    ppo = torch.where(adv < 0, torch.min(-adv * 10.0, clipped), clipped)
+    assert torch.equal(t.losses, ppo * rho) and not t.acr_kept.any()
+
+
 def test_gradient_flows_through_log_prob_only():
     old, new, adv, rho, mask = random_batch(3)
     new.requires_grad_(True)
@@ -62,65 +75,30 @@ def test_gradient_flows_through_log_prob_only():
     assert new.grad is not None and new.grad.abs().sum() > 0 and rho.grad is None
 
 
-def actor_config(**global_batch_info):
-    from verl.workers.config import ActorConfig
+class ActorConfig(SimpleNamespace):
+    """What the original loss reads from VeRL's actor config."""
 
-    cfg = ActorConfig(strategy="fsdp2", rollout_n=1, ppo_micro_batch_size_per_gpu=-1, clip_ratio=0.2, **CLIP)
-    cfg.global_batch_info.update(global_batch_info)
-    return cfg
-
-
-def run_loss(fn, batch, mode, cfg):
-    old, new, adv, rho, mask = batch
-    leaf = new.clone().requires_grad_(True)
-    loss, metrics = fn(old, leaf, adv, mask, loss_agg_mode=mode, config=cfg, rollout_is_weights=rho)
-    loss.backward()
-    return loss.detach(), metrics, leaf.grad
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 
-@pytest.mark.verl
 @pytest.mark.originals
-@pytest.mark.parametrize("mode", AGG_MODES)
 @pytest.mark.parametrize("cap", [None, "1.5"])
-def test_verl_loss_matches_original(mode, cap, monkeypatch):
-    from qurl.verl.loss import compute_policy_loss_qurl_acr
-
+def test_matches_original(cap, monkeypatch):
+    """The experiments' loss (VeRL's token-mean aggregation restated) and the token-mean of tis_acr_terms: the same
+    loss and the same gradients, bit for bit."""
     original = load_original_acr(monkeypatch)
     if cap is not None:
         monkeypatch.setenv("QURL_TIS_C", cap)
+    cfg = ActorConfig(clip_ratio=0.2, global_batch_info={}, **CLIP)
     for seed in range(3):
-        batch = random_batch(seed)
-        for cfg in (actor_config(), actor_config(dp_size=1, batch_num_tokens=int(batch[4].sum()) + 7,
-                                                 global_batch_size=9, loss_scale_factor=None)):
-            ours = run_loss(compute_policy_loss_qurl_acr, batch, mode, cfg)
-            theirs = run_loss(original.compute_policy_loss_qurl_acr, batch, mode, cfg)
-            assert torch.equal(ours[0], theirs[0]) and ours[1] == theirs[1] and torch.equal(ours[2], theirs[2])
-
-
-@pytest.mark.verl
-@pytest.mark.parametrize("mode", AGG_MODES)
-def test_without_truncation_it_is_vanilla_ppo_with_tis_weights(mode):
-    """rho <= C everywhere: ACR's bound is 1 + eps_high and the TIS weight is rho, i.e. VeRL's vanilla loss."""
-    from verl.trainer.ppo.core_algos import compute_policy_loss_vanilla
-
-    from qurl.verl.loss import compute_policy_loss_qurl_acr
-
-    for seed in range(3):
-        batch = random_batch(seed, max_rho=1.9)
-        ours = run_loss(compute_policy_loss_qurl_acr, batch, mode, actor_config())
-        vanilla = run_loss(compute_policy_loss_vanilla, batch, mode, actor_config())
-        assert torch.equal(ours[0], vanilla[0]) and torch.equal(ours[2], vanilla[2])
-        assert all(ours[1][k] == v for k, v in vanilla[1].items())
-        assert ours[1]["qurl/tis_trunc_frac"] == 0.0
-
-
-@pytest.mark.verl
-def test_registered_and_needs_rho():
-    from verl.trainer.ppo.core_algos import get_policy_loss_fn
-
-    from qurl.verl.loss import compute_policy_loss_qurl_acr
-
-    assert get_policy_loss_fn("qurl_acr") is compute_policy_loss_qurl_acr
-    old, new, adv, _, mask = random_batch(0)
-    with pytest.raises(ValueError, match="rollout_is=token"):
-        compute_policy_loss_qurl_acr(old, new, adv, mask, config=actor_config())
+        old, new, adv, rho, mask = random_batch(seed)
+        theirs_in = new.clone().requires_grad_(True)
+        theirs, _ = original.compute_policy_loss_qurl_acr(old, theirs_in, adv, mask, loss_agg_mode="token-mean",
+                                                          config=cfg, rollout_is_weights=rho)
+        theirs.backward()
+        ours_in = new.clone().requires_grad_(True)
+        t = tis_acr_terms(old, ours_in, adv, rho, tis_c=float(cap or C), **CLIP)
+        ours = (t.losses * mask).sum() / mask.sum() * 1
+        ours.backward()
+        assert torch.equal(ours.detach(), theirs.detach()) and torch.equal(ours_in.grad, theirs_in.grad)

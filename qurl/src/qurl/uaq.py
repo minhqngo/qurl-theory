@@ -8,7 +8,7 @@ W^T + b, so the model's function is unchanged. The theory note (latex/p1_uaq_and
 analyses what the rescaling does to the INT8 rollout and to training.
 
 The checkpoint is stored in FP32, so W / s is rounded once, in FP32. BF16 storage would re-round it (about 4% of the
-INT8 codes change at s = 1.5 that way). VeRL's FSDP actor keeps FP32 master weights, so it starts from exactly these.
+INT8 codes change at s = 1.5 that way). A trainer with FP32 master weights, as qurl.train, starts from exactly these.
 
 check() runs two checks, in FP32 on the CPU, on a fixed GSM8K-style prompt:
   1. The rescaling itself, for every s and without a tolerance: rescaled by 2, where every product and quotient is

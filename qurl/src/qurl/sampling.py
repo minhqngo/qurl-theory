@@ -85,7 +85,7 @@ def sequence_logprobs(model, input_ids: torch.Tensor, attention_mask: torch.Tens
                       temperature: float = 1.0) -> torch.Tensor:
     """Log-probabilities [B, L] of the response tokens (the last L columns of input_ids) under the model.
 
-    On CUDA the forward runs in BF16 autocast over the FP32 weights, as in VeRL's trainer.
+    On CUDA the forward runs in BF16 autocast over the FP32 (master) weights.
     """
     length = response.size(1)
     pos = (attention_mask.cumsum(-1) - 1).clamp(min=0)

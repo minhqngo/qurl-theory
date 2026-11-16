@@ -1,5 +1,4 @@
-"""pytest configuration: skip markers (CUDA, VeRL, the original experiment code) and a clean QURL_* environment."""
-import importlib.util
+"""pytest configuration: skip markers (CUDA, the original experiment code) and a clean QURL_* environment."""
 import os
 import sys
 
@@ -16,8 +15,6 @@ from qurl_test_support import have_originals  # noqa: E402
 def pytest_runtest_setup(item):
     if item.get_closest_marker("gpu") and not torch.cuda.is_available():
         pytest.skip("needs CUDA")
-    if item.get_closest_marker("verl") and importlib.util.find_spec("verl") is None:
-        pytest.skip("needs VeRL")
     if item.get_closest_marker("originals") and not have_originals():
         pytest.skip("the original experiment code is not in this checkout")
 
@@ -29,11 +26,3 @@ def clean_qurl_env(monkeypatch):
         if k.startswith("QURL_"):
             monkeypatch.delenv(k)
     monkeypatch.setenv("HF_HUB_OFFLINE", "1")
-
-
-DEVICES = ["cpu", pytest.param("cuda", marks=pytest.mark.gpu)]
-
-
-@pytest.fixture(params=DEVICES)
-def device(request):
-    return torch.device(request.param)

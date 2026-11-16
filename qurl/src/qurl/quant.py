@@ -1,9 +1,9 @@
-"""Per-row absmax INT8 quantization of QuRL's rollout weights.
+"""Per-row absmax INT8 quantization, for QuRL's rollout weights and activations.
 
 QuRL quantizes the old actor's weights with channel-wise scales and its activations with token-wise scales (paper,
-Sec. 5); vLLM's INT8 W8A8 kernel quantizes the activations dynamically, per token, and quantize_rows produces the
-weights it multiplies them with: symmetric, one scale per output row (channel), scale = absmax / 127, codes =
-round-half-even(W / scale) clamped to +-127.
+Sec. 5). quantize_rows does both: applied to a weight it gives one scale per output row (channel), applied to the
+activations it gives one per token (qurl.fakequant). It is symmetric, with scale = absmax / 127 and codes =
+round-half-even(x / scale) clamped to +-127.
 
 The quantizer is homogeneous: rescaling a row by c > 0 rescales its scale by c and leaves its codes unchanged, exactly
 when c is a power of two and up to FP32 rounding otherwise. The theory note (latex/p1_uaq_and_update_tracking.tex,
