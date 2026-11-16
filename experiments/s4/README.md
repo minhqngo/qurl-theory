@@ -63,21 +63,22 @@ The paper states 200 steps, lr 1e-6, 512 prompts × 16 responses, clip 0.2/0.28 
 | Block | Runs | Purpose |
 |---|---|---|
 | G4 (day 1) | mechanism R3 at 1.5B and 7B | M1/M2 baselines; gates and timing pilots |
-| M | mechanism R4, R5, R6 at 1.5B; R6 at 7B | M1 and early M2 at 1.5B; M1's R6 prediction at 7B |
-| A | full 7B R4, R5 | H1 at the paper's scale; their steps 1–20 give M1 at 7B |
+| M | mechanism R4, R5, R6 at 1.5B; R6, R4, R5 at 7B | M1 and early M2 at 1.5B; at 7B, M1's R6 prediction, and R4 and R5 in case the full pair A does not fit (7B R4, R5 added 2026-11-16) |
+| A | full 7B R4, R5 | H1 at the paper's scale; their steps 1–20 give M1 at 7B, in preference to the mechanism runs |
 | B | full 7B R3 | UAQ's effect; M2 over the whole run; Table 4 |
 | C | full 7B R6 | the paper's control |
 | D | full 1.5B R4, R5 | H1 at 1.5B |
 
 What fits, from the queue's own dry run (`queue.sh` with `DRY_RUN=1` simulates its clock). Day 1 includes the 0.5 h node bootstrap; adding it changed no scenario's outcome.
 
-| Scenario | Full 7B run | 7B / 1.5B mechanism run | Day 1 | Completes |
-|---|---|---|---|---|
-| Fast | 22 h | 3.0 / 1.2 h | 8.5 h | M, A, B, C |
-| Central | 28 h | 3.9 / 1.8 h | 10.0 h | M, A, B |
-| Slow | 36 h | 5.0 / 2.3 h | 11.6 h | M, A |
+| Scenario | Full 7B run | 7B / 1.5B mechanism run | Day 1 | Completes in 5 days | In 4 days |
+|---|---|---|---|---|---|
+| Fast | 22 h | 3.0 / 1.2 h | 8.5 h | M, A, B, C | M, A, B |
+| Central | 28 h | 3.9 / 1.8 h | 10.0 h | M, A, B | M, A |
+| Slow | 36 h | 5.0 / 2.3 h | 11.6 h | M, A | M, B |
 
-- **Every scenario** completes M1 and early M2 at both sizes and the 7B R4/R5 pair. The fast and central scenarios add the full 7B R3, so also M2 over the whole run and UAQ's effect.
+- **Every scenario** completes M1 and early M2 at both sizes, with 4 days too, since the 7B R4/R5 mechanism runs were added. With 5 days every scenario also completes the 7B R4/R5 pair, and the fast and central scenarios add the full 7B R3, so also M2 over the whole run and UAQ's effect.
+- **The dry run was repeated on 2026-11-16 with the 7B R4/R5 mechanism runs.** For 5 days they change no scenario's outcome. For 4 days they cost the slow scenario block D, and secure M1 at 7B there.
 - **Time cut-off:** with the rental's end time given, the queue starts a run only if it is projected to end 6 h before it. An R4/R5 pair starts only if both fit.
 - **Rerun the dry run on day 1** with the measured hours:
   ```bash
@@ -145,6 +146,10 @@ bash ~/qurl/s4/setup_s4.sh 2>&1 | tee ~/qurl/s4/setup.log
 nohup bash ~/qurl/s4/gates.sh > ~/qurl/s4/gates.log 2>&1 < /dev/null &
 cat ~/qurl/s4/results/gates/summary.txt
 ```
+- **Or unattended, after the bootstrap** (`day1.sh`): the setup, the gates and then the queue, so that the queue starts as soon as the gates pass, even at night. It stops before the queue if the setup fails, if the gates do not pass, or if G5 projects more than 45 h per full 7B run (the contingency below, decided by hand).
+  ```bash
+  END="<rental end, e.g. 2026-11-21 09:30 UTC>" nohup bash ~/qurl/s4/day1.sh > ~/qurl/s4/day1.log 2>&1 < /dev/null &
+  ```
 - **Node bootstrap** (`bootstrap_node.sh`), about 0.5 h with one reboot. It uses sudo. Every step checks its own state first, so running it again is safe.
   - **Driver:** from NVIDIA's apt repository, with branch 580 pinned (the oldest branch for CUDA 13.0, with long-term support). Headless, open kernel modules. It brings `nvidia-smi` and the persistence daemon.
     - A driver ≥ 580.65.06 that is already there is kept.
@@ -173,6 +178,9 @@ cat ~/qurl/s4/results/gates/summary.txt
   - NCCL all-reduce, all-gather and reduce-scatter, for correctness and bus bandwidth;
   - clocks, temperature and power sampled meanwhile.
   - A failure stops the setup, so a bad node can go back to the provider within the first hour. Report: `results/node/check_node.txt`.
+  - **On the rental (2026-11-16) the first run failed in NCCL.** Every multi-GPU NCCL test segfaulted at its first collective, on any GPUs, and whatever transport was off (`nccl_diag.sh`).
+    - NCCL's InfiniBand transport had picked the node's Intel RoCE NIC (`irdma0`). With it off, the tests pass (`nccl_diag2.sh`).
+    - Every S4 run is on one node, where NCCL uses NVLink, so `setup_s4.sh` now writes `NCCL_IB_DISABLE=1` to `~/.nccl.conf`, which NCCL reads in every process. `env.txt` records it.
 - **Setup**, in user space, about 2–3 h:
   - VeRL v0.9.1's locked stack, as in S3.
   - flash-attn 2.8.3 built from source for SM90 when `nvcc` 13 is present. The lock's prebuilt wheel no longer exists.
@@ -267,6 +275,7 @@ Exploratory. `s4_m1_ties.py` implements it, imports `s4_analysis.py` unchanged, 
 | `run.sh`, `finish.sh`, `queue.sh`, `watchdog.sh` | one run (full or mechanism; resumable); merge + evaluation; the 5-day queue; its hang watchdog |
 | `bootstrap_node.sh`, `check_node.py` | the node: NVIDIA driver (`nvidia-smi`), Fabric Manager, CUDA 13.0 toolkit, storage, checks; then the node under load |
 | `setup_s4.sh`, `gates.sh` | day-1 environment; gates G1–G6 |
+| `day1.sh` | the setup, the gates and the queue in one unattended chain (after the bootstrap) |
 | `shakeout.sh` | the shake-out on S3's H100 before the rental (not a gate) |
 | `prepare_data.py`, `eval.py` | data; final evaluation, one vLLM per GPU, vLLM's native sampler (as in the training rollout) |
 | `r5_check_mp.py/.sh`, `check_int8_dump.py`, `test_packed_attn.py` | gates G3, G4, G2 |

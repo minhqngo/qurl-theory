@@ -108,12 +108,12 @@ P12 & Asynchronous RL + quantization & explore & med & systems relevance\\
 \item \textbf{Question.} Does UAQ change the quantized rollout model at all? If not, what does it change? Does re-quantization freeze the rollout model, and what should ``update-aware'' mean?
 \item \textbf{What it means.} It separates a number-format effect from an optimization effect. If UAQ is exactly a per-layer learning-rate change, its gains belong to learning-rate tuning, and the update problem has to be restated.
 \item \textbf{Impact.} It corrects a published mechanism and gives practitioners the right control (per-layer learning rates, in the parameterization view of \citealp{yang2021tp4}). The tools (homogeneity, the uniform-phase model, persistence) feed P3, P4 and P6.
-\item \textbf{Status (2026-11-15).}
+\item \textbf{Status (2026-11-16).}
   \begin{itemize}
   \item Theorems proved. Theorem~1 is verified bit-for-bit on vLLM's INT8 kernel at three model sizes, and Theorem~2 bit-for-bit in a training loop.
   \item The pre-registered RL experiment is complete. Its accuracy tests are inconclusive, UAQ's effect on the mismatch matches its BF16 effect (registered), and INT8 rollouts trail BF16 by about 5 points (exploratory).
   \item The pre-registered tracking experiment (E2) confirms update capture and the rounding error's persistence on a real run. The exception is the first update from a BF16 checkpoint, captured at 93\%, which BF16 storage explains.
-  \item Remaining: S4, QuRL's DAPO setting at 7B (designed and coded, waiting for compute), and the paper, which now includes E2.
+  \item Remaining: the paper, which now includes E2.
   \end{itemize}
   See the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and the P1 experiments report (\texttt{p1\_experiments.tex}).
 \end{itemize}

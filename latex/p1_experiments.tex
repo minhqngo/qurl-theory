@@ -5,7 +5,7 @@
 
 \title{P1 Experiments:\\Testing the UAQ and Update-Tracking Theory}
 \author{Experiments report for research problem P1 (draft)}
-\date{15 November 2026 (split from the theory note on 12 November)}
+\date{16 November 2026 (split from the theory note on 12 November)}
 
 \begin{document}
 \maketitle
@@ -39,7 +39,7 @@ The theory note answers five questions (its Section~2); the stages below test th
 \item \textbf{Q2. What does UAQ change in training?} Theorem~2 and Corollary~3: only per-layer learning rates ($\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW). Tested in float64 (T), bit-for-bit in a training loop and in VeRL (S2), and in distribution over seeds in full RL runs (S3, hypotheses H1--H3).
 \item \textbf{Q3. Do re-quantized master weights freeze?} Propositions~3--5: no; updates are captured in expectation. Tested in float64 (T), by a first look in S3, and in full on a real run (E2).
 \item \textbf{Q4. What is the real issue?} Propositions~6--7: the rounding error persists across steps, and error feedback bounds its cumulative effect. Tested in float64 (T) and on a real run (E2); E3 is left to P4.
-\item \textbf{Q5. Do the answers hold on a real RL stack?} Stages S1--S5 below.
+\item \textbf{Q5. Do the answers hold on a real RL stack?} Stages S1--S3, E2 and E3 below.
 \end{itemize}
 
 \begin{center}\small
@@ -51,8 +51,7 @@ T & Q1--Q4 (the maths) & float64 checks: one layer or a toy QuRL loop & done\\
 S1 & Q1 on real kernels & step-0 identity test in vLLM, three model sizes & done\\
 S2 & Q2, exactly & deterministic 20-step QuRL loop, UAQ vs.\ Theorem~2 settings at $s=2$ & done\\
 S3 & Q5: H1--H3 & GSM8K PPO in VeRL: R1--R6 $\times$ 3 seeds ($+2$ for R4, R5); Table~1 reproduction & done (22 of 22)\\
-S4 & H1 closest to the paper & DAPO-style math RL with a 1.5B model & planned\\
-S5 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & E2 done; E3 left to P4\\
+E2, E3 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & E2 done; E3 left to P4\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -72,7 +71,7 @@ All GPU stages run on one H100 NVL (94\,GB); the laptop runs only T and the anal
 
 \subsection{S1: step-0 identity test on vLLM kernels}\label{sec:s1}
 \begin{itemize}
-\item \textbf{Models.} Qwen2.5-0.5B-Instruct \citep{qwen2024qwen25} (S3's model), Qwen2.5-Math-1.5B (S4's) and Qwen2.5-Math-7B (the paper's size) \citep{yang2024qwen25math}, each with UAQ'd checkpoints at $s=2$ (exact in BF16) and $s=1.5$ (the paper's value; BF16 storage re-rounds about 4\% of INT8 codes).
+\item \textbf{Models.} Qwen2.5-0.5B-Instruct \citep{qwen2024qwen25} (S3's model), Qwen2.5-Math-1.5B and Qwen2.5-Math-7B (the paper's size) \citep{yang2024qwen25math}, each with UAQ'd checkpoints at $s=2$ (exact in BF16) and $s=1.5$ (the paper's value; BF16 storage re-rounds about 4\% of INT8 codes).
 \item \textbf{Rollout formats.} INT8 W8A8 on vLLM's \citep{kwon2023vllm} CUTLASS INT8 kernel (what QuRL would use on Hopper); FP8 per-tensor and per-channel as controls; BF16.
 \item \textbf{Protocol.} Sample 512 GSM8K responses from the BF16 model; teacher-force every token under each configuration; compare per-token log-probabilities. Noise floor: the same checkpoint with shuffled batches.
 \item \textbf{Metrics.} Identity: mean $|\Delta\log p|$ and share of identical tokens. Mismatch to the matched BF16 policy: mean $|\log\mu-\log\pi|$ (primary) and sampled-token KL ($k_3$, $k_1$), with paired bootstrap CIs.
@@ -196,11 +195,10 @@ P5$'$: not frozen & the same slope & $>0.5$\\
 \texttt{e2\_policy.py} \texttt{\small af8f517022cda4b496af6425a4558480d6975750a2871a50a0d3695c7c2ec49c}.
 \end{itemize}
 
-\subsection{Planned: S4 and S5}\label{sec:planned}
+\subsection{E3, and the link to 7B}\label{sec:link7b}
 \begin{itemize}
-\item \textbf{S4.} DAPO-style \citep{yu2025dapo} math RL with a 1.5B model (Qwen2.5-Math-1.5B or R1-Distill-1.5B, \citealp{luo2025deepscaler}) at $\eta=10^{-6}$, about 300 steps: R3--R5 $\times$ 3 seeds, then R1 and R2. This is closest to the paper's UAQ ablation (DAPO at 7B). Metrics: reward, exact full-vocabulary KL, per-layer $\nu$, MATH500 Avg@32 (AIME24 secondary: 30 problems are too noisy at 1.5B).
-\item \textbf{S5 $=$ E2 + E3.} \emph{E2}, on saved checkpoints: code-flip fraction vs.\ Proposition~4's prediction $\frac1n\sum_j\min(1,|\delta_j|/\Delta_j)$; $\Corr(e_k,e_0)$ vs.\ Proposition~6; correlation of $\Delta\log\mu$ and $\Delta\log\pi$; phase histograms for Assumption~U. Designed and pre-registered in \cref{sec:e2}; the results are in \cref{sec:e2-results,sec:e2-dyn}. \emph{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability. What drives the mismatch growth is research problem P4's question, so E3 is left to P4; its one P1 part, the stationary size of the weight error, is P6a of E2.
-\item \textbf{Link to 7B.} Early in Adam training each element moves by about $\eta$ per step, so $\nu_l\approx\eta/\Delta_l$, computable from the 7B checkpoint without training it. Choosing S4's learning rate to match the 7B distribution of $\nu_l$ puts the small runs in the same tracking regime (Proposition~4 depends only on $|d|/\Delta$).
+\item \textbf{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability. What drives the mismatch growth is research problem P4's question, so E3 is left to P4. Its one P1 part, the stationary size of the weight error, is P6a of E2 (\cref{sec:e2}).
+\item \textbf{Link to 7B.} Early in Adam training each element moves by about $\eta$ per step, so $\nu_l\approx\eta/\Delta_l$, computable from the 7B checkpoint without training it. Comparing the distributions of $\nu_l$ shows whether a smaller model's runs are in the 7B model's tracking regime (Proposition~4 depends only on $|d|/\Delta$).
 \item \textbf{Why not paper scale.} A 7B full fine-tune needs about 112\,GB for weights, gradients and Adam state alone; R3--R5 $\times$ 3 seeds would take 1{,}400--2{,}700 H100-hours. H1 at 7B is future work.
 \end{itemize}
 
@@ -482,7 +480,7 @@ Lemma~1: share of rows with $\sigma/\Delta<1$, below 1\% & 0 & 0 & 0 & \textbf{h
 \item \textbf{U holds at the rounding boundary.} The near-boundary ratio is 0.999--1.011 in every cell, with the exact ties counted as the rule says. Without them it is 0.985--0.993: the ties sit on the boundary itself, and the band next to it holds slightly less than uniform. Exact ties are 0.18\%, 0.15\% and 0.12\% of the elements at 0.5B, 1.5B and 7B.
 \item \textbf{U2 fails narrowly, in one cell:} Qwen2.5-Math-1.5B's \texttt{up\_proj}, at 0.0516. The other 20 cells lie between 0.015 and 0.046, and \texttt{gate\_proj} and \texttt{up\_proj} are the highest at 0.5B and 1.5B. Larger codes deviate more: 0.07--0.13 for $16\le|c|\le63$ and 0.31--0.42 for $64\le|c|\le126$, the BF16 lattice anticipated in \cref{sec:e2}. By the registered reading, a failure of U limits where the propositions apply; it does not refute them.
 \item \textbf{Lemma~1's condition holds in every row, by a wide margin.} Median $\sigma/\Delta$ is 28--36, and 99\% of rows have $\sigma/\Delta\ge3.9$; the lowest 1\% quantile is in 7B's \texttt{gate\_proj}, whose outlier rows reach $\max/\rms=32.5$. The theory note's estimate of 6--25 assumed $\max/\rms$ of 5--20; measured, its median is 3.6--4.5 in every cell.
-\item \textbf{The link to 7B} (\cref{sec:planned}): $\nu=\eta/\Delta$ at $\eta=10^{-6}$, reported without a rule.
+\item \textbf{The link to 7B} (\cref{sec:link7b}): $\nu=\eta/\Delta$ at $\eta=10^{-6}$, reported without a rule.
 \begin{center}\small
 \begin{tabular}{@{}llll@{}}
 \toprule

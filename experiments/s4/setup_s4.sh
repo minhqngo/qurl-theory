@@ -50,6 +50,15 @@ test "$(git -C "$SRC" describe --tags --exact-match)" = "$VERL_TAG"
   --no-install-package flash-attn)
 PY="$VENV/bin/python"
 
+# 2a. NCCL without its InfiniBand/RoCE transport. Every S4 run is on one node, where NCCL talks over NVLink. On the
+# rental, NCCL 2.28.9's IB transport picked the Intel RoCE NIC (irdma0) and segfaulted at the first collective, on any
+# GPUs and whatever else was switched off (nccl_diag.sh, nccl_diag2.sh). NCCL reads ~/.nccl.conf in every process,
+# Ray's and vLLM's workers included.
+if ! grep -q '^NCCL_IB_DISABLE=1' "$HOME/.nccl.conf" 2>/dev/null; then
+  echo "NCCL_IB_DISABLE=1" >> "$HOME/.nccl.conf"
+  echo "NCCL: InfiniBand transport off for this user (~/.nccl.conf)"
+fi
+
 # 2b. The GPUs under load (check_node.py: memory, matmuls, host copies, NCCL), skipped once it has passed.
 NODE="$S4/results/node"
 mkdir -p "$NODE"
@@ -112,5 +121,6 @@ print("flash_attn installed:", fa, "-> trainer attention:", "flash_attention_2" 
 print("devices:", torch.cuda.device_count(), "x", torch.cuda.get_device_name(0), "| capability", torch.cuda.get_device_capability(0))
 EOF
 git -C "$SRC" rev-parse HEAD | sed 's/^/verl commit /' | tee -a "$S4/env.txt"
+echo "~/.nccl.conf: $(tr '\n' ' ' < "$HOME/.nccl.conf")" | tee -a "$S4/env.txt"
 { cat "$DATA/data.json"; echo; } >> "$S4/env.txt"   # data.json has no final newline; run.sh appends to env.txt
 echo "== setup done $(date -Is): next, bash ~/qurl/s4/gates.sh"

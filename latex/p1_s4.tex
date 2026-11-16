@@ -1,0 +1,206 @@
+\documentclass[11pt]{article}
+\input{preamble}
+\usepackage{flafter} % floats never appear before their place in the text
+
+\title{P1 Experiment S4:\\UAQ in QuRL's DAPO Setting at 7B}
+\author{S4 report for research problem P1 (in progress)}
+\date{16 November 2026}
+
+\begin{document}
+\maketitle
+
+\paragraph{Scope.} S4 tests the P1 theory where the QuRL paper made its claim about Update-Aware Quantization (UAQ): DAPO training of Qwen2.5-Math-7B \citep[Sec.~5.1 and Table~4]{li2026qurl}, with Qwen2.5-Math-1.5B for cheaper mechanism runs. It runs on a rented node of eight H100 GPUs for five days, from 16 to 21 November 2026. It builds on the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and on the P1 experiments report (\texttt{p1\_experiments.tex}), whose experiments ran on a single H100. The code and its README are in \texttt{experiments/s4/}.
+
+\section*{In short}\addcontentsline{toc}{section}{In short}
+\begin{itemize}
+\item \textbf{Status.} S4 is designed, coded and pre-registered, the node is up, and the runs are starting. No run has finished yet: the only findings so far come from the shake-out on a single H100 and from bringing up the node.
+\item \textbf{Questions.} Two registered tests: M1, UAQ's mechanism, seen in the INT8 codes the rollout uses; and M2, QuRL's claim that UAQ reduces the rollout--trainer mismatch. H1 at 7B and the paper's Table~4 are descriptive.
+\item \textbf{Pre-registration.} The analysis plan was frozen on 11 November, before any S4 run. An addendum, M1 without the BF16 checkpoint's ties, was registered on 16 November, also before any run on the rental, and its expected effect was corrected the same day.
+\item \textbf{Shake-out.} Three runs on a single H100 found two problems before the rental: the UAQ checkpoint check's tolerance was too tight, and BF16 storage distorts the first updates' code flips. The third run passed all 9 checks.
+\item \textbf{Node.} NCCL crashed on the node's RoCE network card. With NCCL's InfiniBand transport off (one node, so NVLink only), all-reduce over the 8 GPUs runs at 469\,GB/s.
+\end{itemize}
+
+\tableofcontents
+
+% =====================================================================================
+\section{Questions}\label{sec:questions}
+\begin{itemize}
+\item \textbf{M1, the mechanism (registered).} The INT8 refit logs, at every weight sync, the share of INT8 codes that changed.
+  \begin{itemize}
+  \item Theorem~2 with Proposition~4 predicts that over steps 1--20, R4 (UAQ) and R5 (Theorem~2's per-layer settings, no UAQ) both change about 1.5 times as many Q/K/V codes as R3, and the same number elsewhere. R6 (global learning rate $\times1.5$) should change 1.5 times as many codes everywhere.
+  \item Each share counts every INT8 code of every layer, tens to hundreds of millions per sync, so one seed suffices.
+  \item The decisive comparison is R5 against R4. R5 never touches the quantizer, so if it matches R4, UAQ's effect is a learning-rate effect, not better rollout fidelity.
+  \end{itemize}
+\item \textbf{M2, QuRL's mechanism claim (registered).} Does UAQ reduce the rollout--trainer mismatch ($k_3$), as QuRL says? It is measured over steps 1--20 at both sizes, and over the whole run at 7B when the full R3 and R4 runs both finish.
+\item \textbf{H1 at the paper's scale (descriptive).} One full 7B R4/R5 pair at the paper's settings. A single pair supports no seed-based test, so differences are reported with evaluation-noise intervals. The full R3 and R6 runs, when they fit, give UAQ's effect and the paper's Table~4 comparison.
+\end{itemize}
+
+% =====================================================================================
+\section{Design}\label{sec:design}
+The paper states 200 steps, learning rate $10^{-6}$, $512$ prompts $\times$ 16 responses, clipping at 0.2/0.28 and no KL penalty, with $s=1.5$. VeRL's DAPO recipe for this model uses exactly these values, so S4 takes the paper's unstated settings from it. S4 runs the INT8 rollout only.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l L l@{}}
+\toprule
+& Value & Source\\
+\midrule
+Model & Qwen2.5-Math-7B \citep{yang2024qwen25math}; Qwen2.5-Math-1.5B for mechanism runs & paper\\
+Data & DAPO-Math-17k: the published file has 1{,}791{,}700 rows but 17{,}398 distinct problems; 7 with conflicting answers dropped, leaving 17{,}391 & paper; deduplication ours\\
+Algorithm & GRPO advantages, clipping 0.2/0.28, token-mean loss, no KL, no entropy bonus \citep{yu2025dapo} & paper + recipe\\
+Batch & $512$ prompts $\times$ 16 responses per step, mini-batches of 32 prompts (16 updates per step) & paper + recipe\\
+Optimizer & AdamW \citep{loshchilov2019adamw}, learning rate $10^{-6}$ after 10 warm-up steps (0 at step~1), weight decay 0.1, gradient clipping 1.0, FP32 master weights & paper + recipe\\
+Lengths & prompts $\le2{,}048$ and responses $\le8{,}192$ tokens; overlong penalty over the last 4{,}096 & recipe\\
+Rollout & vLLM 0.24 \citep{kwon2023vllm}, one replica per GPU, temperature 1; INT8 W8A8 re-quantized at every sync; token TIS at $C=2$; ACR & paper ($C$ from S3)\\
+Full runs & 200 steps; AIME 2024 $\times$ 32 every 20 steps; checkpoints every 20 steps; final evaluation & recipe; frequency ours\\
+Mechanism runs & the same training for 25 steps, without validation, checkpoints or evaluation & ours\\
+Evaluation & final checkpoint in BF16: AIME 2024 Avg@32 and greedy (the paper's metric); MATH-500 Avg@4 and greedy & paper + ours\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{itemize}
+\item \textbf{Arms.} R3 (QuRL's INT8 rollout), R4 (R3 with UAQ at $s=1.5$), R5 (R3 with Theorem~2's per-layer settings), R6 (R3 with the learning rate $\times1.5$). All use seed 1, which fixes the prompt order and the sampling seed.
+\item \textbf{The UAQ checkpoints} (W$_{Q,K,V}/s$, input-norm gain $\times s$) are stored in FP32, so $W/s$ is rounded once. Their check is exact (\cref{sec:shakeout}): rescaled by 2, the model must give bit-identical logits.
+\item \textbf{The flip log.} The INT8 refit keeps its own copy of the previous sync's codes, all of them, and logs per layer and projection the share of codes that changed, the share of rows whose scale changed, and the quantization error. For three layers it also logs Proposition~4's prediction. Since 16 November it also logs the ties and their flips (\cref{sec:addendum}).
+\item \textbf{Software.} VeRL v0.9.1 \citep{sheng2025hybridflow} with a locked environment (torch 2.11 for CUDA 13.0, vLLM 0.24, transformers 5.9), and flash-attn 2.8.3 built on the node.
+\end{itemize}
+
+% =====================================================================================
+\section{Analysis plan (registered)}\label{sec:plan}
+\subsection{The frozen plan (11 November)}
+\texttt{s4\_analysis.py} implements it. It was frozen before any S4 run, with SHA-256 {\small\nolinkurl{b61d9ee9c9112c43eec3d1dc1ea45290688895a9f18b8c14fc0972cdcd06d213}}.
+\begin{itemize}
+\item \textbf{Runs that count.} A full run counts when all 200 steps are logged and its evaluation exists; a mechanism run, when its flip window is complete. No run is excluded for its outcome.
+\item \textbf{Flip window.} Syncs 2--21, the weight changes of steps 1--20, from the first attempt that starts at step 0.
+\item \textbf{M1, at each size.} Each arm's source is its full run if that run's window is complete, otherwise its mechanism run; their first 20 steps have the same settings. The code-flip shares are pooled over layers and weighted by code counts.
+  \begin{itemize}
+  \item Q/K/V: R4/R3, R5/R3 and R6/R3 are predicted to be 1.5, and are ``consistent'' within $[1.35,1.65]$.
+  \item Other projections: R4/R3 and R5/R3 are predicted to be 1, within $[0.90,1.10]$; R6/R3 is predicted to be 1.5.
+  \item R4/R5 is predicted to be 1 for both groups, within $[0.95,1.05]$.
+  \end{itemize}
+\item \textbf{M2, at each size.} The $k_3$ ratio R4/R3 over steps 1--20 (M1's sources) and over steps 1--200 (full runs, when both exist): ``reduced'' below 0.80, ``not meaningfully changed'' within $[0.80,1.25]$, ``increased'' above 1.25. QuRL's mechanism predicts a reduction; Theorem~1 predicts none.
+\item \textbf{Descriptive.} Full-run differences R4$-$R5 (H1), R4$-$R3 (UAQ's effect) and R6$-$R3 (the paper's control) for every endpoint, with a paired bootstrap over problems for MATH-500 and AIME. That interval covers evaluation noise only.
+\item \textbf{Exploratory, fixed in advance.} A full run has ``stalled'' if its mean training score over steps 181--200 is below its mean over steps 1--10.
+\end{itemize}
+
+\subsection{Addendum (16 November): M1 without the BF16 ties}\label{sec:addendum}
+Registered before any run on the rental. \texttt{s4\_m1\_ties.py} implements it, importing \texttt{s4\_analysis.py} unchanged, and is frozen with SHA-256 {\small\nolinkurl{90333f9980b3eeed8b4e96c0305213af8edb5fd5fc64abb074dd238bd02a4888}}. The first version, \texttt{1830cb9c\ldots d657}, had the same rule. Its expected effect was corrected the same day, after the third shake-out run and still before any data.
+\begin{itemize}
+\item \textbf{Why.} About 0.15\% of a BF16 checkpoint's weights sit exactly on an INT8 rounding boundary (0.15\% at 1.5B and 0.12\% at 7B, in the P1 experiments report's static analysis). Any update flips about half of them, whatever its size, and afterwards they re-cross the boundary more often than other weights. The ties are the same weights in every arm, and how often they cross does not depend on the update size, so they add about the same number of flips to every arm. That pulls M1's ratios of 1.5 toward 1.
+\item \textbf{Rule.} M1 exactly as \texttt{s4\_analysis.py} computes it, with each sync's flips counted only outside the run's ties.
+  \begin{itemize}
+  \item The ties are the weights within $10^{-4}$ grid steps of a rounding boundary at the attempt's first sync, logged by the INT8 refit.
+  \item In R3, R5 and R6 they are the BF16 checkpoint's exact ties and a few weights next to them. In R4 they are the same weights: UAQ's FP32 rescaling moves them by at most about $5\times10^{-5}$ grid steps. At 1.5B it moves them by at most $7.6\times10^{-6}$, and the two sets are identical.
+  \end{itemize}
+\item \textbf{Expected.} The ratios predicted to be 1 come out about as in M1. The ratios predicted to be 1.5 come out above M1's, for two reasons:
+  \begin{itemize}
+  \item Removing the ties raises a ratio of 1.5 by about a third of the ties' share of R3's flips. (The first version said by the whole share.)
+  \item Until training moves the weights off the BF16 lattice, the lattice holds back small updates more than 1.5 times larger ones, which raises the ratio during the warm-up (\cref{sec:sim}).
+  \end{itemize}
+\item \textbf{Reading.} M1's registered verdicts stand. M1 and the variant bracket the effects of BF16 storage (\cref{sec:sim}). A shortfall from 1.5 that M1 shows and the variant does not is the ties'.
+\end{itemize}
+
+% =====================================================================================
+\section{Schedule}\label{sec:schedule}
+\begin{itemize}
+\item \textbf{Budget.} 120 hours on 8 GPUs. Day~1 takes about 8.5--11.5 hours: the node bootstrap, the environment, and gates G1--G6. The gates include the two R3 mechanism runs, which are runs of the analysis plan and the timing pilots. A script chains the setup, the gates and the queue, so the queue starts as soon as the gates pass.
+\item \textbf{Gates.} G1 records the machine and checks the frozen hashes. G2 checks packed attention. G3 checks R5's exactness on all GPUs at $s=2$. G4 runs the R3 mechanism runs and checks the INT8 refit and its logs. G5 times the runs, and G6 evaluates the base models.
+\item \textbf{The queue} runs one run at a time on all 8 GPUs, in this order. It starts a run only if the run is projected to end 6 hours before the rental ends, which leaves time to copy the results back.
+\end{itemize}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l L@{}}
+\toprule
+Block & Runs & Purpose\\
+\midrule
+G4 (day 1) & mechanism R3 at 1.5B and 7B & M1 and M2 baselines; timing pilots\\
+M & mechanism R4, R5, R6 at 1.5B; R6, R4, R5 at 7B & M1 and early M2 at 1.5B; at 7B, R6's prediction, and R4 and R5 in case the full pair does not fit (added 16 November)\\
+A & full 7B R4, R5 & H1 at the paper's scale; their first 20 steps give M1 at 7B\\
+B & full 7B R3 & UAQ's effect; M2 over the whole run; Table~4\\
+C & full 7B R6 & the paper's control\\
+D & full 1.5B R4, R5 & H1 at 1.5B\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\begin{center}\small
+\begin{tabular}{@{}l l l l l l@{}}
+\toprule
+Scenario & Full 7B run & Mechanism run, 7B / 1.5B & Day 1 & Completes in 5 days & In 4 days\\
+\midrule
+Fast & 22\,h & 3.0 / 1.2\,h & 8.5\,h & M, A, B, C & M, A, B\\
+Central & 28\,h & 3.9 / 1.8\,h & 10.0\,h & M, A, B & M, A\\
+Slow & 36\,h & 5.0 / 2.3\,h & 11.6\,h & M, A & M, B\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \textbf{What fits} comes from the queue's own dry run. Every scenario completes M1 and early M2 at both sizes, with four days too, since the 7B R4/R5 mechanism runs were added. For five days those runs change no scenario's outcome; for four days they cost the slow scenario block~D.
+\item \textbf{Contingency, fixed in advance.} If day~1 projects more than 45 hours per full 7B run, all runs use responses $\le4{,}096$ tokens and the two R3 mechanism runs are repeated, decided on timing alone before any queued run.
+\end{itemize}
+
+% =====================================================================================
+\section{Shake-out on a single H100}\label{sec:shakeout}
+Before the rental, every day-1 step that one GPU can run was rehearsed on a single H100. That covered the setup for 1.5B, gates G2 and G3, and a 2-step 1.5B R3 run at a small batch with validation, a checkpoint, the merge and a short evaluation. It also covered G4's checks that need no 20-step window, and from the third run on the tie log. Nothing from it is reported as a result.
+\begin{itemize}
+\item \textbf{First run: stopped in the setup.} At $s=1.5$, the UAQ checkpoint check's FP32 logits differed by $1.6\times10^{-5}$ relative to the largest logit, above the tolerance of $10^{-5}$ set from the 0.5B model.
+  \begin{itemize}
+  \item This was rounding: the same comparison gives $6.7\times10^{-6}$ on the laptop's CPU, and rescaled by 2 (exact in floating point) the model gives bit-identical logits.
+  \item Four wrong rescalings move the logits by 50--90\% of the largest logit.
+  \item The check now tests the rescaling exactly instead (rescaled by 2, the logits must be bit-identical), and the checkpoint is byte-identical to before.
+  \end{itemize}
+\item \textbf{Second run: 8 of 8 checks.}
+  \begin{itemize}
+  \item Validation before training adds no sync, so in the full runs syncs 2--21 are the updates of steps 1--20, as the plan assumes.
+  \item Step~1 (learning rate 0) changed no code. Step~2 changed 0.0996\% of the Q/K/V codes, 8.6 times Proposition~4's prediction on the tracked tensors. The excess, 0.084\%, is close to half of the checkpoint's exact ties.
+  \end{itemize}
+\item \textbf{Third run: 9 of 9 checks, with the tie log.}
+  \begin{itemize}
+  \item Ties are 0.200\% of the Q/K/V codes at sync~1. None flipped at step~1, and 0.496 of them flipped at step~2.
+  \item Step~2's flips were almost all the ties': 0.0991\% of the Q/K/V codes, against 0.00055\% for all other codes. On the tracked tensors the other weights flipped at 4\% of Proposition~4's prediction.
+  \item BF16 storage leaves a gap around each rounding boundary, with only the ties on it, and updates of about $10^{-4}$ grid steps cannot cross it.
+  \end{itemize}
+\end{itemize}
+
+% =====================================================================================
+\section{BF16 storage in the flip window (exploratory)}\label{sec:sim}
+A CPU simulation (\texttt{sim\_bf16\_window.py}) follows synthetic weight rows through S4's first 20 steps, stored in BF16 as a checkpoint stores them or in FP32. It uses Adam on noise gradients, 16 updates per step, learning rate 0 at step~1 and then a 10-step warm-up. Two arms share the same rows and gradients, and one moves 1.5 times as far in grid units, as R4, R5 and R6 do against R3 for Q/K/V. Each row's $\nu=\eta/\Delta$ is drawn around the 1.5B or the 7B checkpoint's median.
+\begin{center}\small
+\begin{tabular}{@{}l l c c c c@{}}
+\toprule
+Rows like & Storage & M1 & Without ties & Without ties, steps 11--20 & R3's flips over the window\\
+\midrule
+1.5B & BF16 & 1.426 & 1.543 & 1.520 & 3.4\%\\
+1.5B & FP32 & 1.502 & 1.512 & 1.506 & 3.0\%\\
+7B & BF16 & 1.456 & 1.536 & 1.518 & 4.9\%\\
+7B & FP32 & 1.498 & 1.504 & 1.499 & 4.6\%\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \textbf{The ties pull M1 down,} to 1.43--1.46 for a true 1.5.
+\item \textbf{The lattice pushes the variant up} during the warm-up. Without ties, the ratio at step~2 is 2.4--2.6; it falls to about 1.55 by step~8 and is 1.52 over steps 11--20.
+\item \textbf{Reading.} With FP32 storage both read 1.50--1.51. So M1 and the variant bracket the true ratio, and both stay inside M1's band.
+\end{itemize}
+
+% =====================================================================================
+\section{The node (16 November)}\label{sec:node}
+\begin{itemize}
+\item \textbf{Hardware.} 8 $\times$ H100 80\,GB HBM3 (SXM), every pair linked by 18 NVLinks through 4 NVSwitches, Fabric Manager active, driver 580.196.07, CUDA 13.0. The bootstrap installed the driver, Fabric Manager and the CUDA toolkit on a plain Ubuntu 24.04 image. Its checks of NVLink, the fabric, CUDA peer access (56 of 56 pairs) and kernel errors all passed.
+\item \textbf{Under load.} BF16 matmul at 680--687\,TFLOPS per GPU, INT8 (cuBLASLt) at 870--877\,TOPS, clocks of 1.62--1.64\,GHz at 700\,W, and host copies at 30--53\,GB/s.
+\item \textbf{NCCL failed at first.} Every multi-GPU NCCL test crashed at its first collective, on any set of GPUs and with any transport switched off.
+  \begin{itemize}
+  \item The cause was NCCL's InfiniBand transport, which picked the node's Intel RoCE network card and crashed on it.
+  \item Every S4 run is on one node, where NCCL uses NVLink, so the setup turns the InfiniBand transport off for every process (\texttt{NCCL\_IB\_DISABLE=1}).
+  \item All-reduce is then correct on all 8 GPUs, with a bus bandwidth at 1\,GiB of 469\,GB/s for all-reduce and 345 and 343\,GB/s for all-gather and reduce-scatter.
+  \end{itemize}
+\end{itemize}
+
+% =====================================================================================
+\section{Status}\label{sec:status}
+\begin{itemize}
+\item \textbf{16 November, evening:} the environment is being built; the gates run overnight; the queue then starts by itself. The rental ends on 21 November at 09:30 UTC.
+\item \textbf{Results} will be added here as the runs finish. The registered analyses are computed once at the end, from the results copied back each day.
+\end{itemize}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

@@ -7,8 +7,9 @@
 #   m  mechanism run: 25 steps, seed 1, no validation, no checkpoints, no final evaluation (tag s4m_<size>_<arm>_s1).
 #      Only its training metrics and code-flip log count (M1, early M2). The two R3 runs are made by gates.sh (G4).
 #   f  full run: the paper's 200 steps, validation and checkpoints every 20 steps, final evaluation (s4_<size>_<arm>_s<k>).
-# Order: M (mechanism runs 1.5B R4, R5, R6 and 7B R6) | A 7B R4/R5 (H1 at the paper's scale; their first 20 steps give
-# M1 at 7B) | B 7B R3 (UAQ's effect, M2 over training, Table 4) | C 7B R6 (the paper's control) | D 1.5B R4/R5.
+# Order: M (mechanism runs 1.5B R4, R5, R6 and 7B R6, R4, R5) | A 7B R4/R5 (H1 at the paper's scale; their
+# first 20 steps give M1 at 7B, which the 7B R4/R5 mechanism runs give if the pair does not fit) | B 7B R3 (UAQ's
+# effect, M2 over training, Table 4) | C 7B R6 (the paper's control) | D 1.5B R4/R5.
 # Whatever the 5 days allow is the most useful prefix.
 # Before the first run it requires results/gates/PASSED (gates.sh, gates G2-G4); FORCE=1 overrides.
 # Per run: run.sh (training, summary; for full runs finish.sh = merge + evaluation). A failed run is retried once (a
@@ -33,6 +34,7 @@ plan() {   # "kind size arm seed tag runs" in run order; runs = 2 for the first 
            # only if both fit), 0 for its second (it follows the first), 1 otherwise
   {
     echo "m 1.5b R4 1 1"; echo "m 1.5b R5 1 1"; echo "m 1.5b R6 1 1"; echo "m 7b R6 1 1"   # M
+    echo "m 7b R4 1 1"; echo "m 7b R5 1 1"   # M, added 2026-11-16: M1 at 7B even if the full R4/R5 pair does not fit
     echo "f 7b R4 1 2"; echo "f 7b R5 1 0"                                                 # A
     echo "f 7b R3 1 1"                                                                     # B
     echo "f 7b R6 1 1"                                                                     # C
