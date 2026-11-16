@@ -13,12 +13,14 @@ dependencies = ["torch>=2.6"]
 
 [project.optional-dependencies]
 uaq = ["transformers>=4.51", "safetensors"]
+train = ["transformers>=4.51", "safetensors"]
 # qurl.verl subclasses VeRL internals and relies on vLLM 0.24's INT8 layer layout: keep these versions.
 verl = ["verl>=0.9.1,<0.10", "vllm>=0.24,<0.25"]
 test = ["pytest>=8", "numpy", "transformers>=4.51", "tokenizers", "safetensors"]
 
 [project.scripts]
 qurl-uaq-checkpoint = "qurl.uaq:main"
+qurl-train = "qurl.train:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

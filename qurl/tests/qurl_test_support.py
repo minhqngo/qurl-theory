@@ -83,9 +83,10 @@ def tiny_qwen2(seed: int = 0, layers: int = 2):
     return m
 
 
-def write_tiny_checkpoint(path: Path, seed: int = 0) -> None:
-    """A tiny random Qwen2 checkpoint stored in BF16, as Qwen2.5 checkpoints are, with a word-level tokenizer and a
-    chat template, so that qurl.uaq's command line runs offline."""
+def tiny_tokenizer():
+    """A word-level tokenizer with as many tokens as tiny_qwen2's vocabulary (so every sampled id decodes): the special
+    tokens <unk>, <pad> (pad) and <eos> (end of text), the words of qurl.uaq's prompt, then filler words; its chat
+    template concatenates the messages' contents."""
     from tokenizers import Tokenizer, models, pre_tokenizers
     from transformers import PreTrainedTokenizerFast
 
@@ -94,11 +95,19 @@ def write_tiny_checkpoint(path: Path, seed: int = 0) -> None:
     vocab = {"<unk>": 0, "<pad>": 1, "<eos>": 2}
     for word, _ in pre_tokenizers.Whitespace().pre_tokenize_str(PROMPT):
         vocab.setdefault(word, len(vocab))
+    while len(vocab) < 96:
+        vocab[f"w{len(vocab)}"] = len(vocab)
     tk = Tokenizer(models.WordLevel(vocab=vocab, unk_token="<unk>"))
     tk.pre_tokenizer = pre_tokenizers.Whitespace()
     tok = PreTrainedTokenizerFast(tokenizer_object=tk, unk_token="<unk>", pad_token="<pad>", eos_token="<eos>")
     tok.chat_template = "{% for m in messages %}{{ m['content'] }}{% endfor %}"
-    tok.save_pretrained(path)
+    return tok
+
+
+def write_tiny_checkpoint(path: Path, seed: int = 0) -> None:
+    """A tiny random Qwen2 checkpoint stored in BF16, as Qwen2.5 checkpoints are, with tiny_tokenizer(), so that
+    qurl.uaq's command line and the training loop run offline."""
+    tiny_tokenizer().save_pretrained(path)
     tiny_qwen2(seed).to(torch.bfloat16).save_pretrained(path, safe_serialization=True)
 
 
