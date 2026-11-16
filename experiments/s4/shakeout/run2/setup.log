@@ -1,0 +1,42 @@
+0, NVIDIA H100 NVL, 9.0, 95830 MiB, 580.173.02
+CPU cores 32 | RAM 125 GB
+free space for checkpoints at /localhome/local-minngo/qurl/s4/ckpt: 1455 GB
+Checked 255 packages in 2ms
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]Fetching 10 files: 100%|██████████| 10/10 [00:00<00:00, 10351.19it/s]
+Qwen/Qwen2.5-Math-1.5B -> /localhome/local-minngo/.cache/huggingface/hub/models--Qwen--Qwen2.5-Math-1.5B/snapshots/4a83ca6e4526a4f2da3aa259ec36c259f66b2ab2
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  36%|███▌      | 122/338 [00:00<00:00, 1194.55it/s]Loading weights:  80%|███████▉  | 269/338 [00:00<00:00, 1310.02it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1391.19it/s]
+probe, rescaled by 2: FP32 logits bit-identical: True; undone, weights bit-identical: True
+rescaled 84 Q/K/V weight tensors by 1/1.5 and 28 input-layernorm gains by 1.5
+FP32 logits on 82 prompt tokens: max |diff| 4.520e-04 (relative to max |logit|: 1.627e-05); bit-identical: False
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.41s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.41s/it]
+saved to /localhome/local-minngo/qurl/models/qwen2.5-math-1.5b-uaq1.5
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  37%|███▋      | 125/338 [00:00<00:00, 1240.02it/s]Loading weights:  83%|████████▎ | 279/338 [00:00<00:00, 1355.86it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1428.42it/s]
+probe, rescaled by 2: FP32 logits bit-identical: True; undone, weights bit-identical: True
+rescaled 84 Q/K/V weight tensors by 1/2.0 and 28 input-layernorm gains by 2.0
+FP32 logits on 82 prompt tokens: max |diff| 0.000e+00 (relative to max |logit|: 0.000e+00); bit-identical: True
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.50s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.50s/it]
+saved to /localhome/local-minngo/qurl/models/qwen2.5-math-1.5b-uaq2
+DAPO-Math-17k: 1791700 rows, 17398 distinct prompts, 7 dropped for conflicting answers, 17391 kept
+  prompts in the DAPO format: 17391 of 17391; data sources: {'math_dapo': 17391}
+AIME-2024: 960 rows, 30 distinct prompts, 0 dropped for conflicting answers, 30 kept
+{
+ "dapo17k": {
+  "rows_published": 1791700,
+  "kept": 17391,
+  "dropped_conflicting": 7
+ },
+ "aime24": {
+  "problems": 30,
+  "x32_rows": 960,
+  "in_dapo_format": 30
+ },
+ "math500": {
+  "problems": 500
+ }
+}
+example training prompt: Solve the following math problem step by step. The last line of your response should be of the form Answer: $Answer (without quotes) where $Answer is the answer to the problem. |  | In triangle $ABC$, $\s
+verl 0.9.1 | vllm 0.24.0 | torch 2.11.0+cu130 | cuda 13.0 | transformers 5.9.0 | ray 2.55.1
+flash_attn installed: False -> trainer attention: sdpa (packed via transformers' mask)
+devices: 1 x NVIDIA H100 NVL | capability (9, 0)
+verl commit 1876b06d0a3e4e71e06230be10af14492ca8a75b
+== setup done 2026-11-16T05:42:04+00:00: next, bash ~/qurl/s4/gates.sh

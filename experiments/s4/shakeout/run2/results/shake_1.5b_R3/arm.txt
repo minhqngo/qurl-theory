@@ -1,0 +1,3 @@
+== S4 shake_1.5b_R3: size 1.5b, arm R3, seed 1, 2 steps, 1 GPUs, attention sdpa 2026-11-16T05:44:11+00:00
+model Qwen/Qwen2.5-Math-1.5B | QURL_OPT=plain | QURL_S=1.5 | lr 1e-6 (base 1e-6) | INT8 rollout 1 | QURL_TIS_C=2.0 | token budgets train 16384 / log-prob 32768 | attempt 1794807851
+== training exit 0 shake_1.5b_R3 2026-11-16T05:53:35+00:00

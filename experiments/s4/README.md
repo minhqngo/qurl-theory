@@ -103,11 +103,36 @@ What fits, from the queue's own dry run (`queue.sh` with `DRY_RUN=1` simulates i
 - **The analysis plan is frozen** (2026-11-11, before any S4 run; `gates.sh`'s R3 mechanism runs are already runs of the analysis).
   - `s4_analysis.sha256` holds the hash, and `gates.sh` checks it.
   - Any later change is recorded with both results, as in S3.
-- **Recommended with only 5 days: a shake-out on S3's H100** after S3's queue ends. A 2-step 1.5B run on one GPU at a small batch catches configuration errors before paying for 8 GPUs.
+  - Its addendum, M1 without the BF16 ties, was registered on 2026-11-16, also before any rental run. It is frozen the same way (`s4_m1_ties.sha256`).
+- **Recommended with only 5 days: a shake-out on S3's H100** (`shakeout.sh`, about 1–1.5 h). It runs every day-1 step that one GPU can run, so configuration errors surface before 8 GPUs are paid for. It is not a gate, and nothing from it is reported.
+  - The setup, for 1.5B only and without the flash-attn build. On S3's H100 this re-syncs S3's venv to the same lock, so the venv stays as it is.
+  - Gates G2 and G3 (at 1.5B, on one GPU).
+  - A 2-step 1.5B R3 run at a small batch (32 prompts × 4 responses), otherwise with S4's settings: validation before and after, the INT8 test dump, a checkpoint, the merge and a short evaluation. On the rental, the merge and evaluation first run after a full 7B run.
+  - G4's checks that need no 20-step window. The flip log must also hold exactly the first sync and one per step, with no flip at step 1, whose learning rate is 0. S3 and E2 never validated before training, and S4's full runs do: an extra sync there would shift their flip window by one step.
+  - The tie log for the addendum: about 0.2% of the codes are ties, none of them flips at step 1, and about half flip at step 2.
   ```bash
-  SIZES=1.5b FLASH_ATTN=skip bash ~/qurl/s4/setup_s4.sh
-  NGPU=1 DUMP=1 VAL_EVERY=2 SAVE_EVERY=-1 NO_FINISH=1 bash ~/qurl/s4/run.sh 1.5b R3 shake_1.5b_R3 2 data.train_batch_size=32 actor_rollout_ref.rollout.n=4 actor_rollout_ref.actor.ppo_mini_batch_size=8
+  scp -r experiments/s4 h100:qurl/
+  ssh -n h100 "nohup bash ~/qurl/s4/shakeout.sh > ~/qurl/s4/shakeout.log 2>&1 < /dev/null &"
   ```
+  - Results: `~/qurl/s4/results/shakeout/summary.txt`. Keep them out of the local `experiments/s4/results/`, which goes to the rental with the code: a copied `results/node/check_node.txt` would make `setup_s4.sh` skip the rental's own node check.
+  - **First run (2026-11-16): stopped in the setup.**
+    - At s = 1.5, the UAQ check's FP32 logits differed by 1.6e-5 relative to the largest logit, on the H100's CPU. `make_uaq_checkpoint.py` had kept S3's limit of 1e-5, which was set from the 0.5B model.
+    - Laptop tests show it is rounding: rescaled by 2 (exact), the model gives bit-identical logits, and the same s = 1.5 comparison gives 6.7e-6 on the laptop's CPU.
+    - The script now checks the rescaling exactly instead (laptop tests below) and writes the same checkpoint.
+  - **Second run (2026-11-16), with the fixed script: 8 of 8 checks passed.** Results in `experiments/s4/shakeout/run2/` (not reported).
+    - The UAQ probe gave bit-identical logits on the H100's CPU as well.
+    - Validation before training added no sync. The flip log holds syncs 1–3 for 2 steps, so in the full runs syncs 2–21 are the updates of steps 1–20, as the analysis plan assumes.
+    - Step 1 (lr 0) changed no code.
+    - Step 2 (lr 1e-7) changed 0.0996% of the q/k/v codes. On the tracked tensors that is 8.6 times Proposition 4's prediction (0.0956% against 0.0111%).
+    - The excess, 0.084%, is close to half of the checkpoint's exact ties (E2: 0.15%), which flip with probability ½ under any update. By E2's data they keep re-crossing afterwards, in every arm alike. Hence the addendum to the analysis plan (M1 without the ties) and the tie log in `int8_rollout.py`.
+    - Found and fixed: `env.txt` ended without a newline, so `run.sh`'s first `code:` line ran into the data record.
+    - Seen, not changed: VeRL could not bind its trainer workers to their GPUs' CPUs, because this server has no `libnuma.so` (package `libnuma-dev`). On one GPU this does not matter.
+  - **Third run (2026-11-16), with the tie log: 9 of 9 checks passed.** Results in `experiments/s4/shakeout/run3/` (not reported).
+    - Ties at sync 1: 0.200% of the q/k/v codes and 0.199% of all codes, as the laptop's CPU test found for this checkpoint. None flipped at step 1, and 0.496 of them flipped at step 2.
+    - Step 2's flips were almost all the ties': 0.0991% of the q/k/v codes, against 0.00055% for all the other codes (484 codes).
+    - On the tracked tensors, the non-tie flips were 4% of Proposition 4's prediction. BF16 storage leaves a gap around each rounding boundary, and only the ties sit on the boundary. Updates of about 1e-4 grid steps cannot cross the gap.
+    - This lattice effect raises the addendum's ratios during the warm-up. Hence the corrected expectation and the simulation in the addendum.
+    - The other parts ran as in the second run, and the `env.txt` fix works.
 
 ## Day 1: node, setup and gates
 ```bash
@@ -153,7 +178,7 @@ cat ~/qurl/s4/results/gates/summary.txt
   - flash-attn 2.8.3 built from source for SM90 when `nvcc` 13 is present. The lock's prebuilt wheel no longer exists.
   - Both models, the UAQ checkpoints at s = 1.5 and 2 (FP32, checked on the CPU), and the data.
 - **Gates**, about 6–8 h. `queue.sh` refuses to start until G2–G4 pass.
-  - **G1, machine:** GPU type and count, attention implementation, the node checks' warnings and failures, and whether `s4_analysis.py` still matches its frozen hash.
+  - **G1, machine:** GPU type and count, attention implementation, the node checks' warnings and failures, and whether `s4_analysis.py` and its addendum `s4_m1_ties.py` still match their frozen hashes.
     - Recorded only, with one exception: a `check_node.py` failure stops the gates.
     - A hash mismatch is a loud warning.
   - **G2, packed attention.** VeRL's padding-free forward must give the same log-probs as one sequence at a time (`test_packed_attn.py`).
@@ -164,7 +189,8 @@ cat ~/qurl/s4/results/gates/summary.txt
   - **G4, the R3 mechanism runs** at 1.5B and 7B. These are runs of the analysis plan. Checks:
     - the INT8 codes after the first sync equal an independent quantization (`check_int8_dump.py`);
     - every replica re-quantizes all weights at every sync;
-    - the flip log covers syncs 2–21, and its shares are plausible (below 20% per step; about 1% is expected).
+    - the flip log covers syncs 2–21, and its shares are plausible (below 20% per step; about 1% is expected);
+    - the tie log, which the addendum needs, is recorded, with a warning if it is missing or implausible.
   - **G5, timing → `hours.txt`, which the queue reads.**
     - Full runs: 200 × the measured median step time, × 1.25 for response growth, + 2 h.
     - Mechanism runs: 1.1 × the measured wall time.
@@ -191,7 +217,7 @@ bash ~/qurl/s4/queue.sh --list
   ssh <rental> "cp /var/log/qurl-gpu-monitor.csv qurl/s4/results/node/; tar czf s4_results.tgz --exclude='*.pt' -C qurl/s4 results queue.log gates.log setup.log env.txt"
   scp <rental>:s4_results.tgz experiments/s4/
   ```
-- **At the end:** `python s4_analysis.py` writes `results/s4_analysis.txt`. The merged models are lost with the node unless uploaded.
+- **At the end:** `python s4_analysis.py` writes `results/s4_analysis.txt`, and `python s4_m1_ties.py` writes `results/s4_m1_ties.txt` (the addendum). The merged models are lost with the node unless uploaded.
 
 ## Analysis plan (frozen 2026-11-11)
 `s4_analysis.py` implements this; `--self-test` checks its arithmetic. It was frozen before any S4 run, with SHA-256 `b61d9ee9c9112c43eec3d1dc1ea45290688895a9f18b8c14fc0972cdcd06d213`.
@@ -213,20 +239,42 @@ bash ~/qurl/s4/queue.sh --list
   - The paper's Table 4; the base models.
 - **Exploratory, fixed now:** a full run "stalled" if its mean training score over steps 181–200 is below that over steps 1–10.
 
+### Addendum (registered 2026-11-16, before any run on the rental): M1 without the BF16 ties
+Exploratory. `s4_m1_ties.py` implements it, imports `s4_analysis.py` unchanged, and is frozen with SHA-256 `90333f9980b3eeed8b4e96c0305213af8edb5fd5fc64abb074dd238bd02a4888` (`s4_m1_ties.sha256`; G1 checks it). The same day, after the third shake-out run and still before any rental run, its expected effect was corrected (below). The first version, `1830cb9c…d657`, had the same rule.
+- **Why.** About 0.15% of a BF16 checkpoint's weights sit exactly on an INT8 rounding boundary (E2: 0.15% at 1.5B, 0.12% at 7B).
+  - Any update flips about half of them, whatever its size. Afterwards they re-cross the boundary more often than other weights: in E2, 11% of them at the next update and still about 1.6% per update at update 65.
+  - The ties are the same weights in every arm, and how often they cross does not depend on the update size. So they add about the same number of flips to every arm, which pulls M1's ratios predicted at 1.5 toward 1.
+  - The shake-out measured the first crossing at 1.5B ("Before the rental").
+- **Rule.** M1 exactly as `s4_analysis.py` computes it (the same runs, sources, attempt, window, pooling and bands), with each sync's flips counted only outside the run's ties.
+  - The ties are the weights within 1e-4 grid steps of a rounding boundary at the attempt's first sync. `int8_rollout.py` logs them (fields `ties` and `flip_ties`; the other fields are unchanged).
+  - In R3, R5 and R6 that is the BF16 checkpoint's exact ties and a few weights next to them.
+  - In R4 it is the same weights: UAQ's FP32 rescaling moves them by at most about 5e-5 grid steps. At 1.5B it moves them by at most 7.6e-6, and the two sets are identical (laptop tests).
+- **Expected.** The ratios predicted at 1 come out about as in M1: R4/R5, and R4/R3 and R5/R3 for the other projections. The ratios predicted at 1.5 come out above M1's, for two reasons: R4/R3, R5/R3 and R6/R3 for q/k/v, and R6/R3 for the other projections.
+  - Removing the ties raises a ratio of 1.5 by about a third of the ties' share of R3's flips, which the script reports. The first version said by the whole share.
+  - Until training moves the weights off the BF16 lattice, the lattice holds back small updates more than 1.5 times larger ones, which raises the ratio during the warm-up. The third shake-out run showed the effect: step 2's update flipped almost no weight outside the ties.
+- **Size, simulated.** `sim_bf16_window.py` (exploratory; output in `sim_bf16_window.txt`) uses synthetic BF16 rows, Adam on noise gradients, 16 updates per step and S4's warm-up. For a true 1.5:
+  - M1 reads 1.43 with 1.5B-like rows and 1.46 with 7B-like rows. The variant reads 1.54 at both. With FP32 storage both read 1.50–1.51.
+  - The variant's ratio per step starts at 2.4–2.6 (step 2), falls to about 1.55 by step 8, and is 1.52 over steps 11–20.
+  - R3 flipped 3.4% (1.5B-like) and 4.9% (7B-like) of its codes over the window. G4 measures the real sum on day 1.
+- **Reading.** M1's registered verdicts stand. M1 and the variant bracket the BF16 effects: in the simulation, 1.43–1.46 and 1.54 for a true 1.5, both inside M1's band. A shortfall from 1.5 that M1 shows and the variant does not is the ties'.
+
 ## Code
 | File | What |
 |---|---|
 | `qurl_verl/r5_optim.py` | R5's optimizer (Theorem 2(b)–(c)), now on any number of GPUs. Each GPU sums its shards' squared norms in float64; the sums are all-gathered and added in rank order, so the clip norm is bit-identical on every GPU and between R4 and R5 at s = 2 |
-| `qurl_verl/int8_rollout.py` | The INT8 refit (unchanged quantizer), one vLLM replica per GPU. It refuses tensor parallelism and checks that every sync re-quantizes every weight. Optional per-sync log: code flips and row-scale changes against its own history (all previous codes, in pinned CPU memory: 6.5 GB for 7B), quantization error, the attempt's starting step, and for the q/k/v tensors of three layers Proposition 4's prediction next to the flip share recomputed from the previous weights. One replica writes |
+| `qurl_verl/int8_rollout.py` | The INT8 refit (unchanged quantizer), one vLLM replica per GPU. It refuses tensor parallelism and checks that every sync re-quantizes every weight. Optional per-sync log: code flips and row-scale changes against its own history (all previous codes, in pinned CPU memory: 6.5 GB for 7B), quantization error, the attempt's starting step, and for the q/k/v tensors of three layers Proposition 4's prediction next to the flip share recomputed from the previous weights. One replica writes. Since 2026-11-16 it also logs the ties (the weights within 1e-4 grid steps of a rounding boundary at the run's start) and their flips, for the addendum |
 | `qurl_verl/acr.py` | QuRL's TIS + ACR loss, unchanged from S3 |
 | `run.sh`, `finish.sh`, `queue.sh`, `watchdog.sh` | one run (full or mechanism; resumable); merge + evaluation; the 5-day queue; its hang watchdog |
 | `bootstrap_node.sh`, `check_node.py` | the node: NVIDIA driver (`nvidia-smi`), Fabric Manager, CUDA 13.0 toolkit, storage, checks; then the node under load |
 | `setup_s4.sh`, `gates.sh` | day-1 environment; gates G1–G6 |
+| `shakeout.sh` | the shake-out on S3's H100 before the rental (not a gate) |
 | `prepare_data.py`, `eval.py` | data; final evaluation, one vLLM per GPU, vLLM's native sampler (as in the training rollout) |
 | `r5_check_mp.py/.sh`, `check_int8_dump.py`, `test_packed_attn.py` | gates G3, G4, G2 |
 | `summarize.py`, `s4_analysis.py`, `s4_analysis.sha256` | per-run summary and time projection; the registered analysis and its frozen hash |
+| `s4_m1_ties.py`, `s4_m1_ties.sha256` | the addendum (M1 without the BF16 ties) and its frozen hash |
+| `sim_bf16_window.py`, `sim_bf16_window.txt` | exploratory CPU simulation of BF16 storage in M1's window, with S4's warm-up (laptop; imports E2's frozen `e2_dynamic.py`) |
 | `test_clip_mp.py`, `laptop_smoke.sh` | laptop tests (below) |
-| `make_uaq_checkpoint.py` | copied unchanged from S3 |
+| `make_uaq_checkpoint.py` | S3's, with an exact check of the rescaling in place of S3's fixed tolerance; the checkpoint is byte-identical to the one S3's script writes |
 
 ## Laptop tests (not reported)
 - **`test_clip_mp.py`** runs R5's clip arithmetic under FSDP2 on 1, 2, 3 (uneven shards), 4 and 8 CPU processes, with a tiny Qwen2 model in float32. It passed in every case:
@@ -235,6 +283,22 @@ bash ~/qurl/s4/queue.sh --list
   - an R4 repeat is bit-identical to R4;
   - R5 with ordinary clipping differs.
 - **`test_packed_attn.py`** with Qwen2.5-0.5B-Instruct on the laptop GPU: see G2 above.
+- **`make_uaq_checkpoint.py`** with Qwen2.5-Math-1.5B on the laptop's CPU, with the same torch and transformers as the H100:
+  - Rescaled by 2, the model gives bit-identical FP32 logits. Undoing it restores every weight bit for bit.
+  - At s = 1.5 the logits differ by 6.7e-6 relative to the largest logit. The H100's CPU gave 1.6e-5.
+  - Four wrong rescalings move the logits by 50–90% of the largest logit at s = 1.5: V left out, O instead of V, the post-attention norm instead of the input norm, and no gains. The probe stops all four and leaves the weights as they were.
+  - The saved checkpoints at s = 1.5 and 2 equal the original weights rescaled once, bit for bit in every tensor. At s = 1.5 the file is byte-identical to the one S3's script writes.
+- **The tie log and `s4_m1_ties.py`** (2026-11-16):
+  - **Tie sets, on Qwen2.5-Math-1.5B's weights** (CPU, with `int8_rollout.py`'s own quantizer):
+    - 0.16% of the q/k/v weights are exact ties, and 0.20% lie within 1e-4 grid steps of a boundary (other projections: 0.14% and 0.20%).
+    - R4's set, from UAQ's FP32 checkpoint, is the same weights. It contains all 140,883 exact ties, which UAQ moves by at most 7.6e-6 grid steps.
+    - R4's starting codes differ from R3's only at ties (42,440 weights).
+  - **The refit on the laptop GPU:** `_update_weights` on stand-in INT8 layers, with layers 0–1 of the 1.5B model and two FP32 updates of about 1e-3 grid steps.
+    - Every logged share (flips, ties, flips of the ties) equals an independent recomputation on the CPU exactly.
+    - The first update flipped exactly half of the ties (0.500).
+    - A resumed attempt logs no ties.
+  - **`s4_m1_ties.py --self-test`:** with planted ties, M1 comes out diluted and the variant recovers the planted ratios exactly. Without ties the variant equals M1, and a run without the tie log gives no verdict.
+  - **Gate scripts:** the shake-out's stub test (six cases, one without the tie log) and G4's snippet on synthetic logs gave the expected results.
 - **`prepare_data.py`** produced the counts above.
 - **`s4_analysis.py`:**
   - `--self-test` passes.

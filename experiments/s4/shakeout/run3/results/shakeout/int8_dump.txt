@@ -1,0 +1,8 @@
+Fetching 6 files:   0%|          | 0/6 [00:00<?, ?it/s]Fetching 6 files: 100%|██████████| 6/6 [00:00<00:00, 4405.01it/s]
+checkpoint Qwen/Qwen2.5-Math-1.5B: layer-0 q/k/v stored as torch.bfloat16
+module: model.layers.0.self_attn.qkv_proj | logical widths: [1536, 256, 256] | codes (2048, 1536) | scales (2048, 1)
+sync 1 vs independent quantization: codes identical: True | scales identical: True | mismatched codes: 0 of 3145728
+sync 2 vs sync 1, q_proj: 0.0000% of codes changed, 0.00% of row scales changed
+sync 2 vs sync 1, k_proj: 0.0000% of codes changed, 0.00% of row scales changed
+sync 2 vs sync 1, v_proj: 0.0000% of codes changed, 0.00% of row scales changed
+PASS

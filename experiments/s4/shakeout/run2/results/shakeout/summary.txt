@@ -1,0 +1,118 @@
+[2026-11-16T05:41:27+00:00] == 0 setup_s4.sh, 1.5B only, no flash-attn build (log: ~/qurl/s4/setup.log)
+    devices: 1 x NVIDIA H100 NVL | capability (9, 0)
+    verl commit 1876b06d0a3e4e71e06230be10af14492ca8a75b
+    == setup done 2026-11-16T05:42:04+00:00: next, bash ~/qurl/s4/gates.sh
+[2026-11-16T05:42:04+00:00] PASS setup_s4.sh finished
+[2026-11-16T05:42:04+00:00] == 1 the machine
+    verl 0.9.1 | vllm 0.24.0 | torch 2.11.0+cu130 | cuda 13.0 | transformers 5.9.0 | ray 2.55.1
+    flash_attn installed: False -> trainer attention: sdpa (packed via transformers' mask)
+    devices: 1 x NVIDIA H100 NVL | capability (9, 0)
+    verl commit 1876b06d0a3e4e71e06230be10af14492ca8a75b
+    {
+     "dapo17k": {
+      "rows_published": 1791700,
+      "kept": 17391,
+      "dropped_conflicting": 7
+     },
+     "aime24": {
+      "problems": 30,
+      "x32_rows": 960,
+      "in_dapo_format": 30
+     },
+     "math500": {
+      "problems": 500
+     }
+    }    INFO 1 GPU(s): NVIDIA H100 NVL; torch 2.11.0+cu130, CUDA 13.0, NCCL 2.28.9; 47 s
+    PASS memory: 90-90 GiB per GPU written and read back (pattern and complement), no error
+    PASS BF16 matmul 8192^3, all GPUs at once: median 453 TFLOPS (range 453-453)
+    INFO INT8 matmul 8192^3 (cuBLASLt): median 650 TOPS (range 650-650); vLLM's INT8 kernels are CUTLASS, not timed here
+    PASS pinned copies host to GPU, all GPUs at once: median 28.0 GB/s (range 28.0-28.0)
+    PASS pinned copies GPU to host, all GPUs at once: median 21.7 GB/s (range 21.7-21.7)
+    PASS under load (nvidia-smi): median SM clock 1118-1118 MHz across GPUs, hottest 61 C, highest power 399 W
+    INFO NCCL: one GPU; all-reduce correct, bandwidth not measured
+[2026-11-16T05:42:04+00:00] PASS check_node.py on one GPU: no failure (results/node/check_node.txt)
+[2026-11-16T05:42:04+00:00] PASS the analysis plan: s4_analysis.py matches its frozen SHA-256
+[2026-11-16T05:42:04+00:00] == 2 packed attention (gate G2)
+    sdpa (float32): |log-prob difference| vs single sequences, mean / max: packed 1.63e-05 / 3.87e-04, padded 1.63e-05 / 3.90e-04 -> packed path OK
+    PASS
+    sdpa (bfloat16): |log-prob difference| vs single sequences, mean / max: packed 2.55e-02 / 2.72e-01, padded 2.42e-02 / 2.72e-01 -> packed path OK
+      packed forward of 16384 tokens (1200-token sequences): 0.370 s, peak memory 8.0 GiB
+    flash_attention_2: not available (ImportError: FlashAttention2 has been toggled on, but it cannot be used due to the following error: the package for FlashAttention2 d)
+    PASS
+[2026-11-16T05:42:20+00:00] PASS G2: VeRL's packed forward gives the same log-probs as one sequence at a time (packed_attn.txt)
+[2026-11-16T05:42:20+00:00] == 3 R5's exactness at 1.5B, one GPU (gate G3)
+    R4: R4: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R4
+    R4r: R4: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R4r
+    R5: R5: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R5
+    R5o: R5o: grad norms (before clipping) [0.03951228788514392, 0.0331823624918488, 0.030442048144963534]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R5o
+      grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+      grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+      identical grad norms: True
+      BIT-IDENTICAL
+      grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+      grad norms R5: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+      identical grad norms: True
+      BIT-IDENTICAL
+      grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+      grad norms R5o: [0.03951228788514392, 0.0331823624918488, 0.030442048144963534]
+      identical grad norms: False
+      DIFFERENT
+    G3 1.5b: PASS
+[2026-11-16T05:44:11+00:00] PASS G3: R5 and an R4 repeat bit-identical to R4, R5 with ordinary clipping different (r5_check.txt)
+[2026-11-16T05:44:11+00:00] == 4 a 2-step 1.5B R3 run (results/shake_1.5b_R3)
+    steps logged: 2 (1-2); step time: first 98 s, median of the rest 113 s (min 113, max 113)
+      adv                    median     0.2 s (   0% of a step)
+      gen                    median    22.1 s (  20% of a step)
+      old_log_prob           median    20.6 s (  18% of a step)
+      update_actor           median    49.3 s (  44% of a step)
+      update_weights         median     0.8 s (   1% of a step)
+    projection for 2 steps: 0.1 h of training + 1 validations (133 s each) + 0 checkpoint saves (20 s each) = 0.1 h
+    
+    training score (+1 correct / -1 wrong, plus overlong penalty): step 1 -0.891, last -0.938; mean over all steps -0.914, steps 1-20 -0.914, last 20 steps -0.914
+    response length: step 1 1283, last 1192 tokens; share cut at the cap: last 0.008
+    val-core/aime24/acc/mean@1: 0: 3.4%, 2: 3.5%
+    
+    per step (mean over steps; step 1; min-max):
+      mismatch KL (k3, per token)                7.800e-03  (8.031e-03; 7.569e-03-8.031e-03)
+      mismatch KL (k1, per token)                8.120e-03  (8.558e-03; 7.681e-03-8.558e-03)
+      TIS: share of tokens with rho > C          1.606e-03  (1.614e-03; 1.598e-03-1.614e-03)
+      ACR: share of tokens kept beyond 1 + eps   0.000e+00  (0.000e+00; 0.000e+00-0.000e+00)
+      largest rho in a batch                     5.132e+00  (5.032e+00; 5.032e+00-5.232e+00)
+      gradient norm (before clipping)            1.789e-01  (2.023e-01; 1.555e-01-2.023e-01)
+    
+    INT8 refit: 3 sync lines from 1 vLLM worker process(es); weights per sync 196-196; synced dtype ['torch.float32']; kernel ['CutlassInt8ScaledMMLinearKernel']
+    
+    E2/E3 window: syncs 2-21 of attempt 1794807851 (2 syncs logged, 28 layers); mean over layers and syncs:
+      projection  code flips  rows rescaled  quant. error
+      q_proj         0.0509%         48.35%     9.482e-03
+      k_proj         0.0458%         48.47%     1.005e-02
+      v_proj         0.0473%         47.49%     9.992e-03
+      o_proj         0.0451%         48.15%     9.520e-03
+      gate_proj      0.0588%         48.19%     8.963e-03
+      up_proj        0.0647%         48.35%     8.814e-03
+      down_proj      0.0257%         47.77%     1.164e-02
+      layer  0 k_proj: Proposition 4 predicts 0.0042% flips, observed 0.0473%
+      layer  0 q_proj: Proposition 4 predicts 0.0039% flips, observed 0.0524%
+      layer  0 v_proj: Proposition 4 predicts 0.0066% flips, observed 0.1143%
+      layer 14 k_proj: Proposition 4 predicts 0.0070% flips, observed 0.0914%
+      layer 14 q_proj: Proposition 4 predicts 0.0063% flips, observed 0.0394%
+      layer 14 v_proj: Proposition 4 predicts 0.0054% flips, observed 0.0488%
+      layer 27 k_proj: Proposition 4 predicts 0.0082% flips, observed 0.0328%
+      layer 27 q_proj: Proposition 4 predicts 0.0064% flips, observed 0.0390%
+      layer 27 v_proj: Proposition 4 predicts 0.0027% flips, observed 0.0268%
+    aime24: Avg@2 0.00% | greedy 0.00% | 8 problems | mean response 3438 tokens, 12.5% cut at 8192
+    math500: Avg@1 0.00% | greedy 25.00% | 8 problems | mean response 2384 tokens, 0.0% cut at 8192
+[2026-11-16T05:55:03+00:00] PASS the run: 2 steps, validation, a checkpoint, the merge and a short evaluation (run.txt, shake_1.5b_R3/train.log)
+[2026-11-16T05:55:03+00:00] == 5 the INT8 rollout (gate G4's checks without its 20-step window)
+    sync 1 vs independent quantization: codes identical: True | scales identical: True | mismatched codes: 0 of 3145728
+    sync 2 vs sync 1, q_proj: 0.0000% of codes changed, 0.00% of row scales changed
+    sync 2 vs sync 1, k_proj: 0.0000% of codes changed, 0.00% of row scales changed
+    sync 2 vs sync 1, v_proj: 0.0000% of codes changed, 0.00% of row scales changed
+    PASS
+[2026-11-16T05:55:05+00:00] PASS the INT8 codes after the first sync equal an independent quantization (int8_dump.txt)
+    INT8 refit: 3 sync lines from 1 vLLM worker process(es); weights per sync 196-196
+    sync 1: the attempt's first sync (no history yet)
+    sync 2 (the update of step 1): code flips q/k/v 0.0000%, other projections 0.0000%
+    sync 3 (the update of step 2): code flips q/k/v 0.0996%, other projections 0.0990%
+[2026-11-16T05:55:05+00:00] PASS the INT8 refit and its flip log: one sync per step, the same weights each time, none at step 1 (lr 0)
+[2026-11-16T05:55:05+00:00] shake-out: 8 of 8 checks passed

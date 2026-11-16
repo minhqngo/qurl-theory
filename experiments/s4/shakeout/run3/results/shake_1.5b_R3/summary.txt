@@ -1,0 +1,40 @@
+steps logged: 2 (1-2); step time: first 88 s, median of the rest 101 s (min 101, max 101)
+  adv                    median     0.2 s (   0% of a step)
+  gen                    median    18.1 s (  18% of a step)
+  old_log_prob           median    19.4 s (  19% of a step)
+  update_actor           median    45.1 s (  45% of a step)
+  update_weights         median     0.8 s (   1% of a step)
+projection for 2 steps: 0.1 h of training + 1 validations (125 s each) + 0 checkpoint saves (17 s each) = 0.1 h
+
+training score (+1 correct / -1 wrong, plus overlong penalty): step 1 -0.938, last -0.938; mean over all steps -0.938, steps 1-20 -0.938, last 20 steps -0.938
+response length: step 1 1190, last 1077 tokens; share cut at the cap: last 0.008
+val-core/aime24/acc/mean@1: 0: 3.5%, 2: 4.0%
+
+per step (mean over steps; step 1; min-max):
+  mismatch KL (k3, per token)                7.816e-03  (6.931e-03; 6.931e-03-8.701e-03)
+  mismatch KL (k1, per token)                8.184e-03  (7.487e-03; 7.487e-03-8.881e-03)
+  TIS: share of tokens with rho > C          1.630e-03  (1.490e-03; 1.490e-03-1.769e-03)
+  ACR: share of tokens kept beyond 1 + eps   0.000e+00  (0.000e+00; 0.000e+00-0.000e+00)
+  largest rho in a batch                     6.040e+00  (5.743e+00; 5.743e+00-6.336e+00)
+  gradient norm (before clipping)            1.694e-01  (1.579e-01; 1.579e-01-1.810e-01)
+
+INT8 refit: 3 sync lines from 1 vLLM worker process(es); weights per sync 196-196; synced dtype ['torch.float32']; kernel ['CutlassInt8ScaledMMLinearKernel']
+
+E2/E3 window: syncs 2-21 of attempt 1794814432 (2 syncs logged, 28 layers); mean over layers and syncs:
+  projection  code flips  rows rescaled  quant. error
+  q_proj         0.0512%         48.62%     9.482e-03
+  k_proj         0.0451%         48.46%     1.005e-02
+  v_proj         0.0466%         48.03%     9.992e-03
+  o_proj         0.0450%         48.53%     9.520e-03
+  gate_proj      0.0588%         48.49%     8.963e-03
+  up_proj        0.0647%         48.59%     8.814e-03
+  down_proj      0.0257%         48.27%     1.164e-02
+  layer  0 k_proj: Proposition 4 predicts 0.0044% flips, observed 0.0487%
+  layer  0 q_proj: Proposition 4 predicts 0.0042% flips, observed 0.0520%
+  layer  0 v_proj: Proposition 4 predicts 0.0074% flips, observed 0.1132%
+  layer 14 k_proj: Proposition 4 predicts 0.0069% flips, observed 0.0961%
+  layer 14 q_proj: Proposition 4 predicts 0.0062% flips, observed 0.0412%
+  layer 14 v_proj: Proposition 4 predicts 0.0053% flips, observed 0.0465%
+  layer 27 k_proj: Proposition 4 predicts 0.0080% flips, observed 0.0306%
+  layer 27 q_proj: Proposition 4 predicts 0.0064% flips, observed 0.0399%
+  layer 27 v_proj: Proposition 4 predicts 0.0028% flips, observed 0.0290%

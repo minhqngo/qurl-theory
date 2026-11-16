@@ -4,15 +4,15 @@
 #   nohup bash ~/qurl/s4/gates.sh > ~/qurl/s4/gates.log 2>&1 < /dev/null &      (about 7 h after setup_s4.sh)
 # Writes ~/qurl/s4/results/gates/: summary.txt, hours.txt, and PASSED if G2-G4 pass. Steps (README "Day 1"):
 #   G1  machine: GPU count and type, flash-attn or SDPA (from setup_s4.sh's env.txt), the node checks' warnings and
-#       failures (bootstrap_node.sh, check_node.py), the analysis plan's hash; recorded, and it stops the gates only
-#       when check_node.py found a failure (then nothing can run)
+#       failures (bootstrap_node.sh, check_node.py), the hashes of the analysis plan and its addendum; recorded, and it
+#       stops the gates only when check_node.py found a failure (then nothing can run)
 #   G2  packed attention: VeRL's padding-free forward gives the same log-probs as one sequence at a time, with the
 #       attention the runs will use (test_packed_attn.py, Qwen2.5-Math-1.5B)
 #   G3  R5's exactness on all GPUs at s = 2, 1.5B and 7B (r5_check_mp.sh)
 #   G4  the R3 mechanism runs at 1.5B and 7B (25 steps each, the analysis plan's runs s4m_<size>_R3_s1), with the
 #       test dump: the INT8 codes after the first sync equal an independent quantization of the starting weights
 #       (check_int8_dump.py), every replica re-quantized every weight at every sync, and the code-flip log is
-#       written and plausible
+#       written and plausible; its tie log (for the registered M1 variant) is recorded, with a warning if it looks wrong
 #   G5  timing -> hours.txt: full runs (HOURS_7B, HOURS_1_5B) = 1.25 x 200 x the median step time, for response
 #       growth, + 2 h for validations, checkpoints, merge and evaluation; mechanism runs (HOURS_7B_M, HOURS_1_5B_M)
 #       = 1.1 x the R3 mechanism run's measured wall time
@@ -56,6 +56,12 @@ if (cd "$S4" && sha256sum -c s4_analysis.sha256 > /dev/null 2>&1); then
 else
   log "WARNING: s4_analysis.py differs from its frozen SHA-256 (s4_analysis.sha256): record the change (README)"
 fi
+# Its addendum, registered on 2026-11-16 (README): M1 without the BF16 ties.
+if (cd "$S4" && sha256sum -c s4_m1_ties.sha256 > /dev/null 2>&1); then
+  log "analysis plan addendum: s4_m1_ties.py matches its frozen SHA-256"
+else
+  log "WARNING: s4_m1_ties.py differs from its frozen SHA-256 (s4_m1_ties.sha256): record the change (README)"
+fi
 
 log "== G2 packed attention"
 if [ "$(grep -c '^PASS' "$G/packed_attn.txt" 2>/dev/null)" != 2 ]; then
@@ -96,10 +102,27 @@ import sys
 from pathlib import Path
 sys.path.insert(0, sys.argv[1])
 from s4_analysis import OTHER, QKV, load_e3, pooled_flips
+from s4_m1_ties import pooled_nontie
 recs = load_e3(Path(sys.argv[2]))
 q, n = pooled_flips(recs, QKV)
 o, _ = pooled_flips(recs, OTHER)
 print(f"code-flip shares over {n} syncs: q/k/v {q:.4%}, other projections {o:.4%}")
+# The tie log, which the registered M1 variant without the ties needs (s4_m1_ties.py): recorded; a warning if it is
+# missing or implausible (about 0.2% of the codes are ties, and step 2's update flips about half of them).
+try:
+    by = {r["sync"]: r for r in recs}
+    k = t = f = 0.0
+    for p in QKV:
+        c = by[1]["codes_per_layer"][p]
+        for share, g in zip(by[1]["ties"][p], by[3]["flip_ties"][p]):
+            k, t, f = k + c, t + share * c, f + (g or 0.0) * share * c
+    nq, nn, sq = pooled_nontie(recs, QKV)
+    print(f"ties: {t / k:.3%} of the q/k/v codes, {f / t:.2f} of them flipped at sync 3; without them the q/k/v "
+          f"code-flip share over {nn} syncs is {nq:.4%} (the ties' share of the flips {sq:.1%})")
+    if not (0.0005 < t / k < 0.005 and 0.3 < f / t < 0.7):
+        print("WARNING: the tie log looks implausible (int8_rollout.py, ties)")
+except Exception as e:  # noqa: BLE001
+    print(f"WARNING: no usable tie log ({e!r}): the registered M1 variant cannot be computed")
 sys.exit(0 if n >= 20 and q < 0.2 and o < 0.2 else 1)
 EOF
   log "G4 $size PASS"

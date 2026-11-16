@@ -1,0 +1,29 @@
+S4 exploratory: BF16 storage in M1's window (7.9M elements; Adam on noise gradients, 16 updates per step; lr 0 at step 1, then a 10-step warm-up; arms 1x and 1.5x in grid units; ties within 0.0001 grid steps)
+== 1.5B-like rows, nu 8.3e-4, BF16 storage: ties 0.269%
+   step  sync   1x all   1x no-ties  1.5x no-ties  ratio no-ties  ratio all
+      2     3  0.1370%  0.0024%     0.0062%      2.594          1.031
+      3     4  0.0829%  0.0155%     0.0323%      2.075          1.203
+      4     5  0.0932%  0.0363%     0.0671%      1.850          1.326
+      5     6  0.1090%  0.0589%     0.0995%      1.689          1.372
+      6     7  0.1265%  0.0819%     0.1311%      1.602          1.387
+      8     9  0.1651%  0.1259%     0.1950%      1.549          1.417
+     11    12  0.2219%  0.1895%     0.2922%      1.542          1.462
+     15    16  0.2148%  0.1932%     0.2927%      1.515          1.463
+     20    21  0.2145%  0.1977%     0.3012%      1.524          1.481
+   window syncs 2-21: ratio all 1.426 (M1), without ties 1.543; syncs 12-21 without ties 1.520; 1x flips over the window 3.41%
+== 1.5B-like rows, nu 8.3e-4, FP32 storage: ties 0.020%
+   window syncs 2-21: ratio all 1.502 (M1), without ties 1.512; syncs 12-21 without ties 1.506; 1x flips over the window 2.99%
+== 7B-like rows, nu 1.27e-3, BF16 storage: ties 0.269%
+   step  sync   1x all   1x no-ties  1.5x no-ties  ratio no-ties  ratio all
+      2     3  0.1412%  0.0063%     0.0151%      2.376          1.063
+      3     4  0.1006%  0.0330%     0.0640%      1.937          1.307
+      4     5  0.1249%  0.0683%     0.1145%      1.678          1.369
+      5     6  0.1516%  0.1014%     0.1653%      1.630          1.420
+      6     7  0.1773%  0.1329%     0.2093%      1.574          1.431
+      8     9  0.2368%  0.1977%     0.3041%      1.538          1.448
+     11    12  0.3283%  0.2962%     0.4524%      1.528          1.475
+     15    16  0.3178%  0.2963%     0.4538%      1.531          1.494
+     20    21  0.3213%  0.3049%     0.4552%      1.493          1.467
+   window syncs 2-21: ratio all 1.456 (M1), without ties 1.536; syncs 12-21 without ties 1.518; 1x flips over the window 4.92%
+== 7B-like rows, nu 1.27e-3, FP32 storage: ties 0.020%
+   window syncs 2-21: ratio all 1.498 (M1), without ties 1.504; syncs 12-21 without ties 1.499; 1x flips over the window 4.55%

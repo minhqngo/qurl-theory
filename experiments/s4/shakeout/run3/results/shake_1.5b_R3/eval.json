@@ -1,0 +1,67 @@
+{
+ "model": "/localhome/local-minngo/qurl/s4/ckpt/shake_1.5b_R3/hf_step2",
+ "step": 2,
+ "max_tokens": 8192,
+ "context": 32768,
+ "gpus": 1,
+ "scorer": "verl.utils.reward_score.math_dapo.compute_score",
+ "results": {
+  "aime24": {
+   "avg@2": 0.0,
+   "greedy": 0.0,
+   "n_problems": 8,
+   "k": 2,
+   "mean_response_tokens": 2573.125,
+   "truncated_share": 0.0,
+   "per_problem_sampled": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "per_problem_greedy": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "math500": {
+   "avg@1": 0.0,
+   "greedy": 0.25,
+   "n_problems": 8,
+   "k": 1,
+   "mean_response_tokens": 1721.125,
+   "truncated_share": 0.0,
+   "per_problem_sampled": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "per_problem_greedy": [
+    0.0,
+    1.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "time_s": 49.55402946472168
+}

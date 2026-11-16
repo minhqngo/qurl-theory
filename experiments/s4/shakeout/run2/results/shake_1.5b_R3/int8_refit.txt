@@ -1,0 +1,3 @@
+[qurl int8 refit] pid 3776088 sync 1: 196 linear weights re-quantized to INT8 (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] pid 3776088 sync 2: 196 linear weights re-quantized to INT8 (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)
+[qurl int8 refit] pid 3776088 sync 3: 196 linear weights re-quantized to INT8 (synced weights arrive as torch.float32; INT8 kernel CutlassInt8ScaledMMLinearKernel)

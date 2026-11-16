@@ -112,5 +112,5 @@ print("flash_attn installed:", fa, "-> trainer attention:", "flash_attention_2" 
 print("devices:", torch.cuda.device_count(), "x", torch.cuda.get_device_name(0), "| capability", torch.cuda.get_device_capability(0))
 EOF
 git -C "$SRC" rev-parse HEAD | sed 's/^/verl commit /' | tee -a "$S4/env.txt"
-cat "$DATA/data.json" >> "$S4/env.txt"
+{ cat "$DATA/data.json"; echo; } >> "$S4/env.txt"   # data.json has no final newline; run.sh appends to env.txt
 echo "== setup done $(date -Is): next, bash ~/qurl/s4/gates.sh"

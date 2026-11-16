@@ -1,0 +1,27 @@
+/localhome/local-minngo/qurl/verl/verl/workers/engine/__init__.py:32: UserWarning: torchtitan engine is not available: ModuleNotFoundError("No module named 'torchtitan'")
+  warnings.warn(f"torchtitan engine is not available: {e!r}", stacklevel=1)
+/localhome/local-minngo/qurl/verl/verl/workers/engine/__init__.py:41: UserWarning: veomni engine is not available: ModuleNotFoundError("No module named 'veomni'")
+  warnings.warn(f"veomni engine is not available: {e!r}", stacklevel=1)
+/localhome/local-minngo/qurl/verl/verl/workers/engine/__init__.py:50: UserWarning: automodel engine is not available: ModuleNotFoundError("No module named 'nemo_automodel'")
+  warnings.warn(f"automodel engine is not available: {e!r}", stacklevel=1)
+/localhome/local-minngo/qurl/verl/verl/workers/engine/__init__.py:60: UserWarning: mindspeed engine is not available: ModuleNotFoundError("No module named 'megatron'")
+  warnings.warn(f"mindspeed engine is not available: {e!r}", stacklevel=1)
+/localhome/local-minngo/qurl/verl/verl/workers/engine/__init__.py:69: UserWarning: megatron engine is not available: ModuleNotFoundError("No module named 'megatron'")
+  warnings.warn(f"megatron engine is not available: {e!r}", stacklevel=1)
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  19%|█▉        | 64/338 [00:00<00:00, 603.28it/s]Loading weights:  47%|████▋     | 159/338 [00:00<00:00, 800.11it/s]Loading weights:  75%|███████▌  | 255/338 [00:00<00:00, 815.50it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 854.32it/s]
+Monkey patch state_dict in AutoModelForCausalLMWithValueHead. 
+Skipping monkey patch for Qwen2ForCausalLM as use_fused_kernels is False or fused_kernels_backend is None
+/localhome/local-minngo/venvs/verl/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+[rank0]:[W1116 05:43:15.070401443 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+Qwen2ForCausalLM contains 1.54B parameters
+Before FSDP, memory allocated (GB): 0.00, memory reserved (GB): 0.00, device memory used/total (GB): 1.16/93.09
+After FSDP, memory allocated (GB): 5.75, memory reserved (GB): 6.90, device memory used/total (GB): 8.06/93.09
+[qurl optimizer] mode r5, s 2.0, 1 rank(s): W 84 tensors (lr 2e-05, eps 5e-09, wd 0.05); gamma 28 (lr 5e-06, eps 2e-08, wd 0.2); rest 226 (lr 1e-05, eps 1e-08, wd 0.1); clip 0.1 on the UAQ-coordinate global norm, reduced over the FSDP shard group
+Total steps: -1, num_warmup_steps: 0
+[rank0]:W1116 05:43:18.820000 3771028 torch/fx/_symbolic_trace.py:53] is_fx_tracing will return true for both fx.symbolic_trace and torch.export. Please use is_fx_tracing_symbolic_tracing() for specifically fx.symbolic_trace or torch.compiler.is_compiling() for specifically torch.export/compile.
+/localhome/local-minngo/venvs/verl/lib/python3.12/site-packages/torch/nn/modules/linear.py:134: UserWarning: Requested unified CUBLASLT workspace size of 1048576 bytes exceeds CUBLAS workspace size of 131072 bytes. Please increase CUBLAS workspace size via CUBLAS_WORKSPACE_CONFIG or decrease requested CUBLASLT_WORKSPACE_SIZE. Otherwise CUBLASLT workspace size will be limited to the CUBLAS workspace size. (Triggered internally at /pytorch/aten/src/ATen/cuda/CublasHandlePool.cpp:228.)
+  return F.linear(input, self.weight, self.bias)
+R5: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R5
+/localhome/local-minngo/venvs/verl/lib/python3.12/site-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)

@@ -21,6 +21,13 @@ codes bit-identical to an independent quantization after sync 1). What is new:
     not used: a strided one aliases with the attention heads' dimension structure (on the laptop, every 16th row of
     q_proj, the same 4 of the 64 dimensions of every head, flipped 2-4x more often than the whole tensor), and a random
     one is noisy for small tensors (k_proj).
+  - With the log, the ties (added 2026-11-16 for the registered M1 variant without them, s4_m1_ties.py). At the
+    first sync of an attempt that starts at step 0, the ties are the weights within TIE_TOL = 1e-4 grid steps of a
+    rounding boundary: the BF16 checkpoint's exact ties, and in R4 the same weights, which UAQ's FP32 rescaling moves
+    by at most about 5e-5 grid steps. Any update flips about half of them, whatever its size, and they keep re-crossing
+    afterwards (shake-out; E2), so they add about the same number of flips to every arm. Logged per layer and
+    projection: their share of the codes ("ties"), and from the second sync on the share of them that flipped
+    ("flip_ties"). Their indices stay in CPU memory (about 0.1 GB for 7B). The other fields are unchanged.
   - The test dump (QURL_INT8_DUMP_DIR) is written by one replica only, for the same reason.
 
 vLLM side. The rollout engine is launched as an INT8 W8A8 compressed-tensors model, with the same quantizer as S1's
@@ -63,6 +70,7 @@ ATTEMPT = os.environ.get("QURL_RUN_ATTEMPT", "0")  # set per launch by run.sh, s
 START_STEP = int(os.environ.get("QURL_START_STEP", "0"))   # run.sh: 0, or the checkpoint step a resumed attempt loads
 DUMP_MODULE_SUFFIX = "layers.0.self_attn.qkv_proj"
 DUMP_SYNCS = 2
+TIE_TOL = 1e-4   # grid steps: a weight this close to a rounding boundary at the run's start is a tie
 
 
 def quantization_config() -> dict:
@@ -83,6 +91,14 @@ def quantize_rows(w: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     scale = torch.where(scale > 0, scale, torch.ones_like(scale))
     codes = torch.round(w / scale).clamp_(-QMAX, QMAX).to(torch.int8)
     return codes, scale
+
+
+@torch.no_grad()
+def tie_indices(w: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    """Flat indices of the weights within TIE_TOL grid steps of a rounding boundary (w / scale as in quantize_rows)."""
+    q = w.float() / scale
+    q.sub_(torch.round(q)).abs_()
+    return torch.nonzero(q.view(-1) >= 0.5 - TIE_TOL).view(-1)
 
 
 def _is_int8_layer(module) -> bool:
@@ -151,6 +167,7 @@ class QuRLWorkerExtension(vLLMColocateWorkerExtension):
         self._qurl_prev = {}          # (layer, proj) -> previous FP32 weights, tracked q/k/v only (Proposition 4)
         self._qurl_hist_codes = {}    # (layer, proj) -> previous codes (pinned CPU memory)
         self._qurl_hist_scale = {}    # (layer, proj) -> previous row scales, all rows
+        self._qurl_ties = {}          # (layer, proj) -> flat indices of the ties (CPU), attempts that start at step 0
         self._qurl_codes_per_layer = {}
         self._qurl_e3 = bool(E3_PATH) and _claim(f"{E3_PATH}.{ATTEMPT}.claim")
         # The dump is of the run's starting weights: only the first attempt writes it (a resumed attempt starts from
@@ -167,8 +184,9 @@ class QuRLWorkerExtension(vLLMColocateWorkerExtension):
         self._qurl_dumped_shards = set()
         if self._qurl_e3:
             dev = torch.device("cuda", torch.cuda.current_device())
-            # [layer, projection, (changed codes, codes, changed scales, rows, sq. error, sq. norm)]
-            self._qurl_stats = torch.zeros(self._qurl_layers, len(PROJS), 6, dtype=torch.float64, device=dev)
+            # [layer, projection, (changed codes, codes, changed scales, rows, sq. error, sq. norm, changed codes
+            #  among the ties, ties)]
+            self._qurl_stats = torch.zeros(self._qurl_layers, len(PROJS), 8, dtype=torch.float64, device=dev)
             self._qurl_pred = {}
             self._qurl_obs = {}
 
@@ -191,6 +209,9 @@ class QuRLWorkerExtension(vLLMColocateWorkerExtension):
                "scale_changed": {p: col(j, 2) for j, p in enumerate(PROJS)},
                "qerr": {p: [float((st[i, j, 4] / st[i, j, 5]).sqrt()) for i in range(self._qurl_layers)]
                         for j, p in enumerate(PROJS)},
+               "ties": {p: [len(self._qurl_ties[(i, p)]) / self._qurl_codes_per_layer[p]
+                            if (i, p) in self._qurl_ties else None for i in range(self._qurl_layers)] for p in PROJS},
+               "flip_ties": {p: col(j, 6) for j, p in enumerate(PROJS)},
                "pred": {"layers": self._qurl_tracked,
                         **{p: [self._qurl_pred.get((i, p)) for i in self._qurl_tracked]
                            for p in ("q_proj", "k_proj", "v_proj")},
@@ -261,13 +282,21 @@ class QuRLWorkerExtension(vLLMColocateWorkerExtension):
         self._qurl_codes_per_layer[proj] = codes.numel()
         prev_codes, prev_scale = self._qurl_hist_codes.get(key), self._qurl_hist_scale.get(key)
         if prev_codes is not None:   # the previous sync's codes, kept in pinned CPU memory
-            st[0] += (prev_codes.to(codes.device, non_blocking=True) != codes).sum()
+            changed = prev_codes.to(codes.device, non_blocking=True) != codes
+            st[0] += changed.sum()
             st[1] += codes.numel()
             st[2] += (prev_scale != scale).sum()
             st[3] += scale.numel()
+            ties = self._qurl_ties.get(key)
+            if ties is not None:
+                st[6] += changed.view(-1)[ties.to(codes.device)].sum()
+                st[7] += ties.numel()
+            del changed
         else:
             prev_codes = torch.empty(codes.shape, dtype=torch.int8, pin_memory=True)
             self._qurl_hist_codes[key] = prev_codes
+            if START_STEP == 0:   # the run's starting weights: the BF16 checkpoint, or R4's UAQ checkpoint
+                self._qurl_ties[key] = tie_indices(w, scale).cpu()
         torch.cuda.current_stream().synchronize()   # the comparison above has read the old codes
         prev_codes.copy_(codes)
         self._qurl_hist_scale[key] = scale.clone()

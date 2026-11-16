@@ -1,0 +1,15 @@
+# check_node.py 2026-11-16T05:22:05+00:00 on a1u1g-mil-0602: exit 0
+INFO 1 GPU(s): NVIDIA H100 NVL; torch 2.11.0+cu130, CUDA 13.0, NCCL 2.28.9; 47 s
+PASS memory: 90-90 GiB per GPU written and read back (pattern and complement), no error
+PASS BF16 matmul 8192^3, all GPUs at once: median 453 TFLOPS (range 453-453)
+INFO INT8 matmul 8192^3 (cuBLASLt): median 650 TOPS (range 650-650); vLLM's INT8 kernels are CUTLASS, not timed here
+PASS pinned copies host to GPU, all GPUs at once: median 28.0 GB/s (range 28.0-28.0)
+PASS pinned copies GPU to host, all GPUs at once: median 21.7 GB/s (range 21.7-21.7)
+PASS under load (nvidia-smi): median SM clock 1118-1118 MHz across GPUs, hottest 61 C, highest power 399 W
+INFO NCCL: one GPU; all-reduce correct, bandwidth not measured
+
+GPU  name                            memory GiB  BF16 TFLOPS  INT8 TOPS  H2D GB/s  D2H GB/s
+0    NVIDIA H100 NVL                         90          453        650      28.0      21.7
+
+nvidia-smi GPU  median SM MHz  hottest C  highest W  samples   (at >= 90% utilization)
+0                        1118         61        399       18

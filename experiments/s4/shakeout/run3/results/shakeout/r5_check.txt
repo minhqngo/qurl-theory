@@ -1,0 +1,32 @@
+R4: R4: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R4
+R4r: R4: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R4r
+R5: R5: grad norms (before clipping) [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R5
+R5o: R5o: grad norms (before clipping) [0.03951228788514392, 0.0331823624918488, 0.030442048144963534]; hashed 338 tensors on 1 ranks -> /localhome/local-minngo/qurl/s4/results/gates/r5_check_1.5b/R5o
+R4 vs R4 after 3 updates on 1 GPUs (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+  grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+  identical grad norms: True
+  W    : 84 of 84 parameter shards bit-identical
+  gamma: 28 of 28 parameter shards bit-identical
+  rest : 226 of 226 parameter shards bit-identical
+  BIT-IDENTICAL
+
+R5 vs R4 after 3 updates on 1 GPUs (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+  grad norms R5: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+  identical grad norms: True
+  W    : 84 of 84 parameter shards bit-identical
+  gamma: 28 of 28 parameter shards bit-identical
+  rest : 226 of 226 parameter shards bit-identical
+  BIT-IDENTICAL
+
+R5o vs R4 after 3 updates on 1 GPUs (s = 2.0; W = q/k/v_proj.weight, gamma = input_layernorm.weight, rest = everything else)
+  grad norms R4: [0.04897546405972451, 0.03794228073705951, 0.03560757054698184]
+  grad norms R5o: [0.03951228788514392, 0.0331823624918488, 0.030442048144963534]
+  identical grad norms: False
+  W    : 84 of 84 parameter shards bit-identical
+  gamma: 28 of 28 parameter shards bit-identical
+  rest : 226 of 226 parameter shards bit-identical
+  DIFFERENT
+
+G3 1.5b: PASS

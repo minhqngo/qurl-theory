@@ -1,0 +1,8 @@
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  37%|███▋      | 125/338 [00:00<00:00, 1236.28it/s]Loading weights:  79%|███████▉  | 267/338 [00:00<00:00, 1318.41it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 1357.81it/s]
+sdpa (float32): |log-prob difference| vs single sequences, mean / max: packed 1.63e-05 / 3.87e-04, padded 1.63e-05 / 3.90e-04 -> packed path OK
+PASS
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 5948.99it/s]
+sdpa (bfloat16): |log-prob difference| vs single sequences, mean / max: packed 2.55e-02 / 2.72e-01, padded 2.42e-02 / 2.72e-01 -> packed path OK
+  packed forward of 16384 tokens (1200-token sequences): 0.369 s, peak memory 8.0 GiB
+flash_attention_2: not available (ImportError: FlashAttention2 has been toggled on, but it cannot be used due to the following error: the package for FlashAttention2 d)
+PASS
