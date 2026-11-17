@@ -9,11 +9,11 @@
 \begin{document}
 \maketitle
 
-\paragraph{Scope.} S4 tests the P1 theory where the QuRL paper made its claim about Update-Aware Quantization (UAQ): DAPO training of Qwen2.5-Math-7B \citep[Sec.~5.1 and Table~4]{li2026qurl}, with Qwen2.5-Math-1.5B for cheaper mechanism runs. It runs on a rented node of eight H100 GPUs for five days, from 16 to 21 November 2026. It builds on the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and on the P1 experiments report (\texttt{p1\_experiments.tex}), whose experiments ran on a single H100. The code and its README are in \texttt{experiments/s4/}.
+\paragraph{Scope.} S4 tests the P1 theory where the QuRL paper made its claim about Update-Aware Quantization (UAQ): DAPO training of Qwen2.5-Math-7B \citep[Sec.~5.1 and Table~4]{li2026qurl}, with Qwen2.5-Math-1.5B for cheaper mechanism runs. It runs on a rented node of eight H100 GPUs from 16 to 22 November 2026: five days, extended by 21 hours. It builds on the P1 theory note (\texttt{p1\_uaq\_and\_update\_tracking.tex}) and on the P1 experiments report (\texttt{p1\_experiments.tex}), whose experiments ran on a single H100. The code and its README are in \texttt{experiments/s4/}.
 
 \section*{In short}\addcontentsline{toc}{section}{In short}
 \begin{itemize}
-\item \textbf{Status.} The gates passed on 16 November, and all eight mechanism runs (25 steps each, at 1.5B and 7B) have finished, each at its first attempt. The full 7B runs started on 17 November.
+\item \textbf{Status.} The gates passed on 16 November, and all eight mechanism runs (25 steps each, at 1.5B and 7B) have finished, each at its first attempt. The full 7B runs started on 17 November. The rental was extended to 22 November, which makes room for block~C.
 \item \textbf{M1 holds at both sizes} (\cref{sec:mblock}). All 16 registered ratios are ``consistent''. R4 (UAQ) and R5, which never touches the quantizer, change the same number of INT8 codes: R4/R5 is 1.00 at 1.5B and 0.97 at 7B, where the other projections give the same 0.97 and two runs of one arm differ by 2\%. So UAQ's extra code changes are a learning-rate effect. The 7B values are interim: at the end the plan takes R3, R4 and R5 from the full runs.
 \item \textbf{Early M2: no meaningful change.} Over steps 1--20 the mismatch ratio R4/R3 is 0.88 at 1.5B and 0.94 at 7B, inside $[0.80,1.25]$.
 \item \textbf{Questions.} Two registered tests: M1, UAQ's mechanism, seen in the INT8 codes the rollout uses; and M2, QuRL's claim that UAQ reduces the rollout--trainer mismatch. H1 at 7B and the paper's Table~4 are descriptive.
@@ -298,16 +298,21 @@ Size & R3 & R4 & R5 & R6 & R4/R3 (registered)\\
 \section{Status}\label{sec:status}
 \begin{itemize}
 \item \textbf{17 November, 06:30 UTC.} Block M is done, and the full 7B R4 run is at step 11 of 200.
+\item \textbf{The rental was extended} on 17 November, by 21 hours, to 22 November at 06:27 UTC.
+  \begin{itemize}
+  \item The running queue keeps the end it started with: when B finishes, it will skip C and exit. A waiting process then restarts the queue with the new end.
+  \item The restarted queue keeps a 3-hour reserve instead of 6, so its runs end by 03:27 UTC on 22 November. D's own projection allows a few hours more than its runs should take.
+  \end{itemize}
 \item \textbf{The remaining schedule.}
   \begin{itemize}
   \item At G5's pace, A ends on 18 and 19 November and B on 20 November, at about 05:40, 06:00 and 06:30 UTC.
-  \item C starts only if B ends by 20 November, 03:06 UTC. That needs the three full runs to average at most 23.3 hours, against G5's 24.4. At the current step time, with no growth in response length, they would take about 21 hours.
-  \item An extension of the rental, not yet decided, would also make room for C (3.3 hours more at G5's pace), and with about 32 hours more, for D.
+  \item C then ends on 21 November at about 06:50 UTC, 20 hours before the cut-off.
+  \item D fits only if the four full 7B runs average at most 22.3 hours, against G5's 24.4. At the current step time, with no growth in response length, they would take about 21 hours.
   \end{itemize}
 \item \textbf{What is final.}
   \begin{itemize}
   \item At 7B, the plan takes R3, R4 and R5 from the full runs' first 20 steps at the end, so the 7B values above are interim.
-  \item At 1.5B they are final, unless the rental is extended enough for block D.
+  \item At 1.5B they are final, unless block D runs.
   \item The whole-run M2 and the descriptive comparisons wait for the full runs.
   \end{itemize}
 \end{itemize}
