@@ -3,6 +3,11 @@
 S4 tests UAQ where the QuRL paper made its claim: the DAPO setup with Qwen2.5-Math-7B (paper Sec. 5.1, Table 4). Qwen2.5-Math-1.5B is used only for cheap mechanism runs.
 S3 runs the seed-based test of H1 (R4 ≡ R5) on GSM8K PPO at 0.5B, with five seed pairs. S4 adds the paper's scale and tests the mechanism directly.
 
+**Status (2026-11-17): on the rental. The gates passed on 2026-11-16, and the mechanism runs are done, all at their first attempt.**
+- M1 is "consistent" at both sizes in all 16 registered ratios; early M2 is "not meaningfully changed" at both (R4/R3 0.88 at 1.5B, 0.94 at 7B). The 7B values are interim until the full runs' first 20 steps replace R3, R4 and R5.
+- The full 7B runs started on 2026-11-17. Results, timing and the remaining schedule: `latex/p1_s4.tex` (S4's own report).
+- The results copied back each day are unpacked under `rental/<date>/unpacked/`, never into `results/`; the analyses of each copy are written beside it.
+
 **Status (2026-11-11): designed and coded; nothing has run on GPUs at scale.**
 - The multi-GPU code passed its CPU tests, and the whole loop passed laptop smoke tests (below). On the laptop the flip log reproduces Proposition 4's prediction within a few percent.
 - The analysis plan was frozen on 2026-11-11, before any S4 run: `s4_analysis.py`, SHA-256 `b61d9ee9c9112c43eec3d1dc1ea45290688895a9f18b8c14fc0972cdcd06d213` (also in `s4_analysis.sha256`).
@@ -282,6 +287,7 @@ Exploratory. `s4_m1_ties.py` implements it, imports `s4_analysis.py` unchanged, 
 | `summarize.py`, `s4_analysis.py`, `s4_analysis.sha256` | per-run summary and time projection; the registered analysis and its frozen hash |
 | `s4_m1_ties.py`, `s4_m1_ties.sha256` | the addendum (M1 without the BF16 ties) and its frozen hash |
 | `sim_bf16_window.py`, `sim_bf16_window.txt` | exploratory CPU simulation of BF16 storage in M1's window, with S4's warm-up (laptop; imports E2's frozen `e2_dynamic.py`) |
+| `s4_mblock_explore.py` | exploratory, not registered: M1 and the addendum over steps 11–20 and step by step, the ties' own flips per arm, two runs of one arm (full against mechanism 7B R4), and k3 step by step. Imports the frozen scripts read-only; same `--results`/`--out` as they take |
 | `test_clip_mp.py`, `laptop_smoke.sh` | laptop tests (below) |
 | `make_uaq_checkpoint.py` | S3's, with an exact check of the rescaling in place of S3's fixed tolerance; the checkpoint is byte-identical to the one S3's script writes |
 

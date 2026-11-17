@@ -20,6 +20,8 @@ paper/*.log
 *.tgz
 # - per-token log-prob dumps of S1/E0 (~340 MB); the summaries next to them are tracked
 experiments/**/score_*.json
+# - S4's daily copies from the rental (interim; each supersedes the last, and the final one will be tracked)
+experiments/s4/rental/
 
 # Local tool settings
 .claude/settings.local.json
