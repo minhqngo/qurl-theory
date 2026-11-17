@@ -5,7 +5,7 @@
 
 \title{P1 Experiments:\\Testing the UAQ and Update-Tracking Theory}
 \author{Experiments report for research problem P1 (draft)}
-\date{16 November 2026 (split from the theory note on 12 November)}
+\date{17 November 2026 (split from the theory note on 12 November)}
 
 \begin{document}
 \maketitle
@@ -58,7 +58,7 @@ E2, E3 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attributio
 
 % =====================================================================================
 \section{Design}\label{sec:design}
-All GPU stages run on one H100 NVL (94\,GB); the laptop runs only T and the analysis.
+All GPU stages run on one H100 NVL (94\,GB); T runs on a CPU.
 
 \subsection{T: float64 checks}\label{sec:t}
 \begin{itemize}
@@ -76,7 +76,6 @@ All GPU stages run on one H100 NVL (94\,GB); the laptop runs only T and the anal
 \item \textbf{Protocol.} Sample 512 GSM8K responses from the BF16 model; teacher-force every token under each configuration; compare per-token log-probabilities. Noise floor: the same checkpoint with shuffled batches.
 \item \textbf{Metrics.} Identity: mean $|\Delta\log p|$ and share of identical tokens. Mismatch to the matched BF16 policy: mean $|\log\mu-\log\pi|$ (primary) and sampled-token KL ($k_3$, $k_1$), with paired bootstrap CIs.
 \item \textbf{Prediction.} $s=2$: identical. $s=1.5$: no systematic change. An $s$-fold error reduction would give ratios of 0.667 (mean $|\Delta\log p|$) and 0.444 (KL).
-\item \textbf{Earlier laptop run.} A first run of this test on a laptop GPU (\texttt{experiments/e0/}) is superseded and not used as evidence: it had no CUTLASS INT8 kernel and a nondeterministic BF16 path.
 \end{itemize}
 
 \subsection{S2: exact equivalence in a training loop}\label{sec:s2}
@@ -146,7 +145,7 @@ Otherwise inconclusive. If both conditions hold: ``equivalent within $\delta$, s
 \end{itemize}
 
 \subsection{E2: tracking and persistence on real weights (pre-registered 2026-11-15)}\label{sec:e2}
-Fixed before any E2 data were analysed. \emph{Seen beforehand:} the smoke test's dump check (syncs 1--4; it reports only that the dumps match the rollout's codes and the largest weight change, about $4\times10^{-6}$ per step), and a laptop test of the static script on Qwen2.5-0.5B-Instruct, whose numbers are quoted below and do not count as a test.
+Fixed before any E2 data were analysed. \emph{Seen beforehand:} the smoke test's dump check (syncs 1--4; it reports only that the dumps match the rollout's codes and the largest weight change, about $4\times10^{-6}$ per step), and a trial run of the static script on Qwen2.5-0.5B-Instruct, so the 0.5B checkpoint's results do not count as a fresh test.
 \begin{itemize}
 \item \textbf{What it tests.} Assumption~U and Propositions~3--7 of the theory note on the synced FP32 master weights of a real QuRL run, where T used float64 simulations. P3 and P7's error-feedback bound are exact and serve as consistency checks.
 \item \textbf{Data.}
@@ -183,8 +182,8 @@ P5$'$: not frozen & the same slope & $>0.5$\\
 \item \textbf{Policy-space measurement.} The probe set is 128 GSM8K training prompts (a fixed random subset), each with one response sampled at temperature~1 from $\theta_0$. For each full-dump sync, $\log\pi$ comes from an FP32 forward pass with the dumped weights. $\log\mu$ comes from the same model with the rollout's W8A8 quantizer applied as deterministic FP32 fake quantization: per-row INT8 weights and per-token INT8 activations, with embeddings, norms and the output head unquantized.
 \item \textbf{Deviations expected in advance.}
   \begin{itemize}
-  \item \emph{BF16 lattice.} Near a row's maximum, BF16 spacing is 0.5--1 grid step, so weights with large codes sit on a coarse lattice. U2 is therefore claimed only for $|c|\le15$. The laptop test of 0.5B showed bin deviations up to 0.35 for $|c|\ge64$, against 0.03--0.05 for $|c|\le15$ and a near-boundary ratio of 1.007.
-  \item \emph{Exact ties.} About 0.2\% of the stored weights sit exactly on a rounding boundary (0.18\% in that test), and any update flips about half of them. So $F/P$ exceeds 1 in the first pairs with all elements, and the rule for those pairs leaves the ties out. By sync 65 the ties have drifted apart, and the rule uses all elements.
+  \item \emph{BF16 lattice.} Near a row's maximum, BF16 spacing is 0.5--1 grid step, so weights with large codes sit on a coarse lattice. U2 is therefore claimed only for $|c|\le15$.
+  \item \emph{Exact ties.} About 0.2\% of the stored weights sit exactly on a rounding boundary, and any update flips about half of them. So $F/P$ exceeds 1 in the first pairs with all elements, and the rule for those pairs leaves the ties out. By sync 65 the ties have drifted apart, and the rule uses all elements.
   \item \emph{Moving grids.} $u$ includes the grid's motion. The fixed-grid prediction $\mathrm{mean}\min(1,|\delta|/\Delta)$ is reported next to it, so the size of that motion is visible.
   \end{itemize}
 \item \textbf{Reading.} A failure of P4 or P6 where U1 holds would contradict Proposition~4 or~6 as stated. A failure of P5$'$ would support QuRL's claim~(i), that the rollout freezes. A failure of U limits where the propositions apply rather than refuting them.
@@ -273,7 +272,7 @@ R3 & plain settings, no UAQ & 0/20; 0/20 & 1.4e-4; 1.1e-3\\
 \item \textbf{R5 matched R4 in every fingerprint at every step}, and its saved weights equal R4's mapped weights element by element. The test covers INT8 W8A8 rollouts, BF16 autocast with FP32 master weights, GRPO, TIS, ACR, AdamW and global-norm clipping (binding on every update with a nonzero gradient), and weight decay at $10^{-5}$.
 \item \textbf{Clipping rule (c) is necessary.} On the first update the gradient norm is 1.131 in UAQ coordinates and 0.874 in original ones, so ordinary clipping (R5o) diverged at step~1, as early as R3.
 \item \textbf{One differing bit decorrelates the runs}, so at $s=1.5$, where $W/s$ is rounded, H1 must be tested in distribution over seeds.
-\item \textbf{In VeRL}, the R5 plug-in passed the same test inside VeRL's FSDP2 actor (three updates on one fixed batch at $s=2$): R5 and an R4 repeat were bit-identical to R4 in all 494M parameters, on the laptop and again on the H100; R5o differed from the first update.
+\item \textbf{In VeRL}, the R5 plug-in passed the same test inside VeRL's FSDP2 actor on the H100 (three updates on one fixed batch at $s=2$): R5 and an R4 repeat were bit-identical to R4 in all 494M parameters; R5o differed from the first update.
 \end{itemize}
 
 \subsection{S3: QuRL's Table~1 is not reproduced at \texorpdfstring{$\eta=10^{-5}$}{eta = 1e-5}}\label{sec:t1-results}
@@ -464,7 +463,7 @@ Mean over seeds, in points (accuracy, reward) or as a ratio ($k_3$), with the 90
 \end{itemize}
 
 \subsection{E2, static part: U holds at the rounding boundary}\label{sec:e2-results}
-\textbf{Data (2026-11-15).} The decoder linear weights of the three stored checkpoints, with the rules of \cref{sec:e2}; the instrumented run and its analyses are in \cref{sec:e2-dyn}. A cell is one projection type of one checkpoint, 21 in all. The 0.5B numbers were seen before registration in the laptop test and agree with it, so only the 1.5B and 7B cells are fresh tests.
+\textbf{Data (2026-11-15).} The decoder linear weights of the three stored checkpoints, with the rules of \cref{sec:e2}; the instrumented run and its analyses are in \cref{sec:e2-dyn}. A cell is one projection type of one checkpoint, 21 in all. The 0.5B numbers were seen before registration (\cref{sec:e2}), so only the 1.5B and 7B cells are fresh tests.
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}L l l l l@{}}
 \toprule
