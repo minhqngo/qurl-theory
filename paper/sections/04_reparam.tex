@@ -1,4 +1,4 @@
-\section{UAQ is a per-layer learning-rate change}\label{sec:reparam}
+\section{UAQ is an optimizer reparameterization}\label{sec:reparam}
 
 \begin{lemma}[Gradients]\label{lem:gradients}
 Let $\mathcal L'=\mathcal L\circ\phi_s$. Then $\nabla_{W'}\mathcal L'=s\,\nabla_W\mathcal L$ and $\nabla_{\gamma'}\mathcal L'=s^{-1}\nabla_\gamma\mathcal L$. All other gradients are unchanged.
@@ -43,7 +43,8 @@ This is AdamW on $W$ with learning rate $s\eta$, constant $\varepsilon/s$ and de
 Define the update-to-grid ratio $\nu_{ij}=|\Delta W_{ij}|/\Delta_i(W)$, where $\Delta_i$ is the grid step of row $i$.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item $\nu$ is invariant under $\phi_s$, because its numerator and denominator both scale by $s$.
-\item So UAQ's $\nu$ equals that of the matched run in \cref{thm:reparam}, which is $s^p$ times that of the plain run: $p=2$ for SGD and $p=1$ for Adam-type optimizers. VeRL, and so QuRL, trains with AdamW, where the gain is $s$, not $s^2$.
+\item So UAQ's $\nu$ equals that of the matched run in \cref{thm:reparam}. At the first step from a shared starting point, that is $s^p$ times the plain run's $\nu$: $p=2$ for SGD and $p=1$ for Adam-type optimizers, as $\varepsilon\to0$. After that the runs follow different trajectories, and the ratio is no longer fixed.
+\item VeRL, and so QuRL, trains with AdamW, where the first-step gain is $s$, not $s^2$.
 \item Raising a layer's update-to-grid ratio and raising that layer's learning rate are the same operation, the parameterization view of \citet{yang2021tp4,yang2022tp5}.
 \end{itemize}
 \end{corollary}
@@ -54,7 +55,7 @@ Define the update-to-grid ratio $\nu_{ij}=|\Delta W_{ij}|/\Delta_i(W)$, where $\
 \item ``Identical'' covers rollouts, rewards, TIS weights, the PPO and ACR clipping decisions, the KL-to-reference term, and every parameter.
 \item It holds for every rollout-correction rule that depends only on policy values, such as TIS, ACR, masked importance sampling or sequence-level masks.
 \end{itemize}
-\textbf{The entire effect of UAQ on training is an effect of per-layer learning rates.}
+\textbf{The entire effect of UAQ on training is an effect of per-group optimizer settings:} chiefly the learning rates, together with Adam's $\varepsilon$, the weight decay and the clipping norm.
 \end{corollary}
 
 \begin{remark}[Finite precision]\label{rem:practice}
@@ -63,19 +64,25 @@ Exact equivalence needs exactly representable rescalings and deterministic kerne
 \item At $s=2$, every rescaling is exact in BF16 and FP32, barring overflow and underflow, so the equivalence can be checked bit for bit (\cref{sec:s2}).
 \item At $s=1.5$, $W/s$ is rounded. RL training amplifies such differences, as it amplifies any change of random seed.
 \end{itemize}
-On a real stack, \cref{cor:pipeline} therefore predicts \emph{equality in distribution over seeds}, not identical curves. This is the hypothesis our pre-registered experiment tests (\cref{sec:s3}).
+On a real stack at $s=1.5$, \cref{cor:pipeline} therefore cannot predict identical curves. A natural hypothesis is that the rounding acts like a change of seed, so that UAQ and the matched settings are \emph{equal in distribution over seeds}. This does not follow from the corollary: deterministic rounding differences could also change how often runs enter a different training regime. Our pre-registered experiment tests it (H1, \cref{sec:s3}).
 \end{remark}
 
 \subsection{Implications for the evidence for UAQ}\label{sec:evidence}
 
-The following observations are consistent with \cref{thm:invariance,thm:reparam}. They are not statements about the authors' implementation, which we could not inspect. Figure values were read from the vector data of the figures in the arXiv HTML version of QuRL.
+The following observations are consistent with \cref{thm:invariance,thm:reparam}. They are not statements about the authors' implementation, which we could not inspect. Figure values were read from the vector data of QuRL's figures. QuRL's arXiv version and its ICLR 2026 proceedings version have the same text and tables.
 \begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{UAQ's reported gains are small, single-run differences.}
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Without and with UAQ, QuRL reports an AIME 2024 Avg@32 of 30.63 and 31.25 for DAPO with INT8, and 33.12 and 33.27 with FP8, where Avg@1 falls from 36.66 to 33.33 (its Table~2).
+  \item For DeepScaleR with INT8, the five-benchmark average is 54.79 and 55.48 (its Table~3).
+  \item No result reports seeds or intervals.
+  \end{itemize}
 \item \textbf{QuRL's Fig.~4b} plots the mismatch between quantized and full-precision policies, with and without UAQ, on DAPO with INT8.
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item The two curves start at the same value, 0.011, as \cref{cor:rollout} predicts.
   \item They separate only as training proceeds: with UAQ the curve settles near 0.010--0.011, without it near 0.012--0.014. That is what two training trajectories under different per-layer learning rates would produce.
   \end{itemize}
-\item \textbf{QuRL's Fig.~7} (DAPO, FP8, AIME24 Avg@32) shows QuRL with UAQ at 0.20 by step 20, while the BF16 baseline is at 0.04 and QuRL without UAQ at 0.06. The BF16 baseline catches up by about step 50.
+\item \textbf{QuRL's Fig.~7} (DAPO, FP8, AIME24 Avg@32) shows QuRL with UAQ at 0.20 by step 20, while the BF16 baseline is at 0.04 and QuRL without UAQ at 0.06. The BF16 baseline catches up by about step 50, and the two QuRL curves end level at step 200 (0.278 without UAQ, 0.277 with). Each curve is a single run on AIME 2024's 30 problems.
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item Better rollout fidelity cannot make a quantized run learn faster than a run without quantization.
   \item A larger effective learning rate on Q/K/V can.
@@ -90,5 +97,5 @@ The following observations are consistent with \cref{thm:invariance,thm:reparam}
   \item By \cref{thm:reparam}, the matching control raises the learning rate of Q/K/V alone and lowers that of the normalization gains. That control is absent, and so is a BF16 run with UAQ, which would separate quantization from optimization.
   \item The table reports one number per configuration, without seeds or intervals, on a 30-problem benchmark.
   \end{itemize}
-\item \textbf{QuRL's GSM8K experiment} disables UAQ ``due to the relatively high learning rate ($10^{-5}$), which already provides sufficient weight update magnitude''. This is consistent with UAQ acting as a learning-rate change.
+\item \textbf{QuRL's GSM8K experiment} disables UAQ ``due to the relatively high learning rate ($10^{-5}$), which already provides sufficient weight update magnitude''. This is consistent with UAQ acting through the optimizer, chiefly the learning rate.
 \end{itemize}

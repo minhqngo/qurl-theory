@@ -6,7 +6,7 @@ The price is a training--inference mismatch. Rollouts are sampled from a quantiz
 
 QuRL also identifies a second problem. A single RL update changes a weight by roughly $10^{-7}$ to $10^{-6}$, far less than one step of an INT8 grid. Re-quantizing the updated policy for the next rollout would then lose the update: ``quantization masks nearly all weight updates, effectively freezing the quantized model'' (QuRL, Sec.~4.3).
 
-QuRL's remedy is Update-Aware Quantization (UAQ). It rescales the query, key and value projections, $W_{Q,K,V}\to W/s$, and absorbs the factor $s$ into the preceding normalization layer, with $s=1.5$. The paper argues that ``the scaling factor $s$ reduces quantization error by a factor of $s$ while amplifying weight updates by the same factor'', so that this ``dual effect creates an $s^2$ improvement in the ratio between weight updates and quantization noise''. QuRL reports that UAQ improves its DAPO results, and an ablation finds it better than a larger global learning rate.
+QuRL's remedy is Update-Aware Quantization (UAQ). It rescales the query, key and value projections, $W_{Q,K,V}\to W/s$, and absorbs the factor $s$ into the preceding normalization layer, with $s=1.5$. The paper argues that ``the scaling factor $s$ reduces quantization error by a factor of $s$ while amplifying weight updates by the same factor'', so that this ``dual effect creates an $s^2$ improvement in the ratio between weight updates and quantization noise''. QuRL reports that UAQ improves its DAPO and DeepScaleR results, by 0.15 to 0.69 points of Avg@32 in single runs, and an ablation finds it better than a larger global learning rate.
 
 This paper examines UAQ and the weight-update argument from first principles and tests every conclusion on real kernels. Our contributions are as follows.
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
@@ -17,11 +17,12 @@ This paper examines UAQ and the weight-update argument from first principles and
   \item The claimed $s$-fold error reduction measures the weight error in the rescaled coordinates. The activation error grows by the same factor and cancels it.
   \item We also characterize the cases where the invariance fails.
   \end{itemize}
-\item \textbf{UAQ is a per-layer learning-rate change} (\cref{sec:reparam}).
+\item \textbf{UAQ is an optimizer reparameterization} (\cref{sec:reparam}).
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item Training in UAQ coordinates is trajectory-equivalent to training the original model with per-group optimizer settings (\cref{thm:reparam}): learning rate $\times s$ on Q/K/V and $\div s$ on the normalization gain under Adam-type optimizers ($\times s^2$ and $\div s^2$ under SGD), with matched $\varepsilon$, weight decay, and a clipping norm computed in UAQ coordinates.
   \item The equivalence extends to a full QuRL iteration (\cref{cor:pipeline}).
   \item So any effect of UAQ on training is an optimization effect. QuRL's ablation raises the \emph{global} learning rate and does not control for it.
+  \item The clipping rule is not a detail. In our RL runs, gradient clipping binds on 99.8--100\% of steps, so UAQ changes every parameter's step through the clipping norm.
   \end{itemize}
 \item \textbf{Re-quantization does not freeze the policy} (\cref{sec:tracking}).
   \begin{itemize}[leftmargin=*,itemsep=1pt]
@@ -34,13 +35,13 @@ This paper examines UAQ and the weight-update argument from first principles and
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item \emph{Rollouts:} with vLLM's CUTLASS INT8 W8A8 kernel, UAQ at $s=2$ leaves per-token log-probabilities bit-identical for Qwen2.5 models of 0.5B, 1.5B and 7B parameters. At $s=1.5$ it leaves the mismatch unchanged: ratios of 0.99--1.01, where an $s$-fold reduction would give 0.67.
   \item \emph{Training:} a QuRL-style loop with matched settings reproduces UAQ bit for bit over 80 AdamW updates, as does VeRL's FSDP2 actor. Dropping the clipping rule, or matching only the learning rates, diverges at the first update.
-  \item \emph{Tracking and persistence} (pre-registered; \cref{sec:e2}): over a full PPO run, re-quantization captures 97--99\% of each update from the second on. The rounding error persists as predicted: after 435 steps it correlates 0.691 with its initial value, against 0.692 predicted. Error feedback bounds its partial sums on the real weight path, and the INT8 policy follows the trainer with slope 0.93, where a frozen one would give 0. The first update from the BF16 checkpoint is captured at 93\%, an effect of BF16 storage.
+  \item \emph{Tracking and persistence} (pre-registered; \cref{sec:e2}): over a full PPO run, re-quantization captures 97--99\% of each update from the second on. The rounding error persists as predicted: after 435 steps it correlates 0.691 with its initial value, against 0.692 predicted. Replayed on the recorded weight path, error feedback bounds the partial sums. The INT8 policy follows the trainer with slope 0.93, where a frozen one would give 0. The first update from the BF16 checkpoint is captured at 93\%, an effect of BF16 storage.
   \end{itemize}
 \item \textbf{A reproduction and a pre-registered test} (\cref{sec:s3}).
   \begin{itemize}[leftmargin=*,itemsep=1pt]
-  \item QuRL's GSM8K PPO result (55.35\% BF16, 53.55\% INT8) did not reproduce at its stated learning rate of $10^{-5}$ in our VeRL setup: we obtained 0.0\% and 2.9\%. The same configuration trains at $10^{-6}$, where plain BF16 training reaches 54.8--56.6\% late accuracy over three seeds.
+  \item QuRL's GSM8K PPO result (55.35\% BF16, 53.55\% INT8) did not reproduce at its stated learning rate of $10^{-5}$ in our VeRL setup: one run per format reached 0.0\% and 2.9\%. QuRL's stated settings are those of VeRL's PPO quickstart, whose actor learning rate is $10^{-6}$ and critic learning rate $10^{-5}$, so the single rate QuRL states is most likely the critic's. At an actor rate of $10^{-6}$, plain BF16 training reaches 54.8--56.6\% late accuracy over three seeds.
   \item In a pre-registered, seed-paired six-arm experiment at $10^{-6}$, UAQ changed the INT8 mismatch by about the same factor as the BF16 one, within the registered bounds (ratio of ratios 1.10, 90\% CI $[1.015, 1.20]$): no error reduction appears during training either. Its accuracy effects were too small to resolve with three seeds, both against the BF16 arms (H2) and against QuRL's global-learning-rate control (H3); both tests are inconclusive, as their power analysis anticipated. So is the test of UAQ against its matched settings (H1), with five seeds: two of the matched-settings runs stalled early, and even without the stalls the seed-to-seed spread exceeds what equivalence within $\pm2$ points requires.
-  \item INT8 rollouts lowered the quantized policy's test accuracy by 4.9 points (95\% CI $[2.3, 7.6]$), more than the 1.8 points QuRL reports; every BF16 run ended above every INT8 run.
+  \item In an exploratory comparison, the INT8 policy scored 4.9 points below BF16 training (95\% CI $[2.3, 7.6]$), against the 1.8 points QuRL reports, and every BF16 run ended above every INT8 run. We score the INT8 runs with the INT8 policy, so part of this gap may be a cost of INT8 scoring rather than of INT8 training.
   \end{itemize}
 \end{enumerate}
 

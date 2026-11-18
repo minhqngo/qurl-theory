@@ -42,7 +42,7 @@
 
 \subsection{Implementation in VeRL}\label{app:verl}
 \begin{itemize}[leftmargin=*,itemsep=2pt]
-\item \textbf{Stack.} VeRL v0.9.1 with its locked dependencies: vLLM 0.24.0, PyTorch 2.11 and Transformers 5.9.0. Actor and critic use PyTorch SDPA attention without sequence packing, because the pinned flash-attention wheel is no longer available. A two-line patch lets VeRL's critic loader honour the configured attention implementation; it is our only change to VeRL's code.
+\item \textbf{Stack.} VeRL v0.9.1 with its locked dependencies: vLLM 0.24.0, PyTorch 2.11 and Transformers 5.9.0. \Cref{sec:s1} used vLLM 0.33.0; on the H100 both versions run INT8 W8A8 on vLLM's CUTLASS INT8 kernel. Actor and critic use PyTorch SDPA attention without sequence packing, because the pinned flash-attention wheel is no longer available. A two-line patch lets VeRL's critic loader honour the configured attention implementation; it is our only change to VeRL's code.
 \item \textbf{INT8 rollouts re-quantized at every sync.} VeRL natively refits only FP8 blockwise rollouts.
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item vLLM is started with a compressed-tensors INT8 W8A8 configuration: per-channel weights, dynamic per-token activations, and the output head left in BF16.
@@ -69,12 +69,12 @@
 \toprule
 Setting & Value\\
 \midrule
-Model & Qwen2.5-0.5B-Instruct (actor, reference and critic initialization)\\
+Model & Qwen2.5-0.5B-Instruct (actor, reference and critic initialization; for R2 and R4 the actor and reference start from the UAQ checkpoint, the critic from the original model)\\
 Data & GSM8K: 7{,}473 training and 1{,}319 test problems; VeRL's prompt template and strict answer format\\
 Algorithm & PPO with a critic; GAE with $\gamma=\lambda=1$; one PPO epoch; clip 0.2; dual clip 3.0; token-mean loss\\
 Batch & 256 prompts per step, PPO mini-batch 64 (4 updates per step), 15 epochs = 435 steps\\
 Lengths & prompts up to 320 tokens (all GSM8K prompts fit in 256), responses up to 512\\
-Actor optimizer & AdamW, betas (0.9, 0.999), weight decay 0.01, gradient clip 1.0, constant learning rate without warmup: $10^{-6}$ (UAQ experiment) or $10^{-5}$ (reproduction)\\
+Actor optimizer & AdamW, betas (0.9, 0.999), weight decay 0.01, gradient clip 1.0 (binding on 99.8--100\% of steps), constant learning rate without warmup: $10^{-6}$ (UAQ experiment) or $10^{-5}$ (reproduction)\\
 Critic & AdamW, learning rate $10^{-5}$, value clip 0.5\\
 Regularizers & KL penalty to the reference in the reward, 0.001 ($k_1$, fixed); entropy bonus 0.001\\
 Rollouts & vLLM 0.24, temperature 1; validation greedy every 29 steps, with the rollout engine (INT8 for the QuRL arms)\\

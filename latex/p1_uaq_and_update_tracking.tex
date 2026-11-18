@@ -3,7 +3,7 @@
 
 \title{P1: UAQ and Update Tracking\\in Quantized-Rollout Reinforcement Learning}
 \author{Theory note for research problem P1 (draft)}
-\date{7 November 2026; reorganized 11 November 2026; experiments split off 12 November 2026; E2's results added 15 November 2026}
+\date{7 November 2026; reorganized 11 November 2026; experiments split off 12 November 2026; E2's results added 15 November 2026; statements corrected after review 18 November 2026}
 
 \begin{document}
 \maketitle
@@ -13,7 +13,7 @@
 \section*{In short}\addcontentsline{toc}{section}{In short}
 \begin{itemize}
 \item UAQ leaves the quantized rollout model exactly unchanged (\cref{thm:invariance}). Where UAQ changes a quantized model at all, it does so through a different rounding pattern, never by an $s$-fold error reduction (\cref{rem:scope}).
-\item UAQ's whole effect on training is a per-layer learning-rate change: $\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW (\cref{thm:reparam}). QuRL + UAQ is therefore identical to QuRL with these settings (\cref{cor:pipeline}), and the ``$s^2$ improvement'' is $s$ under Adam (\cref{cor:ratio}).
+\item UAQ's whole effect on training is a change of optimizer settings, chiefly per-layer learning rates: $\times s$ on Q/K/V and $\div s$ on the norm gain under AdamW, with $\varepsilon$, weight decay and the clipping norm matched (\cref{thm:reparam}). QuRL + UAQ is therefore identical to QuRL with these settings (\cref{cor:pipeline}), and the ``$s^2$ improvement'' is $s$ under Adam (\cref{cor:ratio}).
 \item Re-quantized master weights do not freeze; updates are captured in expectation (\cref{prop:lag,prop:capture,prop:layer}). The real issue is that the rounding error persists across steps (\cref{prop:persistence}). Error feedback is the scheme whose cumulative error stays bounded (\cref{prop:schemes}).
 \item \textbf{Evidence.} The companion experiments report (\texttt{p1\_experiments.tex}) tests these results in float64, on vLLM's kernels, in an exact training loop and in pre-registered RL runs. So far:
   \begin{itemize}
@@ -46,9 +46,9 @@
 
 \subsection{QuRL's two claims}\label{sec:claims}
 \begin{itemize}
-\item \textbf{(i) The weight update problem.} Per-step updates (about $10^{-7}$ to $10^{-6}$) are far below $\Delta$, so re-quantization ``masks nearly all weight updates, effectively freezing the quantized model'' (App.~A).
-\item \textbf{(ii) UAQ fixes it.} Once before RL, set $W_{Q,K,V}\to W/s$ and the preceding RMSNorm gain $\gamma\to s\gamma$, with $s=1.5$. The FP model is unchanged. The paper says this ``reduces quantization error by a factor of $s$ while amplifying weight updates by the same factor'', an ``$s^2$ improvement'' (Sec.~4.3). The explainer's Section~3.7 summarizes both claims as the paper makes them.
-\item \textbf{Evidence offered.} Mismatch curves with and without UAQ (Fig.~4b); faster early learning with UAQ (Fig.~7); an ablation against a larger global learning rate, one number per configuration (Table~4). On GSM8K the paper disables UAQ ``due to the relatively high learning rate ($10^{-5}$)''.
+\item \textbf{(i) The weight update problem.} Per-step updates (about $10^{-7}$ to $10^{-6}$) are far below $\Delta$, so re-quantization ``masks nearly all weight updates, effectively freezing the quantized model'' (Sec.~4.3).
+\item \textbf{(ii) UAQ fixes it.} Once before RL, set $W_{Q,K,V}\to W/s$ and the preceding RMSNorm gain $\gamma\to s\gamma$, with $s=1.5$. QuRL applies $s$ ``column-wise to $W$ and row-wise to $X$'' but reports only scalar values, so $s$ is one scalar. The FP model is unchanged. The paper says this ``reduces quantization error by a factor of $s$ while amplifying weight updates by the same factor'', an ``$s^2$ improvement'' (Sec.~4.3). The explainer's Section~3.7 summarizes both claims as the paper makes them.
+\item \textbf{Evidence offered.} Mismatch curves with and without UAQ (Fig.~4b); faster early learning with UAQ (Fig.~7); an ablation against a larger global learning rate, one number per configuration (Table~4). The reported gains from UAQ are small single runs: $+0.62$ and $+0.15$ Avg@32 points on DAPO with INT8 and FP8 (Table~2), and $+0.69$ on DeepScaleR's five-benchmark average (Table~3). On GSM8K the paper disables UAQ ``due to the relatively high learning rate ($10^{-5}$)''.
 \end{itemize}
 
 \subsection{Why the claims are doubtful}
@@ -87,14 +87,19 @@ Partition a tensor's entries into groups $g\in\mathcal P$. $Q$ is \emph{homogene
 A single-level absmax quantizer is $Q(X)_i=\alpha_g\,r(X_i/\alpha_g)$ for $i\in g$, with $\alpha_g=\max_{j\in g}|X_j|/M$ and $r$ a fixed rounding onto a grid with maximum $M$ (INT-$b$: $M=2^{b-1}-1$; FP8-E4M3: 448; FP4-E2M1: 6).
 
 \begin{lemma}\label{lem:homogeneous}
-Single-level absmax quantizers are homogeneous on their groups. So are multi-level quantizers in which every scale is an absmax or a rounding of a \emph{ratio} of absmaxes (e.g.\ NVFP4: E4M3 block scales under a per-tensor FP32 absmax scale, \citealp{nvidia2025nvfp4}).
+Single-level absmax quantizers are homogeneous on their groups. Multi-level quantizers in which every scale is an absmax or a rounding of a \emph{ratio} of absmaxes are homogeneous on the groups of their coarsest scale, not on their finer blocks. For example, NVFP4 (E4M3 block scales under a per-tensor FP32 absmax scale, \citealp{nvidia2025nvfp4}) is homogeneous on the whole tensor.
 \end{lemma}
 \begin{proof}
-If $c=c_g$ on group $g$, then $\alpha_g(c\odot X)=c_g\alpha_g(X)$, so $X_i/\alpha_g$ is unchanged and $Q(c\odot X)_i=c_gQ(X)_i$. In the multi-level case every absmax scales by $c_g$, so the rounded ratios are unchanged.
+If $c=c_g$ on group $g$, then $\alpha_g(c\odot X)=c_g\alpha_g(X)$, so $X_i/\alpha_g$ is unchanged and $Q(c\odot X)_i=c_gQ(X)_i$. In the multi-level case, with $c$ constant on each group of the coarsest scale, every absmax in such a group scales by the same factor, so the rounded ratios are unchanged. A factor that differed between finer blocks would change them.
 \end{proof}
 
 \begin{theorem}\label{thm:invariance}
-Let $X'=X\diag(s)$ and $W'=W\diag(s)^{-1}$ with $s\in\R^d_{>0}$ constant on the input-channel footprint of every activation group and every weight group. Then $Q_a(X')\,Q_w(W')^\top=Q_a(X)\,Q_w(W)^\top$. For QuRL's W8A8 (per-token activations, per-output-channel weights) this holds for every \textbf{scalar} $s>0$; for block quantization, for any $s$ constant on blocks.
+Let $X'=X\diag(s)$ and $W'=W\diag(s)^{-1}$ with $s\in\R^d_{>0}$ constant on the input-channel footprint of every group on which $Q_a$ or $Q_w$ is homogeneous (\cref{lem:homogeneous}). Then $Q_a(X')\,Q_w(W')^\top=Q_a(X)\,Q_w(W)^\top$. This holds:
+\begin{itemize}
+\item for QuRL's W8A8 (per-token activations, per-output-channel weights), for every \textbf{scalar} $s>0$;
+\item for single-level block quantization, for any $s$ constant on blocks;
+\item for two-level scaling such as NVFP4, for scalar $s$ only.
+\end{itemize}
 \end{theorem}
 \begin{proof}
 \Cref{lem:homogeneous} twice: $Q_a(X')=Q_a(X)\diag(s)$ and $Q_w(W')=Q_w(W)\diag(s)^{-1}$.
@@ -127,7 +132,7 @@ INT8 of BF16-stored weights & \parbox[t]{9em}{\raggedright 3.7\% of codes re-rou
 Where UAQ changes the quantized model at all, it does so through a different rounding pattern or a calibration side-effect, never by an $s$-fold error reduction.
 \end{remark}
 
-\subsection{UAQ is a per-layer learning-rate change (Q2)}\label{sec:reparam}
+\subsection{UAQ is an optimizer reparameterization (Q2)}\label{sec:reparam}
 
 \begin{lemma}[Gradients]\label{lem:gradients}
 With $\mathcal L'=\mathcal L\circ\phi_s$, the chain rule gives $\nabla_{W'}\mathcal L'=s\,\nabla_W\mathcal L$ and $\nabla_{\gamma'}\mathcal L'=s^{-1}\nabla_\gamma\mathcal L$; all other gradients are unchanged.
@@ -167,21 +172,21 @@ which is AdamW with lr $s\eta$, constant $\varepsilon/s$ and decay $\lambda/s$, 
 \end{proof}
 
 \begin{corollary}[The ``$s^2$ improvement'']\label{cor:ratio}
-The update-to-grid ratio $\nu_{ij}=|\Delta W_{ij}|/\Delta_i(W)$ ($\Delta_i$: row $i$'s grid step) is invariant under $\phi_s$. So UAQ's $\nu$ equals the matched run's, which is $s^p$ times the plain run's: $p=2$ for SGD, $p=1$ for Adam-type optimizers. VeRL trains with AdamW, so the gain is $s$, not $s^2$. Raising a layer's $\nu$ and raising its learning rate are the same operation.
+The update-to-grid ratio $\nu_{ij}=|\Delta W_{ij}|/\Delta_i(W)$ ($\Delta_i$: row $i$'s grid step) is invariant under $\phi_s$. So UAQ's $\nu$ equals the matched run's. At the first step from a shared starting point, that is $s^p$ times the plain run's: $p=2$ for SGD, and $p=1$ for Adam-type optimizers as $\varepsilon\to0$. After that the runs diverge. VeRL trains with AdamW, so the first-step gain is $s$, not $s^2$. Raising a layer's $\nu$ and raising its learning rate are the same operation.
 \end{corollary}
 
 \begin{corollary}[The whole pipeline]\label{cor:pipeline}
-\Cref{cor:rollout} at every iterate plus \cref{thm:reparam} make QuRL + UAQ at learning rate $\eta$ \emph{identical} to QuRL without UAQ under \cref{thm:reparam}'s settings: rollouts, rewards, TIS weights, PPO/ACR clip decisions, the KL-to-reference term and every parameter. This holds for any rollout correction that depends only on policy values (TIS, ACR, MIS, sequence masks). \textbf{UAQ's entire effect on training is an effect of per-layer learning rates.}
+\Cref{cor:rollout} at every iterate plus \cref{thm:reparam} make QuRL + UAQ at learning rate $\eta$ \emph{identical} to QuRL without UAQ under \cref{thm:reparam}'s settings: rollouts, rewards, TIS weights, PPO/ACR clip decisions, the KL-to-reference term and every parameter. This holds for any rollout correction that depends only on policy values (TIS, ACR, MIS, sequence masks). \textbf{UAQ's entire effect on training is an effect of per-group optimizer settings}, chiefly the learning rates.
 \end{corollary}
 
 \begin{remark}[Finite precision]\label{rem:practice}
-Bit-exact equivalence needs exact rescaling and deterministic kernels. At $s=2$ every rescaling is exact in BF16 and FP32; at $s=1.5$, $W/s$ is rounded, and RL amplifies the difference like a change of seed. On a real stack \cref{cor:pipeline} therefore predicts \emph{equality in distribution over seeds}, which is hypothesis H1 of the experiments report (its Section~2.4).
+Bit-exact equivalence needs exact rescaling and deterministic kernels. At $s=2$ every rescaling is exact in BF16 and FP32; at $s=1.5$, $W/s$ is rounded, and RL amplifies the difference as it amplifies a change of seed. That UAQ and the matched settings are then \emph{equal in distribution over seeds} is a hypothesis, not a consequence of \cref{cor:pipeline}: deterministic rounding differences could also change how often runs enter a different training regime. It is hypothesis H1 of the experiments report (its Section~2.4).
 \end{remark}
 
 \subsection{Re-quantized master weights track updates (Q3)}\label{sec:tracking}
 
 \begin{assumptionU}[Uniform phase]
-For a coordinate with grid step $\Delta$, write $w/\Delta=c+\varphi$, $c\in\Z$, $\varphi\in[-\tfrac12,\tfrac12)$; RTN gives $Q(w)=c\Delta$ and error $e=-\Delta\varphi$. Assume $\varphi\sim\Unif[-\tfrac12,\tfrac12)$, independent of the update and across coordinates.
+For a coordinate with grid step $\Delta$, write $w/\Delta=c+\varphi$, $c\in\Z$, $\varphi\in[-\tfrac12,\tfrac12)$; RTN gives $Q(w)=c\Delta$ and error $e=-\Delta\varphi$. Assume $\varphi\sim\Unif[-\tfrac12,\tfrac12)$, independent of the update (over several steps, of the cumulative displacement) and across coordinates. In RL the path depends on rollouts from the quantized weights, so the independence is itself an assumption. E2 finds phase and one-step update uncorrelated ($|r|\le6\times10^{-4}$).
 \end{assumptionU}
 
 \begin{lemma}[When U holds]\label{lem:phase}
@@ -202,7 +207,7 @@ In E2 (experiments report), \cref{prop:capture}'s capture slope is 0.93 for the 
 \end{remark}
 
 \begin{proposition}[Bounded lag; no assumption]\label{prop:lag}
-For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for all $k$, so $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$. The quantized trajectory never falls more than one grid step behind: no freezing.
+For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for all $k$, so $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$. The quantized trajectory never falls more than one grid step behind. While the total drift stays below one grid step, as in QuRL's regime, this alone does not exclude freezing; \cref{prop:capture} does.
 \end{proposition}
 
 \begin{proposition}[One-step capture, under U]\label{prop:capture}
@@ -234,7 +239,12 @@ Under U with a fixed grid:
 (i) A uniform phase shifted by an independent amount, modulo 1, is uniform. (ii) With $\varphi'=\varphi+a-\mathbf 1[\varphi\ge\tfrac12-a]$, $\E[\varphi\varphi']=\tfrac1{12}-\int_{1/2-a}^{1/2}\varphi\,d\varphi=\tfrac1{12}-\tfrac{a(1-a)}2$; divide by $\E\varphi^2=\tfrac1{12}$.
 \end{proof}
 
-\paragraph{Consequence.} Weight quantization error does not grow during training. A growing train--rollout mismatch (QuRL Fig.~3a) must come from a growing grid (outliers), growing sensitivity (Fisher, Jacobians), growing activation error, or changing contexts. This is research problem P4. In E2's run the weight error kept its size and the weight grids moved by at most 1.3\% for 99\% of rows, while the mismatch on a fixed set of probe tokens rose 3.5-fold. On fixed contexts, that leaves sensitivity and activation error.
+\paragraph{Consequence.} The size of the weight quantization error does not grow during training. A growing train--rollout mismatch (QuRL Fig.~3a) must come from how the errors act on the output, or from changing contexts:
+\begin{itemize}
+\item a growing grid (outliers);
+\item growing sensitivity (Fisher, Jacobians), including sensitive directions that come to align with the persistent error;
+\item growing activation error.
+\end{itemize} This is research problem P4. In E2's run the weight error kept its size and the weight grids moved by at most 1.3\% for 99\% of rows, while the mismatch on a fixed set of probe tokens rose 3.5-fold. On fixed contexts, that leaves sensitivity and activation error.
 
 \begin{corollary}[Persistence time]\label{cor:persistence-time}
 The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$: after $\approx0.092\,\Delta/|d|$ steps of coherent drift, or $\approx\tfrac\pi2(0.092\,\Delta/|d|)^2$ steps of random-walk drift.
@@ -242,7 +252,7 @@ The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$: a
 Reading QuRL's App.~A curves as cumulative relative norms (update $\approx0.002$, quantization error $\approx0.0097$ after ${\sim}900$ steps) gives $a\approx0.06$ and $\Corr(e_{900},e_0)\approx0.66$ ($\approx0.32$ if the plotted values are squared ratios). Either way, the error at the end of training is still substantially correlated with the error at the start. E2 measures this directly: after 435 steps at $\eta=10^{-6}$ the correlation is 0.691, against 0.692 predicted from the measured displacements.
 
 \begin{proposition}[Rollout-quantization schemes]\label{prop:schemes}
-For any master-weight path $\theta_k$:
+For any master-weight path $\theta_k$, SR's errors are martingale differences and error feedback's errors sum to $r_0-r_K$, with no assumption. The variances and correlations below assume uniform phases (RTN, delta) or independent, uniform residuals (SR, error feedback). A path that stays on a grid point has zero error under both.
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}l L l l L L@{}}
 \toprule
@@ -251,21 +261,21 @@ Scheme & Rollout weights $q_k$ & Error var. & Lag-1 corr. & $\sum_{k\le K}e_k$ &
 RTN & $Q(\theta_k)$ & $\Delta^2/12$ & $\approx1$ & $\approx Ke_0$ while drift $\ll\Delta$ & none\\
 Delta & $Q(\theta_0)+Q_f(\theta_k-\theta_0)$ & $\approx\Delta^2/12$ & $\approx1$ & $\approx Ke_0$ always & second GEMM or sparse delta\\
 SR, fresh & $\Delta\lfloor\theta_k/\Delta+\xi_k\rfloor$ & $\Delta^2/6$ & 0 & martingale, $O(\sqrt K\Delta)$ & random bits\\
-Error feedback & $Q(\theta_k+r_{k-1})$, $r_k=\theta_k+r_{k-1}-q_k$ & $\Delta^2/6$ & $-1/2$ & $r_0-r_K$, at most $\Delta/2$ for all $K$ & one FP residual per weight\\
+Error feedback & $Q(\theta_k+r_{k-1})$, $r_k=\theta_k+r_{k-1}-q_k$ & $\Delta^2/6$ & $-1/2$ & $r_0-r_K$; at most $\Delta/2$ for all $K$ if $r_0=0$ & one FP residual per weight\\
 \bottomrule
 \end{tabularx}
 \end{center}
 \end{proposition}
 \begin{proof}
-SR \citep{gupta2015limited}: $\E[e_k\mid\mathcal F_{k-1},\theta_k]=0$ exactly (no U needed), so partial sums are a martingale; variance $\Delta^2a(1-a)$ averages to $\Delta^2/6$. Error feedback \citep{gray1990spectra,seide2014onebit,stich2018sparsified,karimireddy2019ef}: $|r_k|\le\Delta/2$ and $e_k=r_{k-1}-r_k$, so the sum telescopes for \emph{any} path; with roughly uniform independent residuals the variance is $\Delta^2/6$ and the lag-1 correlation $-1/2$. Delta: $e_k=e_0+e_{f,k}$ with $|e_{f,k}|\le\Delta_f/2$.
+SR \citep{gupta2015limited}: $\E[e_k\mid\mathcal F_{k-1},\theta_k]=0$ exactly (no U needed), so partial sums are a martingale; variance $\Delta^2a(1-a)$ averages to $\Delta^2/6$ for a uniform fractional part $a$. Error feedback \citep{gray1990spectra,seide2014onebit,stich2018sparsified,karimireddy2019ef}: $|r_k|\le\Delta/2$ and $e_k=r_{k-1}-r_k$, so the sum telescopes for \emph{any} path; with roughly uniform independent residuals the variance is $\Delta^2/6$ and the lag-1 correlation $-1/2$. Delta: $e_k=e_0+e_{f,k}$ with $|e_{f,k}|\le\Delta_f/2$.
 \end{proof}
 
 \begin{corollary}[Why partial sums matter]\label{cor:partial-sums}
-Suppose step $k$'s expected update carries a first-order mismatch bias $b_k=B_ke_k$ with $\|B_k\|\le\beta$ and $\|B_{k+1}-B_k\|\le\lambda$. The accumulated bias is up to ${\sim}K\beta\|e\|$ for RTN and delta, $O(\sqrt K\beta\|e\|)$ for SR, and for error feedback (Abel summation, $r_0=0$)
+Suppose step $k$'s expected update carries a first-order mismatch bias $b_k=B_ke_k$ with $\|B_k\|\le\beta$. Let $V_K=\sum_{k<K}\|B_{k+1}-B_k\|$ be $B$'s total variation, which is at most $(K-1)\lambda$ if $\|B_{k+1}-B_k\|\le\lambda$. The accumulated bias is up to ${\sim}K\beta\|e\|$ for RTN and delta, and $O(\sqrt K\beta\|e\|)$ for SR. For error feedback (Abel summation, $r_0=0$),
 \[
-\Bigl\|\sum_{k=1}^K B_k(r_{k-1}-r_k)\Bigr\|\le\bigl(\beta+(K-1)\lambda\bigr)\max_k\|r_k\|,
+\Bigl\|\sum_{k=1}^K B_k(r_{k-1}-r_k)\Bigr\|\le\bigl(\beta+V_K\bigr)\max_k\|r_k\|,
 \]
-bounded whenever $B$ varies slowly.
+which is bounded whenever $B$'s total variation is.
 \end{corollary}
 So ``update-aware'' should mean \textbf{bounded cumulative error}, not a larger update-to-grid ratio. Turning this into a convergence theorem is research problem P6.
 
@@ -273,7 +283,7 @@ So ``update-aware'' should mean \textbf{bounded cumulative error}, not a larger 
 These points are consistent with \cref{thm:invariance,thm:reparam}; they are not statements about the authors' code, which is not public.
 \begin{itemize}
 \item \textbf{Fig.~4b.} With and without UAQ, the mismatch starts at the same value (about 0.0106), as \cref{cor:rollout} predicts; the later gap is what two runs with different per-layer learning rates would show.
-\item \textbf{Fig.~7 (DAPO, FP8).} QuRL + UAQ learns faster than the \emph{unquantized BF16 baseline} for ${\sim}40$ steps. Better rollout fidelity cannot beat no quantization; a higher Q/K/V learning rate can.
+\item \textbf{Fig.~7 (DAPO, FP8).} QuRL + UAQ learns faster than the \emph{unquantized BF16 baseline} for ${\sim}40$ steps. Better rollout fidelity cannot beat no quantization; a higher Q/K/V learning rate can. By step 200 the two QuRL curves end level (0.278 and 0.277); each is a single run.
 \item \textbf{Table~4.} The control raises the \emph{global} learning rate. The matched control (Q/K/V $\times1.5$, norm gains $\div1.5$) and BF16 + UAQ are missing, and the three $s$ settings differ by at most 2.1 Avg@32 points on 30 problems, one number each.
 \item \textbf{GSM8K.} Disabling UAQ ``due to the relatively high learning rate'' is consistent with UAQ being a learning-rate change.
 \item \textbf{Side hypothesis (bridge to P4).} Under AdamW, UAQ also makes the norm gains learn $s\times$ slower, which may slow outlier growth in activations and hence mismatch growth.
@@ -285,7 +295,7 @@ These points are consistent with \cref{thm:invariance,thm:reparam}; they are not
 \item \textbf{Policy-space tracking beyond first order.} Extend \cref{prop:layer} with a Lipschitz-Hessian remainder, and add activation quantization (also recomputed from $\theta$, so also persistent).
 \item \textbf{Moving grids.} Dynamic absmax rescales a row's grid whenever its largest element moves. Quantify this jitter for outlier-dominated rows and compare with frozen scales.
 \item \textbf{Per-layer learning rates for RL fine-tuning.} \Cref{thm:reparam} turns UAQ into a question with nothing quantization-specific in it: which per-layer learning-rate multipliers (in the spirit of \citealp{yang2022tp5}) are best for RLVR? UAQ may be a lucky instance.
-\item \textbf{Bridges.} P4: weight error is stationary, so mismatch growth must come from sensitivity, outliers, activations or contexts. P6: error feedback or stochastic rounding for rollout weights, with a convergence theorem in place of \cref{cor:partial-sums}'s heuristic.
+\item \textbf{Bridges.} P4: the size of the weight error is stationary, so mismatch growth must come from sensitivity, outliers, activations or contexts. P6: error feedback or stochastic rounding for rollout weights, with a convergence theorem in place of \cref{cor:partial-sums}'s heuristic.
 \end{enumerate}
 
 % Background references listed in the bibliography but not cited in the text above.

@@ -34,7 +34,7 @@ Coupled $L^2$ regularization, added to the gradient rather than applied as decou
 
 \paragraph{Proof of \cref{cor:ratio}.} The grid step of row $i$ is $\Delta_i(W)=\max_j|W_{ij}|/M$. Under $\phi_s$, both $\Delta_i$ and $\Delta W$ scale by $s$, so $\nu$ is invariant, and UAQ's $\nu$ is that of the matched run of \cref{thm:reparam}.
 
-On the first step of Adam, $|\hat m/\sqrt{\hat v}|=1$ for every coordinate with a nonzero gradient (as $\varepsilon\to0$). The update is then the learning rate itself, so the matched run's $\nu$ is $s$ times the plain run's. Under SGD the update is proportional to the learning rate, a factor $s^2$. Our float64 check gives first-step gains of 1.500 (Adam) and 2.250 (SGD) at $s=1.5$ (\cref{app:verification}). \qed
+From a shared starting point, on the first step of Adam, $|\hat m/\sqrt{\hat v}|=1$ for every coordinate with a nonzero gradient (as $\varepsilon\to0$). The update is then the learning rate itself, so the matched run's $\nu$ is $s$ times the plain run's. Under SGD the update is proportional to the learning rate, a factor $s^2$. Our float64 check gives first-step gains of 1.500 (Adam) and 2.250 (SGD) at $s=1.5$ (\cref{app:verification}). \qed
 
 \paragraph{Proof of \cref{cor:pipeline}.} By \cref{thm:reparam}, $\theta_k=\phi_s(\theta'_k)$ at every step. By \cref{cor:rollout}, the policies $\pi$ and $\mu$, and with them every quantity computed from policy values and sampled data, are identical at every step. \qed
 
@@ -77,7 +77,7 @@ and dividing by $\E\varphi^2=\tfrac1{12}$ gives $1-6a(1-a)$. \qed
 
 \paragraph{Proof of \cref{prop:schemes}.}
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \emph{Stochastic rounding.} $\E[e_k\mid\mathcal F_{k-1},\theta_k]=0$ exactly, so the partial sums form a martingale. The conditional variance is $\Delta^2a(1-a)$, whose average over a uniform $a$ is $\Delta^2/6$. No assumption U is needed.
+\item \emph{Stochastic rounding.} $\E[e_k\mid\mathcal F_{k-1},\theta_k]=0$ exactly, so the partial sums form a martingale. The martingale property needs no assumption. The conditional variance is $\Delta^2a(1-a)$, whose average is $\Delta^2/6$ if the fractional part $a$ is uniform.
 \item \emph{Error feedback.} $|r_k|\le\Delta/2$ without saturation, and $e_k=q_k-\theta_k=r_{k-1}-r_k$. The sum therefore telescopes for any path. If the residuals are approximately independent and uniform, the per-step variance is $2\cdot\Delta^2/12$ and the lag-1 correlation is $-\Var(r)/(2\Var(r))=-\tfrac12$.
 \item \emph{Delta quantization.} $e_k=e_0+e_{f,k}$ with $|e_{f,k}|\le\Delta_f/2$.
 \item \emph{RTN.} This is \cref{prop:persistence}. \qed
@@ -89,7 +89,7 @@ and dividing by $\E\varphi^2=\tfrac1{12}$ gives $1-6a(1-a)$. \qed
 \[
 \sum_{k=1}^KB_k(r_{k-1}-r_k)=-B_Kr_K+\sum_{k=1}^{K-1}(B_{k+1}-B_k)\,r_k ,
 \]
-whose norm is at most $(\beta+(K-1)\lambda)\max_k\|r_k\|$.
+whose norm is at most $(\|B_K\|+V_K)\max_k\|r_k\|\le(\beta+V_K)\max_k\|r_k\|$.
 \item \emph{Stochastic rounding.} If $B_k$ is predictable, the increments $B_ke_k$ are martingale differences. So $\E\|\sum_kB_ke_k\|^2=\sum_k\E\|B_ke_k\|^2\le K\beta^2\E\|e\|^2$.
 \item \emph{RTN and delta quantization.} While the drift is below the persistence scale, $e_k\approx e_0$, so $\sum_kB_ke_k\approx(\sum_kB_k)\,e_0$, which can grow to about $K\beta\|e\|$. \qed
 \end{itemize}

@@ -8,7 +8,7 @@ Q(X)_i=\alpha_g\,r\!\left(X_i/\alpha_g\right)\quad(i\in g),\qquad \alpha_g=\max_
 \end{equation}
 Here $r$ is a fixed rounding rule onto a grid with maximum $M$: INT-$b$ has $M=2^{b-1}-1$, FP8-E4M3 has $M=448$, and FP4-E2M1 has $M=6$. QuRL's INT8 rollouts use per-output-channel weight groups and dynamic per-token activation groups (QuRL, Sec.~5); we call this INT8 W8A8.
 
-\paragraph{UAQ.} In a pre-norm transformer block, the attention input is $X=\gamma\odot n(x)$, where $n(x)=x/\rms(x)$ is RMS normalization and $\gamma$ its learned gain. $X$ feeds $W_Q$, $W_K$ and $W_V$. UAQ replaces $(W_{Q,K,V},\gamma)$ by $(W/s,\ s\gamma)$ for a scalar $s>0$; QuRL uses $s=1.5$.
+\paragraph{UAQ.} In a pre-norm transformer block, the attention input is $X=\gamma\odot n(x)$, where $n(x)=x/\rms(x)$ is RMS normalization and $\gamma$ its learned gain. $X$ feeds $W_Q$, $W_K$ and $W_V$. UAQ replaces $(W_{Q,K,V},\gamma)$ by $(W/s,\ s\gamma)$ for a scalar $s>0$; QuRL uses $s=1.5$. QuRL applies $s$ ``column-wise to $W$ and row-wise to $X$'' (its Eq.~11), but it reports only scalar values ($s=1$, 1.5 and 2) and scales every Q/K/V weight by the same $s$ (its Fig.~5). We therefore read $s$ as one scalar. A per-channel $s$ would be a SmoothQuant-style transformation, which does change the quantized model (\cref{app:verification}).
 
 The map back to the original coordinates is $\phi_s(W',\gamma')=(sW',\gamma'/s)$, and it leaves the full-precision forward pass unchanged. The same construction applies to the MLP input through the second normalization layer, and everything below carries over verbatim.
 
@@ -22,5 +22,5 @@ The map back to the original coordinates is $\phi_s(W',\gamma')=(sW',\gamma'/s)$
 \paragraph{Mismatch.} We measure the rollout--trainer mismatch on sampled tokens with the following quantities:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item the mean absolute log-probability difference $|\log\mu-\log\pi|$;
-\item the sampled-token estimators of $\KL(\pi\|\mu)$, namely $k_1=\log\pi-\log\mu$ and $k_3=(r-1)-\log r$ with $r=\mu/\pi$.
+\item the sampled-token estimators $k_1=-\log r$ and $k_3=(r-1)-\log r$ of a KL divergence. On tokens sampled from $\pi$, as in \cref{sec:s1}, $r=\mu/\pi$ and they estimate $\KL(\pi\|\mu)$. On tokens sampled from the rollout policy $\mu$, as in the RL runs of \cref{sec:s3}, $r=\pi/\mu$ and they estimate $\KL(\mu\|\pi)$.
 \end{itemize}

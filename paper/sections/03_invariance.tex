@@ -5,23 +5,23 @@ Partition the entries of a tensor into groups $g\in\mathcal P$. A quantizer $Q$ 
 \end{definition}
 
 \begin{lemma}\label{lem:homogeneity}
-Single-level absmax quantizers \eqref{eq:absmax} are homogeneous on their groups. So are multi-level quantizers in which every scale is either an absmax over a set of entries or a rounding of a ratio of such absmaxes. An example is NVFP4-style scaling \citep{nvidia2025nvfp4}, with E4M3 block scales applied under a per-tensor FP32 absmax scale.
+Single-level absmax quantizers \eqref{eq:absmax} are homogeneous on their groups. Multi-level quantizers in which every scale is either an absmax over a set of entries or a rounding of a ratio of such absmaxes are homogeneous on the groups of their coarsest scale, but not on their finer blocks. An example is NVFP4-style scaling \citep{nvidia2025nvfp4}, with E4M3 block scales applied under a per-tensor FP32 absmax scale: it is homogeneous on the whole tensor.
 \end{lemma}
 
 \begin{proof}
 If $c$ equals $c_g$ on group $g$, then $\alpha_g(c\odot X)=c_g\,\alpha_g(X)$. So $X_i/\alpha_g$ is unchanged, and $Q(c\odot X)_i=c_g\,Q(X)_i$.
 
-In the multi-level case, every absmax scales by the same $c_g$. The ratios that are rounded are therefore scale-free.
+In the multi-level case, let $c$ be constant on each group of the coarsest scale. Every absmax within such a group then scales by the same factor, so the ratios that are rounded are unchanged. A factor that differed between the finer blocks of one coarse group would change those ratios, and with them the rounded block scales.
 \end{proof}
 
 \begin{theorem}[Invariance]\label{thm:invariance}
-Let $X'=X\diag(s)$ and $W'=W\diag(s)^{-1}$ with $s\in\R^d_{>0}$. Suppose $s$ is constant on the input-channel footprint of every activation group and every weight group. Then
+Let $X'=X\diag(s)$ and $W'=W\diag(s)^{-1}$ with $s\in\R^d_{>0}$. Suppose $s$ is constant on the input-channel footprint of every group on which $Q_a$ or $Q_w$ is homogeneous (\cref{lem:homogeneity}). Then
 \[
 Q_a(X')\,Q_w(W')^\top=Q_a(X)\,Q_w(W)^\top .
 \]
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item With per-token or per-tensor activation groups and per-output-channel or per-tensor weight groups (QuRL's INT8 W8A8), this holds for every scalar $s>0$.
-\item With block quantization, it holds for every $s$ that is constant on blocks, scalars included.
+\item With single-level block quantization, it holds for every $s$ that is constant on blocks, scalars included. With two-level scaling such as NVFP4, the per-tensor scale spans every block, so only a scalar $s$ qualifies.
 \end{itemize}
 \end{theorem}
 

@@ -6,7 +6,7 @@ QuRL's weight-update argument compares one update with one grid step. With full-
 Write $w/\Delta=c+\varphi$ with $c\in\Z$ and $\varphi\in[-\tfrac12,\tfrac12)$, so that $Q(w)=c\Delta$ with error $e=-\Delta\varphi$. Assume:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item $\varphi\sim\Unif[-\tfrac12,\tfrac12)$;
-\item $\varphi$ is independent of the update applied to $w$;
+\item $\varphi$ is independent of the update applied to $w$ and, for results over several steps, of the cumulative displacement;
 \item the phases of different coordinates are independent.
 \end{itemize}
 \end{assumptionU}
@@ -21,10 +21,12 @@ For per-row absmax INT8, $\sigma/\Delta\approx127/(\max/\rms)$. On the Qwen2.5 c
 
 U fails when weights sit on grid points, for example after quantization-aware training on the same grid. At fine scales it also fails for weights stored in BF16. These have no density: they sit on a lattice whose spacing, in grid units, is $|c|/256$ to $|c|/128$ for code $c$. U then holds at a resolution of a few hundredths of a grid step, but not at the scale of a single update, until training with FP32 master weights moves the weights off the lattice (\cref{sec:e2}).
 
+U's independence conditions are assumptions as well. In RL the weight path depends on rollouts sampled from the quantized weights, so a displacement could in principle depend on the phase. On our instrumented run, phase and one-step update are uncorrelated ($|r|\le6\times10^{-4}$), and the persistence predicted below holds (\cref{sec:e2}).
+
 \begin{proposition}[Bounded lag; no assumption]\label{prop:lag}
 For RTN on a fixed grid without saturation, $\|Q(\theta_k)-\theta_k\|_\infty\le\Delta/2$ for every $k$. Hence $\|(Q(\theta_k)-Q(\theta_0))-(\theta_k-\theta_0)\|_\infty\le\Delta$.
 
-The quantized trajectory never falls behind the full-precision one by more than one grid step, so it cannot freeze.
+The quantized trajectory never falls behind the full-precision one by more than one grid step. While the total drift stays below one grid step, as in QuRL's regime, this alone does not exclude freezing; \cref{prop:capture} does.
 \end{proposition}
 
 \begin{proposition}[One-step capture, under U]\label{prop:capture}
@@ -62,10 +64,10 @@ On a fixed grid, the following hold.
 The correlation falls to $\tfrac12$ at $a_{1/2}=(1-\sqrt{2/3})/2\approx0.092$. With per-step updates of size $|d|$, this takes about $0.092\,\Delta/|d|$ steps under coherent drift, and about $\tfrac\pi2(0.092\,\Delta/|d|)^2$ steps under random-walk drift.
 \end{corollary}
 
-\paragraph{Consequences.} The weight-space rounding error does not grow during training. If the rollout--trainer mismatch grows, as QuRL reports (its Fig.~3a) and as we observe (\cref{sec:s3}), the cause must lie elsewhere:
+\paragraph{Consequences.} The size of the weight-space rounding error does not grow during training. If the rollout--trainer mismatch grows, as QuRL reports (its Fig.~3a) and as we observe (\cref{sec:s3}), the cause must lie in how the errors act on the output, or elsewhere:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item the grid itself grows, through absmax or outlier growth;
-\item the policy becomes more sensitive to a fixed error;
+\item the policy becomes more sensitive to an error of fixed size, for instance as its most sensitive directions come to align with the persistent error;
 \item the activation error grows;
 \item the visited contexts change.
 \end{itemize}
@@ -81,23 +83,23 @@ Scheme & Rollout weights $q_k$ & Per-step var. & Lag-1 corr. & $\sum_{k\le K}e_k
 RTN & $Q(\theta_k)$ & $\Delta^2/12$ & $1-6a(1-a)\approx1$ & $\approx Ke_0$ while drift $\ll\Delta$ & none\\
 Delta & $Q(\theta_0)+Q_f(\theta_k-\theta_0)$ & $\approx\Delta^2/12$ & $\approx1$ & $\approx Ke_0$ always & second GEMM or a low-rank delta\\
 Stochastic rounding & $\Delta\lfloor\theta_k/\Delta+\xi_k\rfloor$ & $\Delta^2/6$ & $0$ & martingale, $O(\sqrt K\Delta)$ & random bits\\
-Error feedback & $Q(\theta_k+r_{k-1})$, with $r_k=\theta_k+r_{k-1}-q_k$ & $\Delta^2/6$ & $-1/2$ & $r_0-r_K$, at most $\Delta/2$ & one residual per weight\\
+Error feedback & $Q(\theta_k+r_{k-1})$, with $r_k=\theta_k+r_{k-1}-q_k$ & $\Delta^2/6$ & $-1/2$ & $r_0-r_K$; at most $\Delta/2$ if $r_0=0$ & one residual per weight\\
 \bottomrule
 \end{tabularx}
-\caption{Rollout-quantization schemes for a master-weight path $\theta_k$ (\cref{prop:schemes}). Stochastic rounding draws $\xi_k\sim\Unif[0,1)$ afresh at each step; $Q_f$ uses a finer grid.}\label{tab:schemes}
+\caption{Rollout-quantization schemes for a master-weight path $\theta_k$ (\cref{prop:schemes}). Stochastic rounding draws $\xi_k\sim\Unif[0,1)$ afresh at each step; $Q_f$ uses a finer grid. The variances and correlations assume uniform phases or residuals.}\label{tab:schemes}
 \end{table}
 
 \begin{proposition}[Rollout-quantization schemes]\label{prop:schemes}
-For any master-weight path $\theta_k$, the schemes in \cref{tab:schemes} have the stated properties. The properties of stochastic rounding and error feedback need no uniform-phase assumption.
+For any master-weight path $\theta_k$, stochastic rounding's errors are martingale differences, and error feedback's errors sum to $r_0-r_K$; neither property needs Assumption~U. The variances and correlations in \cref{tab:schemes} do not hold for every path: they assume uniform phases (RTN and delta) or independent, uniform residuals (stochastic rounding and error feedback). A path that stays on a grid point, for example, has zero error under both.
 \end{proposition}
 
 \begin{corollary}[Cumulative bias]\label{cor:partial-sums}
-Suppose the expected update at step $k$ carries a first-order mismatch bias $b_k=B_ke_k$, with $\|B_k\|\le\beta$ and $\|B_{k+1}-B_k\|\le\lambda$. Then the accumulated bias $\sum_{k\le K}b_k$ behaves as follows:
+Suppose the expected update at step $k$ carries a first-order mismatch bias $b_k=B_ke_k$, with $\|B_k\|\le\beta$. Let $V_K=\sum_{k<K}\|B_{k+1}-B_k\|$ be the total variation of $B$, which is at most $(K-1)\lambda$ if $\|B_{k+1}-B_k\|\le\lambda$. Then the accumulated bias $\sum_{k\le K}b_k$ behaves as follows:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item it can grow to about $K\beta\|e\|$ under RTN and delta quantization;
 \item it is $O(\sqrt K\,\beta\|e\|)$ under stochastic rounding;
-\item it is at most $(\beta+(K-1)\lambda)\max_k\|r_k\|$ under error feedback, which stays bounded while $B_k$ varies slowly.
+\item under error feedback with $r_0=0$, it is at most $(\beta+V_K)\max_k\|r_k\|$. It stays bounded when the total variation of $B$ does, instead of growing with $K$.
 \end{itemize}
 \end{corollary}
 
-The property that matters is a bounded cumulative error, not a larger update-to-grid ratio. Error feedback, the principle behind sigma--delta modulation \citep{gray1990spectra} and compressed SGD \citep{seide2014onebit,stich2018sparsified,karimireddy2019ef}, delivers it at the price of twice the per-step error variance. UAQ enters these quantities only through the update-to-grid ratio, and by \cref{cor:ratio} the matched learning-rate change raises that ratio in exactly the same way.
+The property that matters is a bounded cumulative error, not a larger update-to-grid ratio. Error feedback, the principle behind sigma--delta modulation \citep{gray1990spectra} and compressed SGD \citep{seide2014onebit,stich2018sparsified,karimireddy2019ef}, delivers it at the price of twice the per-step error variance, for uniform residuals. UAQ enters these quantities only through the update-to-grid ratio, and by \cref{cor:ratio} the matched learning-rate change raises that ratio in exactly the same way.

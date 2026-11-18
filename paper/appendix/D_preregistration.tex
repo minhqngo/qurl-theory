@@ -1,11 +1,11 @@
 \section{Pre-registrations}\label{app:prereg}
 
-The analyses below were fixed in writing, and their scripts frozen and hashed, before the data they test were seen. We report what had been seen at each point.
+The analyses below were fixed in writing, and their scripts frozen and hashed, before the data they test were seen. We report what had been seen at each point. The hashes were recorded in our working notes when each analysis was fixed. They carry no external timestamp, so the dates rest on our records.
 
 \paragraph{H1 (fixed 2026-11-11, before any R5 result).}
 \begin{itemize}[leftmargin=*,itemsep=2pt]
 \item \textbf{Seen beforehand:} R3 with seed 1 in full; one progress line of R4 with seed 1 (validation 42.8\% at step 29); nothing of R5; and the passed exactness check.
-\item \textbf{Data:} R4 and R5 with seeds 1--3, paired by seed. Seeds 4 and 5 were added the same day, before any R4 or R5 run was analysed, so the test uses five pairs.
+\item \textbf{Data:} R4 and R5 with seeds 1--3, paired by seed. Seeds 4 and 5 were added the same day, before any result of R5 had been seen and before any R4 or R5 run was analysed, so the test uses five pairs.
 \item \textbf{Run rules:} every completed run counts, whatever its outcome; a crashed run is repeated with the same seed; and no verdict is drawn until all pairs are complete.
 \item \textbf{Primary endpoint:} late accuracy, the mean greedy test accuracy over the last five validations (steps 319, 348, 377, 406 and 435).
 \item \textbf{Decision rule,} with $t$-intervals of the mean paired difference on $n-1$ degrees of freedom:

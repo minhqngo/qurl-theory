@@ -1,6 +1,6 @@
 \section{Discussion}\label{sec:discussion}
 
-\paragraph{What UAQ's reported gains can mean.} If UAQ helps, the cause is that the query, key and value projections benefit from a larger learning rate, the normalization gains from a smaller one, or both.
+\paragraph{What UAQ's reported gains can mean.} If UAQ helps, the cause is an optimizer effect. The query, key and value projections may benefit from a larger learning rate, the normalization gains from a smaller one, or training from the changed clipping norm, which binds at nearly every step in our runs.
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item That would be a finding about per-layer learning rates for RL fine-tuning, and it should then appear with BF16 rollouts as well (H2).
 \item One mechanism could still make the effect larger with quantization: slower updates of the normalization gains may limit the growth of activation outliers, and with them of the activation-quantization step. That would slow the mismatch growth we observe and, without any appeal to update capture, explain why QuRL's Fig.~4b separates over training. Our runs show no such slowing at 0.5B: R4's mismatch was $1.04\times$ R3's, and relative to the BF16 arms $1.10\times$ (\cref{tab:s3tests}).
@@ -8,7 +8,7 @@
 \end{itemize}
 Choosing per-layer learning-rate multipliers for RL fine-tuning is an open question in its own right, independent of quantization.
 
-\paragraph{Low-precision rollouts were not free in our setup.} With INT8 rollouts, TIS and ACR, the quantized policy's GSM8K accuracy was 4.9 points below BF16 training (95\% CI $[2.3, 7.6]$), against the 1.8 points QuRL reports. The difference built up during training, with lower reward, higher entropy and a larger drift from the reference model, while the residual mismatch stayed 40--100$\times$ the BF16 floor (\cref{sec:s3}). Three explanations remain open:
+\paragraph{Low-precision rollouts were not free in our setup.} In an exploratory comparison with INT8 rollouts, TIS and ACR, the quantized policy's GSM8K accuracy was 4.9 points below BF16 training (95\% CI $[2.3, 7.6]$), against the 1.8 points QuRL reports. The difference built up during training, with lower reward, higher entropy and a larger drift from the reference model, while the residual mismatch stayed 40--100$\times$ the BF16 floor (\cref{sec:s3}). Three explanations remain open:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item the persistent rounding error of \cref{prop:persistence}, which we measure on a real run (\cref{sec:e2}), biases the updates;
 \item TIS's truncation leaves a bias that grows with the mismatch;
@@ -23,23 +23,24 @@ Scoring the trained weights in both formats separates the third from the first t
 \item Report several seeds with intervals. In this RL configuration, 4 of 22 runs stalled early, for 21 to 370 steps (\cref{sec:s3}).
 \item Train the BF16 baseline with the same seeds, and score the trained full-precision weights as well as the quantized policy. Validation through the rollout engine scores only the latter.
 \item State every optimizer hyperparameter, including the critic's learning rate and any warmup. \Cref{sec:s3} shows that one unstated setting can decide between learning and collapse.
-\item To bound the cumulative effect of rollout quantization, use schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}). Larger update-to-grid ratios do not bound it.
+\item To bound the cumulative rounding error of the rollout weights, use schemes with bounded partial sums, such as error feedback (\cref{tab:schemes}); larger update-to-grid ratios do not bound it. Whether this improves RL training is untested.
 \end{enumerate}
 
 \paragraph{Limitations.}
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \emph{Assumptions of the theory.} The invariance assumes scales recomputed from the rescaled tensors. The reparameterization assumes exact arithmetic and identical data; on real stacks it predicts equality in distribution. The tracking results assume uniform rounding phases. Checkpoints stored in BF16 violate this at the scale of one update, so the first update from such a checkpoint is captured at 93\% (\cref{sec:e2}).
+\item \emph{Assumptions of the theory.} The invariance assumes scales recomputed from the rescaled tensors. The reparameterization assumes exact arithmetic and identical data. That it carries over to equality in distribution on real stacks at $s=1.5$ is a hypothesis (\cref{rem:practice}), which our RL test could not settle. The tracking results assume uniform rounding phases. Checkpoints stored in BF16 violate this at the scale of one update, so the first update from such a checkpoint is captured at 93\% (\cref{sec:e2}).
 \item \emph{Scale.} We verify rollouts at up to 7B parameters, but train only at 0.5B on GSM8K. QuRL's UAQ ablation uses DAPO with a 7B model. For tracking, the relevant quantity, the update-to-grid ratio at a given learning rate, is within a factor of 1.4 of the 7B model's (\cref{sec:e2}).
 \item \emph{What we could not inspect.} The authors' implementation was not available to us. Our statements about QuRL's figures rest on values read from their vector data.
-\item \emph{The reproduction.} Our GSM8K non-reproduction may reflect settings the paper does not state.
+\item \emph{The reproduction.} Our GSM8K result at $10^{-5}$ rests on one run per format. It may reflect settings the paper does not state, most likely a learning rate that applies to the critic.
 \item \emph{Power.} Three seeds per arm, five for R4 and R5, resolve accuracy differences of several points only; H1--H3 are inconclusive for that reason, as their power analysis anticipated.
 \item \emph{Scoring.} Runs with INT8 rollouts were validated with the quantized policy, and no checkpoints were kept to score their BF16 weights.
+\item \emph{Remedies.} Error feedback's bound is shown on a recorded weight path. We did not train with error-feedback rollouts, so its effect on RL is untested.
 \end{itemize}
 
 \section{Conclusion}\label{sec:conclusion}
 
-UAQ cannot reduce quantization error for absmax quantizers: the rescaling is invisible to them, exactly so on the hardware kernel QuRL targets. Its effect on training is a per-layer learning-rate change, which a matched optimizer reproduces bit for bit.
+UAQ cannot reduce quantization error for absmax quantizers: the rescaling is invisible to them, exactly so on the hardware kernel QuRL targets. Its effect on training is a change of optimizer settings, chiefly per-layer learning rates, which a matched optimizer reproduces bit for bit.
 
-Re-quantizing full-precision master weights does not freeze the rollout policy. Over a full run it captures updates at the rate we predict, except for the first update from a BF16 checkpoint. The open problem it leaves is the persistence of the rounding error, which we measure on a real run as predicted, and which error feedback addresses and UAQ does not.
+Re-quantizing full-precision master weights does not freeze the rollout policy. Over a full run it captures updates at the rate we predict, except for the first update from a BF16 checkpoint. The open problem it leaves is the persistence of the rounding error, which we measure on a real run as predicted. Error feedback bounds its cumulative effect on the recorded weight path; UAQ does not address it.
 
-In RL at 0.5B, UAQ's effects on accuracy were too small to resolve, against its matched settings (five seeds), a BF16 control and QuRL's control (three seeds each), while its effect on the mismatch matched the BF16 control, as the theory predicts. Low-precision rollouts themselves cost 4.9 points of accuracy in our runs, more than QuRL reports; explaining and reducing that gap is the natural next problem.
+In RL at 0.5B, UAQ's effects on accuracy were too small to resolve, against its matched settings (five seeds), a BF16 control and QuRL's control (three seeds each), while its effect on the mismatch matched the BF16 control, as the theory predicts. In our runs the INT8 policy also scored 4.9 points below BF16 training, more than QuRL reports. Separating the cost of INT8 scoring from that of INT8 training, and reducing the gap, are natural next problems.

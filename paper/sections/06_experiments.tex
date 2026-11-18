@@ -50,6 +50,7 @@ FP8 per-channel/token & 0.5B & $1.1\times10^{-4}$; 99.78\% & \textbf{0}; 100\% &
 \item \textbf{FP8 shows small changes at 1.5B and 7B (ratios 0.94--0.98), never near $s$-fold.}
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item \Cref{thm:invariance} predicts no systematic change. Both FP8 modes of a model share one BF16 re-rounding of $W$ and $\gamma$, so the table holds three draws, two of them favourable.
+  \item Their bootstrap intervals exclude 1, but they cover only the variation over responses, not over re-rounding draws. Without a null distribution over such draws, we cannot say whether these reductions are systematic.
   \item The per-token errors before and after UAQ correlate only 0.43--0.64, and $|\log\mu-\log\pi|$ shrinks on about as many tokens as it grows.
   \end{itemize}
 \end{itemize}
@@ -118,9 +119,10 @@ R3 & no UAQ, plain settings & 0/20; 0/20 & weights after step 1 & $1.36\times10^
 \item \emph{Regularizers:} KL penalty 0.001 in the reward and entropy bonus 0.001, as in VeRL's documented PPO baseline for this model (56.7\% at actor learning rate $10^{-6}$). QuRL states neither.
 \item \emph{Validation:} greedy, on the 1{,}319 test problems, every 29 steps. VeRL validates with the rollout engine, so runs with INT8 rollouts are scored with the INT8 policy.
 \item \emph{QuRL arms:} INT8 W8A8 rollouts re-quantized at every sync, token-level TIS with $C=2$, and ACR.
+\item \emph{Clipping:} the actor's gradient is clipped to global norm 1.0. The clip binds on 99.8--100\% of steps in every run (median pre-clip norm 2.5--4.7), so rule~(c) of \cref{thm:reparam} acts at every step.
 \end{itemize}
 
-\paragraph{QuRL's Table~1 does not reproduce at the stated learning rate.} QuRL reports 55.35\% for BF16 RL and 53.55\% for QuRL INT8 at ``the relatively high learning rate ($10^{-5}$)''. At actor learning rate $10^{-5}$ (critic $10^{-5}$), our BF16 and INT8 runs reached 0.0\% and 2.9\% after 435 steps; their best of 15 validations was 0.0\% and 3.4\%.
+\paragraph{QuRL's stated learning rate does not train in our setup.} QuRL reports 55.35\% for BF16 RL and 53.55\% for QuRL INT8 at ``the relatively high learning rate ($10^{-5}$)''. At actor learning rate $10^{-5}$ (critic $10^{-5}$), our BF16 and INT8 runs reached 0.0\% and 2.9\% after 435 steps; their best of 15 validations was 0.0\% and 3.4\%.
 \begin{itemize}[leftmargin=*,itemsep=2pt]
 \item \textbf{Neither run learned the task.}
   \begin{itemize}[leftmargin=*,itemsep=1pt]
@@ -138,11 +140,12 @@ R3 & no UAQ, plain settings & 0/20; 0/20 & weights after step 1 & $1.36\times10^
   \item At $10^{-5}$, the actor follows that error ten times as fast and loses the rare correctly formatted answers before the critic becomes useful.
   \item Once no answer is rewarded, the per-token KL penalty is the only reward left, and it shortens the responses.
   \end{itemize}
-\item \textbf{What the paper's run must have done differently.} QuRL does not state the critic's learning rate, warmup, KL penalty or entropy bonus. Two explanations fit:
-  \begin{enumerate}[leftmargin=*,itemsep=1pt]
-  \item the actor ran at $10^{-6}$ and $10^{-5}$ is the critic's rate, as in VeRL's baseline, from whose 56.7\% QuRL's 55.35\% differs by 1.4 points;
-  \item the run used a stabilizer the paper does not state.
-  \end{enumerate}
+\item \textbf{Most likely a reporting discrepancy.} QuRL states a single learning rate, without saying whether it is the actor's or the critic's, and states no warmup, KL penalty or entropy bonus.
+  \begin{itemize}[leftmargin=*,itemsep=1pt]
+  \item Its stated settings (batch 256, responses up to 512 tokens, 15 epochs of 435 steps) are those of VeRL's PPO quickstart, whose actor learning rate is $10^{-6}$ and critic learning rate $10^{-5}$. QuRL's 55.35\% is within 1.4 points of that baseline's 56.7\%.
+  \item So the stated $10^{-5}$ is most likely the critic's rate, though a stabilizer the paper does not state would also fit.
+  \item Either way, this is a discrepancy observed with one run per format, not a refutation of QuRL's result.
+  \end{itemize}
   At $10^{-6}$ our configuration trains. With BF16 rollouts and no other change (R1 in \cref{tab:s3arms}), it reaches 54.8--56.6\% late accuracy over three seeds, in line with QuRL's 55.35\% and VeRL's 56.7\%.
 \end{itemize}
 
@@ -155,12 +158,12 @@ R3 & no UAQ, plain settings & 0/20; 0/20 & weights after step 1 & $1.36\times10^
   \item R5, QuRL with the settings of \cref{thm:reparam}(b)--(c);
   \item R6, QuRL with the global learning rate $\times1.5$, QuRL's own control.
   \end{itemize}
-\item \emph{Implementation:} all arms share one FSDP2 code path and differ only in rollout precision, starting checkpoint and optimizer settings.
+\item \emph{Implementation:} all arms share one FSDP2 code path and differ only in rollout precision, the actor's starting checkpoint and the actor's optimizer settings. UAQ (R2, R4) changes the starting checkpoint of the actor and of the frozen reference policy. The critic starts from the original model, with the same optimizer, in every arm.
 \item \emph{Seeds:} 1--3 for R1, R2, R3 and R6, and 1--5 for R4 and R5. The arms of one seed share prompt order and sampling seed.
 \end{itemize}
 The hypotheses are:
 \begin{itemize}[leftmargin=*,itemsep=1pt]
-\item \textbf{H1:} R4 and R5 are equal in distribution (\cref{cor:pipeline});
+\item \textbf{H1:} R4 and R5 are equal in distribution, the hypothesis of \cref{rem:practice};
 \item \textbf{H2:} UAQ's effect is not specific to quantization, $(\text{R2}-\text{R1})\approx(\text{R4}-\text{R3})$;
 \item \textbf{H3:} QuRL's control does not match UAQ, $\text{R6}\neq\text{R4}$.
 \end{itemize}
@@ -181,7 +184,7 @@ R5 & QuRL INT8 & \cref{thm:reparam}(b)--(c) settings & 11.8$^*$, 49.9, 44.5$^*$,
 R6 & QuRL INT8 & learning rate $\times1.5$ & 48.7, 51.2, 47.8$^*$ & 49.2 & 48.8 & $3.3\times10^{-2}$\\
 \bottomrule
 \end{tabularx}
-\caption{The UAQ experiment by arm ($\eta=10^{-6}$, $s=1.5$; seeds 1--3, and 1--5 for R4 and R5). Late accuracy is the mean greedy test accuracy over the last five validations, final accuracy the last one; the QuRL arms are scored with the INT8 policy. $k_3$ is the sampled-token mismatch averaged over all 435 steps. Means are over all seeds of an arm; H2 and H3 use seeds 1--3, H1 all five. $^*$Early stall: no correct training answer for 21--370 steps, and validation below 10\% at step 29.}\label{tab:s3arms}
+\caption{The UAQ experiment by arm ($\eta=10^{-6}$, $s=1.5$; seeds 1--3, and 1--5 for R4 and R5). Late accuracy is the mean greedy test accuracy over the last five validations, final accuracy the last one; the QuRL arms are scored with the INT8 policy. $k_3$ is the sampled-token estimate of $\KL(\mu\|\pi)$ on the rollout tokens, averaged over all 435 steps. Means are over all seeds of an arm; H2 and H3 use seeds 1--3, H1 all five. $^*$Early stall: no correct training answer for 21--370 steps, and validation below 10\% at step 29.}\label{tab:s3arms}
 \end{table}
 
 \begin{table}[t]
@@ -216,7 +219,7 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item The two large differences, $+37.2$ and $+6.7$ points, come from R5's two early stalls. In the three seeds where neither arm stalled, the differences are $-0.9$, $-4.9$ and $+4.1$ points, with no consistent sign.
   \item Equivalence was out of reach even without the stalls. R4's late accuracy alone varied with a standard deviation of 2.7 points across its five seeds, while equivalence within $\pm2$ points needs a paired standard deviation below about 2.1 (\cref{app:prereg}).
-  \item This limits the test, not \cref{cor:pipeline}, which holds bit for bit on the same stack (\cref{sec:s2}).
+  \item This limits the test. \Cref{cor:pipeline} itself holds bit for bit at $s=2$ on the same stack (\cref{sec:s2}). At $s=1.5$ the question is whether the rounding differences act like a change of seed, which five pairs cannot settle.
   \end{itemize}
 \item \textbf{H2 is inconclusive on accuracy and supported on mismatch.}
   \begin{itemize}[leftmargin=*,itemsep=1pt]
@@ -228,7 +231,7 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
 \item \textbf{UAQ has no detectable effect at this scale.} By \cref{cor:pipeline}, R4 $-$ R3 measures the effect of the $\times1.5$ Q/K/V and $\div1.5$ norm-gain learning rates. It is $-1.1$ points of late accuracy with INT8 rollouts (90\% interval $[-3.3, 1.1]$) and $-1.0$ with BF16 rollouts ($[-3.4, 1.4]$), and its mismatch ratio, 1.04, lies within the registered bounds.
 \end{itemize}
 
-\paragraph{INT8 rollouts cost accuracy in our setup (exploratory).} QuRL reports a 1.8-point gap between BF16 and INT8 rollouts. In our runs the gap is larger, and it appears in every seed (\cref{fig:s3}).
+\paragraph{INT8 rollouts cost accuracy in our setup (exploratory).} QuRL reports a 1.8-point gap between BF16 and INT8 rollouts. In our runs the gap is larger, and it appears in every seed (\cref{fig:s3}). QuRL does not state whether it scores its INT8 runs with the quantized policy or with the trained weights in BF16, so the two gaps may not measure the same thing.
 \begin{itemize}[leftmargin=*,itemsep=2pt]
 \item \textbf{Size.} Averaged over UAQ, the BF16 arms (R1, R2) lead the INT8 arms (R3, R4) by 4.9 points of late accuracy (95\% interval $[2.3, 7.6]$) and 4.5 points of final accuracy ($[2.4, 6.7]$). All six BF16 runs end above all sixteen INT8 runs, seeds 4--5 of R4 and R5 included: 53.9--56.6\% against at most 53.0\%, an ordering with probability $1/\binom{22}{6}\approx1.3\times10^{-5}$ by chance. Even by best validation, R1 leads R3 by 3.7 points.
 \item \textbf{Timing.} The INT8 runs start lower, though the ranges overlap: at step 29, 43.2--47.6\% with BF16 and 33.9--47.4\% in the twelve INT8 runs without a stall, a mean gap of 2--4 points. The gap widens to 5--7.5 points by step 145; over steps 87--145, every BF16 validation is above every validation of those INT8 runs.
@@ -251,7 +254,7 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
 \paragraph{The INT8 mismatch grows although the weight error cannot.} In the ten H1 runs (R3--R5) without a stall, the sampled-token mismatch ($k_3$) rose 4.7--7.8-fold, from $1.0$--$1.2\times10^{-2}$ at step 1 to window medians of $5.5$--$8.4\times10^{-2}$ over steps 60--175. It then fell, ending at $3.6$--$6.3\times10^{-2}$ over steps 400--435 in every H1 run but the one that stalled until step 373. That is still about 40--100$\times$ the BF16 arms' mismatch over the same steps ($6.1$--$8.4\times10^{-4}$).
 \begin{itemize}[leftmargin=*,itemsep=1pt]
 \item In the twelve INT8 runs without a stall, it tracked neither the policy's entropy (Spearman $-0.56$ to $0.13$) nor its KL from the reference model ($-0.39$ to $0.38$).
-\item By \cref{prop:persistence} the weight rounding error is stationary, and \cref{sec:e2} confirms this on a real run, in which the mismatch on fixed probe tokens still rises 3.5-fold. The growth must therefore come from sensitivity, activations or contexts (\cref{sec:tracking}).
+\item By \cref{prop:persistence} the size of the weight rounding error is stationary, and \cref{sec:e2} confirms this on a real run, in which the mismatch on fixed probe tokens still rises 3.5-fold. The growth must therefore come from how the errors act on the output, through the policy's sensitivity or the activation error, or from changing contexts (\cref{sec:tracking}).
 \item Attributing it requires per-layer error and activation logging, which we leave to future work.
 \end{itemize}
 
@@ -260,7 +263,7 @@ R1 $-$ R3 & late accuracy & $+5.7$, $+3.4$, $+5.6$ & $+4.9$, $[2.7, 7.0]$ & expl
 \item \textbf{All four had INT8 rollouts} (R3 seed~3, R5 seeds 1 and 3, R6 seed~3), against none of the six BF16 runs. Stalls falling at random would do this with probability 0.25, so it is suggestive only. In seed~3, which fixes the prompt order for every arm, three of the four INT8 arms stalled while both BF16 runs learned at once. Seeds 4 and 5 had none.
 \item \textbf{R5 stalled in 2 of 5 runs, R4 in none.} If both stalled equally often, this would happen with probability 0.22.
 \item \textbf{Not the mismatch level.} R3 seed~3's stall had the highest mismatch of any run, the other three the lowest.
-\item \textbf{Not evidence against H1.} By \cref{cor:pipeline}, R4 and R5 run the same algorithm, and stalls also occur under R3's and R6's plain settings. They do weaken H1's test: both large R4 $-$ R5 differences come from R5 stalls.
+\item \textbf{Unresolved for H1.} Stalls also occur under R3's and R6's plain settings, so they are not specific to the matched settings. Whether the rounding differences at $s=1.5$ change how often a run stalls is open: two stalls in five runs against none cannot tell. Both large R4 $-$ R5 differences come from R5's stalls.
 \end{itemize}
 
 \subsection{Tracking and persistence over a full run}\label{sec:e2}
@@ -329,7 +332,7 @@ Not frozen: above 0.5 & 0.8985--1.169 & holds, 11 of 11\\
   \item After 435 steps it is still 0.691, against 0.692 predicted from the measured displacements.
   \item Its variance stays within 0.07\% of its initial value, and the grids hardly move. By the end of the run no weight had moved by more than $4.8\times10^{-4}$, so the absmax of 99\% of rows changed by at most 1.3\%.
   \end{itemize}
-\item \textbf{Error feedback bounds the cumulative error on the real weight path} (\cref{prop:schemes}). After $K=436$ syncs, the rms partial sum of the errors is:
+\item \textbf{Error feedback bounds the cumulative error on the recorded weight path} (\cref{prop:schemes}). Each scheme is replayed on the path that the run's round-to-nearest rollouts produced; rollouts quantized with error feedback would change the path itself. After $K=436$ syncs, the rms partial sum of the errors is:
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item $115\,\Delta_0$ for RTN, 0.91 of the fully persistent value $K\Delta_0/\sqrt{12}$;
   \item $8.53\,\Delta_0$ for stochastic rounding, against $\sqrt{K/6}\,\Delta_0=8.52\,\Delta_0$;
@@ -339,8 +342,9 @@ Not frozen: above 0.5 & 0.8985--1.169 & holds, 11 of 11\\
   \begin{itemize}[leftmargin=*,itemsep=1pt]
   \item The registered first-order test, a slope within $\pm10\%$ of 1, passes in 9 of 10 cumulative pairs. The slopes sit about 7\% below 1, which the theory does not predict.
   \item Late in training, one-step changes are dominated by the rollout's own error. The spread of $\Delta\log\mu$ is 1.7 times that of $\Delta\log\pi$ at the first pair and 8.2 times at the last, and the last pair alone lifts the pooled one-step slope to 1.17.
+  \item So in policy space a single update is captured noisily: the one-step correlations are 0.13--0.58. In that limited sense QuRL's intuition holds. Over a few steps the signal accumulates: the correlation is 0.70 over two steps and 0.86 over sixteen.
   \end{itemize}
-\item \textbf{The mismatch grows although the weight error does not.} On the fixed probe tokens, the mean $|\log\mu-\log\pi|$ rises 3.5-fold over the run, from 0.057 to 0.20, while the weight error keeps its size and the grids barely move. On fixed contexts, the growth must therefore come from the policy's sensitivity or the activation error, not from the weights. The probe tokens also become less likely under the trained policy.
+\item \textbf{The mismatch grows although the weight error does not.} On the fixed probe tokens, the mean $|\log\mu-\log\pi|$ rises 3.5-fold over the run, from 0.057 to 0.20, while the weight error keeps its size and the grids barely move. On fixed contexts, the growth must therefore come from the policy's sensitivity to the weight error or from the activation error, not from the size of the weight error. The probe tokens also become less likely under the trained policy.
 \item \textbf{Stored checkpoints meet \cref{lem:uniform-phase}'s condition by a wide margin.} No row of the three models has $\sigma/\Delta<1$; the median is 28--36, because $\max/\rms$ has a median of only 3.6--4.5. U holds at the rounding boundary in all 21 cells, and the bulk test fails narrowly in one (0.052 against 0.05), again from BF16 storage.
 \item \textbf{The tracking regime at 0.5B is close to that at 7B.} At $\eta=10^{-6}$ the median update-to-grid ratio $\nu=\eta/\Delta$ over rows is $1.8\times10^{-3}$ at 0.5B, $0.85\times10^{-3}$ at 1.5B and $1.3\times10^{-3}$ at 7B.
 \end{itemize}
