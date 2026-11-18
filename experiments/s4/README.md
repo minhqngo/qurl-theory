@@ -6,7 +6,9 @@ S3 runs the seed-based test of H1 (R4 ≡ R5) on GSM8K PPO at 0.5B, with five se
 **Status (2026-11-17): on the rental. The gates passed on 2026-11-16, and the mechanism runs are done, all at their first attempt.**
 - M1 is "consistent" at both sizes in all 16 registered ratios; early M2 is "not meaningfully changed" at both (R4/R3 0.88 at 1.5B, 0.94 at 7B). The 7B values are interim until the full runs' first 20 steps replace R3, R4 and R5.
 - The full 7B runs started on 2026-11-17. Results, timing and the remaining schedule: `latex/p1_s4.tex` (S4's own report).
-- The lease was extended on 2026-11-17 to 2026-11-22 06:27 UTC. A waiter restarts the queue with the new end, and a 3 h reserve, when the running queue exits ("Extending the rental" below).
+- The lease was extended twice: on 2026-11-17 to 2026-11-22 06:27 UTC, and on 2026-11-18 to 2026-11-23 01:00 UTC.
+  - When the running queue exits, a waiter restarts it with the newest end and a 10 h reserve, so runs end by 2026-11-22 15:00 UTC, in time for the final copy.
+  - That waiter replaced the first one on 2026-11-18 ("Extending the rental" below).
 - The results copied back each day are unpacked under `rental/<date>/unpacked/`, never into `results/`; the analyses of each copy are written beside it.
 
 **Status (2026-11-11): designed and coded; nothing has run on GPUs at scale.**
@@ -228,10 +230,19 @@ bash ~/qurl/s4/queue.sh --list
   - `STOP_ON_FAIL=1` stops the queue instead.
 - **Extending the rental.** A running queue keeps the `END` it started with.
   - Never start a second `queue.sh` beside it: both would run the same pending or incomplete run on the same GPUs.
-  - Instead, start a waiter on the node, once. It restarts the queue with the new end as soon as the running one exits, and the restarted queue skips the finished runs. The `pgrep` guard refuses a second waiter.
+  - Instead, start a waiter on the node, once.
+    - It restarts the queue with the new end as soon as the running one exits, and the restarted queue skips the finished runs.
+    - The `pgrep` guard refuses a second waiter.
+    - `BUFFER_H` is the reserve. A run starts only if it is projected to end that many hours before `END`, so set it to leave time for the final copy.
     ```bash
     Q=$(pgrep -o -f 'qurl/s4/[q]ueue.sh$'); ps -o pid,etime,args -p "$Q"   # the running queue: one line
-    if [ -n "$Q" ] && ! pgrep -f '[w]hile kill -0' > /dev/null; then nohup bash -c "while kill -0 $Q 2>/dev/null; do sleep 60; done; END='<new end>' BUFFER_H=3 bash ~/qurl/s4/queue.sh" >> ~/qurl/s4/queue.log 2>&1 < /dev/null & disown; echo "waiter started for queue $Q"; else echo "NOT started: no queue found, or a waiter already exists"; fi
+    if [ -n "$Q" ] && ! pgrep -f '[w]hile kill -0' > /dev/null; then nohup bash -c "while kill -0 $Q 2>/dev/null; do sleep 60; done; END='<new end>' BUFFER_H=<reserve hours> bash ~/qurl/s4/queue.sh" >> ~/qurl/s4/queue.log 2>&1 < /dev/null & disown; echo "waiter started for queue $Q"; else echo "NOT started: no queue found, or a waiter already exists"; fi
+    ```
+  - To change the end again while a waiter is waiting, stop that waiter first, then start a new one with the command above.
+    - The waiter is only a sleep loop, so stopping it leaves the queue untouched.
+    - `pgrep -af '[w]hile kill -0'` should then list exactly one waiter, with the new `END`.
+    ```bash
+    W=$(pgrep -f '[w]hile kill -0'); [ "$(echo $W | wc -w)" = 1 ] && kill "$W" && sleep 2; pgrep -af '[w]hile kill -0' || echo "old waiter stopped"
     ```
   - To change `queue.sh` itself while a queue runs, copy the new version to a temporary name and `mv` it into place. Bash reads a running script as it goes, so a file overwritten in place would run garbage.
 - **Copy back daily.** Results are small; checkpoints and merged models stay on the node.
