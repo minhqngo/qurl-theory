@@ -22,6 +22,8 @@ paper/*.log
 experiments/**/score_*.json
 # - S4's daily copies from the rental (interim; each supersedes the last, and the final one will be tracked)
 experiments/s4/rental/
+# - the revision experiments' copies from the H100 (interim, as for S4)
+experiments/rev/copies/
 
 # Local tool settings
 .claude/settings.local.json

@@ -5,7 +5,7 @@
 
 \title{P1 Experiments:\\Testing the UAQ and Update-Tracking Theory}
 \author{Experiments report for research problem P1 (draft)}
-\date{18 November 2026 (split from the theory note on 12 November)}
+\date{20 November 2026 (split from the theory note on 12 November)}
 
 \begin{document}
 \maketitle
@@ -26,6 +26,7 @@
   \item In policy space the INT8 rollout follows the trainer with slope 0.93 over the run, where a frozen rollout gives 0. The registered $\pm10\%$ band fails in 2 of 11 checks.
   \item On stored checkpoints, Assumption~U holds at the rounding boundary in all 21 cells (7 projection types of the 0.5B, 1.5B and 7B models). Its bulk test fails narrowly in one cell (0.052 against 0.05), again from BF16 storage. Lemma~1's condition $\sigma/\Delta\ge1$ holds in every row.
   \end{itemize}
+\item \textbf{Revision experiments X1--X7} (\cref{sec:rev}) were pre-registered on 20 November, after the paper's blind reviews. They test whether S3's INT8 gap comes from INT8 training or from INT8 scoring, whether R4 and R5 stall equally often, and whether the rounding at $s=1.5$ acts like noise. Results are pending.
 \item \textbf{Overall} (\cref{sec:assessment}), nothing in the experiments contradicts a theoretical result where its assumptions hold. E2's one registered weight-space failure, at the first update, is where BF16 storage breaks Assumption~U, by an exploratory analysis. The largest remaining gap is E3, what drives the mismatch rise, which is left to P4. The INT8 accuracy gap is what E3 and P6 would have to explain and close.
 \end{itemize}
 
@@ -52,6 +53,7 @@ S1 & Q1 on real kernels & step-0 identity test in vLLM, three model sizes & done
 S2 & Q2, exactly & deterministic 20-step QuRL loop, UAQ vs.\ Theorem~2 settings at $s=2$ & done\\
 S3 & Q5: H1--H3 & GSM8K PPO in VeRL: R1--R6 $\times$ 3 seeds ($+2$ for R4, R5); Table~1 reproduction & done (22 of 22)\\
 E2, E3 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & E2 done; E3 left to P4\\
+X1--X7 & the reviews' concerns & S3's INT8 gap split into training and scoring (X1--X3); R4's and R5's stalls over 30 seeds (X5); the rounding at $s=1.5$ (X4, X6); S1 on vLLM 0.24 (X7) & registered 20 Nov.; queued on the H100\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -204,6 +206,178 @@ P5$'$: not frozen & the same slope & $>0.5$\\
 \item \textbf{E3}, logged during training: per-layer $\|e_k\|/\|\theta_k\|$, weight and activation absmax, exact KL by position and by token probability. What drives the mismatch growth is research problem P4's question, so E3 is left to P4. Its one P1 part, the stationary size of the weight error, is P6a of E2 (\cref{sec:e2}).
 \item \textbf{Link to 7B.} Early in Adam training each element moves by about $\eta$ per step, so $\nu_l\approx\eta/\Delta_l$, computable from the 7B checkpoint without training it. Comparing the distributions of $\nu_l$ shows whether a smaller model's runs are in the 7B model's tracking regime (Proposition~4 depends only on $|d|/\Delta$).
 \item \textbf{Why not paper scale.} A 7B full fine-tune needs about 112\,GB for weights, gradients and Adam state alone; R3--R5 $\times$ 3 seeds would take 1{,}400--2{,}700 H100-hours. H1 at 7B is future work.
+\end{itemize}
+
+\subsection{Revision experiments X1--X7 (pre-registered 2026-11-20)}\label{sec:rev}
+The paper's two blind reviews raised two concerns that the single H100 can answer before its lease ends on 28 November:
+\begin{itemize}
+\item whether S3's INT8 gap of about 5 points is a cost of scoring with the INT8 policy or a cost of training with INT8 rollouts;
+\item whether R5's early stalls (2 of 5 seeds, against 0 of 5 for R4) mark a difference between UAQ and its matched settings.
+\end{itemize}
+X1--X7 answer them and check three further points. Everything is in \texttt{experiments/rev/} and runs from one resumable queue. The five analyses were written before any of these data existed and are frozen by SHA-256 in \texttt{registration.sha256}; the queue refuses to start if one has changed. Any later change is recorded here, and results from both versions are reported.
+\begin{itemize}
+\item \textbf{Seen beforehand.}
+  \begin{itemize}
+  \item Everything in S1--S3 and E2, as reported below. This includes S3's R1 and R3 runs for seeds 1--3, which X3 repeats with checkpoints; S3's step-29 validations, behind X5's stall definition; and S1's ratios at $s=1.5$, which X6 tests.
+  \item Laptop smoke tests of every job, none of them reported. The laptop's GPU has no CUTLASS INT8 kernel, so they ran on vLLM's Triton INT8 kernel:
+    \begin{itemize}
+    \item the scorer on 64 problems with the base model (BF16 0.0\%, INT8 1.6\%);
+    \item a 2-step R3 run with X3's settings, its checkpoints merged and scored on 16 problems (0\% in both formats);
+    \item X4 with a tiny model, and with the 0.5B model at step 0;
+    \item X6 with the 0.5B model as a stand-in, two draws and 12 responses;
+    \item X7 on 12 responses, where INT8 at $s=2$ was bit-identical to the original.
+    \end{itemize}
+  \end{itemize}
+\item \textbf{Scorer} (\texttt{score\_gsm8k.py}). It scores a checkpoint on GSM8K's 1{,}319 test problems the way VeRL validates S3's runs: the same prompts, greedy decoding up to 512 tokens, VeRL's reward rule, and S3's stack. It has two formats.
+  \begin{itemize}
+  \item \emph{BF16} serves the weights in BF16, like the R1 and R2 rollout engine.
+  \item \emph{INT8} quantizes every decoder linear weight from its FP32 value with the rollout's own quantizer, into a W8A8 checkpoint with S3's configuration, served by the CUTLASS INT8 kernel. This is the model the R3--R6 rollout engine holds after a sync.
+  \end{itemize}
+  Trained actors are written in FP32 by a merger of our own, which refuses anything but FP32. VeRL's merger casts to BF16, which would move weights near a row's maximum by up to half an INT8 step (E2's BF16 lattice).
+\end{itemize}
+
+\paragraph{X1--X3: the INT8 gap.}
+\begin{itemize}
+\item \textbf{Data.}
+  \begin{itemize}
+  \item \emph{X3:} R1 and R3, seeds 1--3, rerun with S3's call, plus VeRL's own validation at step 0 and the actor's weights at every validation step. Each checkpoint (steps 29--435) is scored in both formats.
+  \item \emph{X1:} the base model, which is step 0 of every run, and S3's UAQ checkpoint, both in both formats.
+  \item \emph{X2:} E2's recorded weights at its 14 full syncs (an R3 run, seed~1), in both formats, if the dumps still exist.
+  \end{itemize}
+\item \textbf{Quantities}, in points of late accuracy (the mean over steps 319--435, S3's primary endpoint), with $A_f$ the scorer's accuracy in format $f$:
+  \begin{itemize}
+  \item $T=A_{\mathrm{bf16}}(\mathrm{R1})-A_{\mathrm{bf16}}(\mathrm{R3})$, the training effect: both arms' trained weights scored in BF16;
+  \item $C_3=A_{\mathrm{bf16}}(\mathrm{R3})-A_{\mathrm{int8}}(\mathrm{R3})$, the scoring cost on INT8-trained weights;
+  \item $C_1=A_{\mathrm{bf16}}(\mathrm{R1})-A_{\mathrm{int8}}(\mathrm{R1})$, the scoring cost on BF16-trained weights;
+  \item $D=C_3-C_1$: does INT8 training change what INT8 scoring costs?
+  \end{itemize}
+  S3's gap is $G=A_{\mathrm{bf16}}(\mathrm{R1})-A_{\mathrm{int8}}(\mathrm{R3})$, and $G=T+C_3$ exactly.
+\item \textbf{Gate.} The scorer must reproduce VeRL's own validation in each run's own format (R1 in BF16, R3 in INT8) at every validation step from 0 to 435. Per format:
+  \begin{itemize}
+  \item the mean signed difference is within $\pm0.5$ points;
+  \item the mean absolute difference is at most 1.0 point;
+  \item no single difference exceeds 3.0 points.
+  \end{itemize}
+  If either format fails, every verdict carries ``scorer not validated''.
+\item \textbf{Decision rules} for $T$, $C_3$, $C_1$ and $D$: paired by seed, with t-intervals on 2 degrees of freedom and S3's margin $\delta=2$ points.
+  \begin{itemize}
+  \item \emph{Positive} if the 95\% CI lies above 0; ``within the margin'' is added if the 90\% CI's upper end is at most $\delta$.
+  \item \emph{Negative} likewise, below 0.
+  \item \emph{No effect beyond $\pm\delta$} if neither holds and the 90\% CI lies within $[-\delta,\delta]$.
+  \item \emph{Inconclusive} otherwise.
+  \item \emph{Incomplete} unless all three seeds have all five late steps scored in both formats.
+  \end{itemize}
+\item \textbf{Reading.} A positive $T$ means INT8 rollouts cost accuracy even when the trained weights are scored in BF16. A positive $C_3$ means part of S3's gap is the cost of scoring with the INT8 policy.
+\item \textbf{Power.} With three seeds a contrast is detected only if its mean exceeds about 2.5 paired SDs ($t_{0.975,2}=4.30$).
+\item \textbf{Also reported, without verdicts.}
+  \begin{itemize}
+  \item $G$ and the share $C_3/G$, and the contrasts at step 435 alone;
+  \item their time courses next to VeRL's validations;
+  \item X1's step-0 scoring cost, and the UAQ checkpoint's scores against the base model's, which Theorem~1 makes equal in exact arithmetic;
+  \item X2's scoring cost at each sync.
+  \end{itemize}
+\end{itemize}
+
+\paragraph{X5: early stalls.}
+\begin{itemize}
+\item \textbf{Data.} 29-step runs with S3's call, validated by VeRL at step 29: R4 and R5 for seeds 6--35, paired by seed, and R3 for seeds 6--15 as a reference. None of these seeds has run before.
+\item \textbf{Stall} (S3's description, fixed before these runs): validation below 10\% at step 29. S3's four stalled runs validated at 0.0--5.5\% at step 29, and every other S3 run at 33.9\% or more.
+\item \textbf{Primary test,} the stall part of H1: the exact McNemar test over the seeds where both R4 and R5 completed.
+  \begin{itemize}
+  \item ``R5 stalls more often'' if $p<0.05$ and more seeds stalled in R5 alone than in R4 alone;
+  \item ``R4 stalls more often'' for the reverse;
+  \item ``no detectable difference'' otherwise.
+  \end{itemize}
+  It is reported with each arm's stall rate (Clopper--Pearson 95\% CI) and the paired difference in rates (95\% percentile bootstrap over seeds).
+\item \textbf{Power} for 30 pairs and independent stalls:
+  \begin{itemize}
+  \item 0.88 if the rates are 40\% and 5\% (S3 had R5 at 2 of 5 and R4 at 0 of 5);
+  \item 0.62 for 30\% and 5\%;
+  \item 0.25 for 20\% and 5\%.
+  \end{itemize}
+  Stalls that share a seed's prompt order lower it.
+\item \textbf{Data rule.} If fewer than the 30 registered pairs complete before the lease ends, the test runs on those available and says so.
+\item \textbf{Also reported, without verdicts.}
+  \begin{itemize}
+  \item R3's stall rate next to R4's and R5's on seeds 6--15;
+  \item on seeds where neither stalled, R4 $-$ R5 in step-29 accuracy and in early reward (steps 1--29), with 95\% t-intervals;
+  \item each run's longest stretch without a correct training answer;
+  \item S3's runs pooled with these, labelled as seen.
+  \end{itemize}
+\end{itemize}
+
+\paragraph{X4: does the rounding at \texorpdfstring{$s=1.5$}{s = 1.5} act like noise?}
+H1 rests on the hypothesis of Remark~3 that at $s=1.5$ the rounding between UAQ and its matched settings acts like a change of seed. X4 tests it in S2's deterministic loop, imported unchanged, at $s=1.5$ and $\eta=10^{-6}$, with 50 rollout batches per arm.
+\begin{itemize}
+\item \textbf{Arms.}
+  \begin{itemize}
+  \item R4 and R5: the question.
+  \item R5p and R4p: R5 and R4 with every $W_{QKV}$ and $\gamma$ element moved by $\pm1$ ulp at step 0, the noise controls.
+  \item R4 repeated, which must be bit-identical to R4.
+  \item R5 with sampling seed~1 (same prompts), and with seed~1 for sampling and data order: changes of seed.
+  \end{itemize}
+\item \textbf{Rule metrics.}
+  \begin{itemize}
+  \item The relative distances between two arms' master weights in original coordinates (float64), separately for $W_{QKV}$, $\gamma$ and the rest.
+  \item The mean $|\Delta\log\pi|$ of the FP32 policy on a fixed probe set.
+  \end{itemize}
+\item \textbf{Decision rule.} At each step from 5 on, the noise pairs (R5, R5p) and (R4, R4p) span a band from $lo$ to $hi$ on each metric. R4 $-$ R5 is \emph{above} if it exceeds $2\,hi$, and \emph{below} if it is under $lo/2$.
+  \begin{itemize}
+  \item \emph{ULP-NOISE-LIKE}: never above or below, on any rule metric.
+  \item \emph{LARGER-THAN-ULP-NOISE}, \emph{SMALLER-THAN-ULP-NOISE} or \emph{MIXED} otherwise.
+  \item \emph{INVALID} if the repeat is not bit-identical, an arm is misconfigured, or a rule metric is not finite.
+  \item \emph{INCOMPLETE} if R4, R5 or both noise pairs are missing.
+  \end{itemize}
+  Secondary, against the change of seed: \emph{SEED-BOUNDED} if R4 $-$ R5 stays within twice it at every step, and \emph{SATURATED} if R4 $-$ R5 reaches at least half of it by the last step.
+\item \textbf{Reading.} ULP-NOISE-LIKE supports Remark~3's hypothesis that the rounding acts like noise; SATURATED adds that this noise grows to a change of seed within 50 batches.
+\end{itemize}
+
+\paragraph{X6: a null distribution for S1's FP8 ratios.}
+At $s=1.5$, S1 found FP8 ratios of 0.94--0.98 for 1.5B and 7B, with bootstrap intervals that exclude 1. The bootstrap covers the responses, not the BF16 re-rounding of the stored checkpoint.
+\begin{itemize}
+\item \textbf{Draws.} UAQ checkpoints at $s=1.45, 1.46,\dots,1.55$ (ten values, not 1.5), built with S1's script. By Theorem~1 each is the same quantized model up to BF16 re-rounding, so the ten are draws of that re-rounding.
+\item \textbf{Scoring.} Each draw is scored on S1's 512 responses exactly as in S1 (S1's scorer, vLLM 0.33): BF16, FP8 per-tensor, FP8 per-channel, and INT8 W8A8. The original and S1's $s=1.5$ checkpoint are re-scored, to check that S1's environment is reproduced. Ratios are computed as in S1: UAQ over original, each run against its own BF16 policy.
+\item \textbf{Decision rule,} per model, quantizer and metric. The primary cells are FP8 per-tensor and per-channel at 1.5B and 7B on mean $|\Delta\log p|$; $k_3$ and INT8 are secondary. With at least 8 usable draws, S1's ratio is:
+  \begin{itemize}
+  \item \emph{consistent with re-rounding noise} if it lies within the draws' range;
+  \item \emph{systematic} if it lies outside the range and outside the draws' 95\% prediction interval $m\pm t_{0.975,n-1}\,\mathrm{SD}\sqrt{1+1/n}$;
+  \item \emph{borderline} otherwise.
+  \end{itemize}
+  Under the null hypothesis the eleven ratios are exchangeable. The range part is then exact, with a $2/11$ chance of falling outside, and ``systematic'' has level 5\%. There is no correction for multiplicity.
+\item \textbf{Same environment.} If X6's re-scores differ from S1's by more than S1's shuffled-batch noise floor, the verdict uses X6's own $s=1.5$ re-score against the draws.
+\item \textbf{Also reported, without verdicts.}
+  \begin{itemize}
+  \item the draws' mean with its 95\% t-interval, and a sign test against 1: does re-rounding near $s=1.5$ shift the ratios at all?
+  \item the response-sampling SD of S1's ratio next to the re-rounding SD;
+  \item each draw's re-rounding size.
+  \end{itemize}
+\item \textbf{Caveat, stated in advance.} In BF16, $W/1.5$ is exact for the third of values whose significand is divisible by 3 and off by exactly $1/3$ ulp for the rest, while nearby $s$ spread the error over $\pm1/2$ ulp. A ``systematic'' verdict may point at this arithmetic rather than at a failure of Theorem~1.
+\end{itemize}
+
+\paragraph{X7: S1's identity on the RL runs' vLLM.}
+S1 ran on vLLM 0.33; every RL run used vLLM 0.24. X7 repeats S1's INT8 W8A8 and BF16 scoring of the 0.5B model on vLLM 0.24, with S1's scripts, checkpoints and responses. Its readings:
+\begin{itemize}
+\item \textbf{Identity at $s=2$:} reproduced only if INT8 at $s=2$ and the original give bit-identical log-probabilities on every response token.
+\item \textbf{At $s=1.5$:} the ratios with 95\% CIs; ``no $s$-fold reduction'' if both lower ends lie above $2/3$ (mean $|\Delta\log p|$) and $4/9$ ($k_3$).
+\item \textbf{Kernel:} CUTLASS only if every INT8 run selected it.
+\end{itemize}
+
+\paragraph{Order, data rules and code.}
+\begin{itemize}
+\item \textbf{Order.} X1, X7, X2, then X3 (seeds paired), X5 (by seed), X4 and X6. The queue takes about 72 hours on the H100 if nothing has to be repeated.
+\item \textbf{Data rules.} Every completed run counts, and a crashed run is re-run with the same seed. There is no verdict before an experiment's registered runs are complete, except for X5 as stated.
+\item \textbf{Code (frozen).} In \texttt{experiments/rev/}. Each analysis has a self-test with known answers.
+  \begin{itemize}
+  \item On S3's runs, \texttt{x5\_analysis.py} finds exactly S3's four stalls.
+  \item On S1's files, \texttt{x6\_analysis.py} and \texttt{x7\_analysis.py} reproduce S1's published ratios.
+  \item Under a simulated null, X6's rule places the ratio outside the range at close to the exact rate $2/11$, and calls ``systematic'' less than 6\% of the time.
+  \end{itemize}
+  SHA-256:\\
+\texttt{x3\_analysis.py} \texttt{\small a3c323cb340df5f86a8bf28d8d66e0c3723e575e29a6d314256ec47f48f17c15};\\
+\texttt{x4\_analysis.py} \texttt{\small 8a563bd245fe91833b7cd1a12664dce7ef1d523dee972d09d765a61b73c972bd};\\
+\texttt{x5\_analysis.py} \texttt{\small 56578eb8b0e2e5e5524b96adfae8d2c0f75372e518e501194829e844e4e65a9f};\\
+\texttt{x6\_analysis.py} \texttt{\small 2c6cfe916bc83a1d422e7407cc55c86c82f6c9ed894f7a06354525442dd2c465};\\
+\texttt{x7\_analysis.py} \texttt{\small 2333abe3253562513ced9696b6f46805f09ba58db4d83fdb46b1dc23a5a75e4b}.
 \end{itemize}
 
 % =====================================================================================
@@ -704,14 +878,14 @@ Claim & Theory & Evidence so far & Status\\
 \midrule
 \endhead
 UAQ leaves the rollout model unchanged & Thm.~1 & float64; vLLM INT8 bit-identical at $s=2$ (3 sizes); no change at $s=1.5$; in RL, R4's mean $k_3$ within 0.80--1.25 of R3's, and H2's registered mismatch test supported (ratio of ratios 1.10) & established\\
-UAQ $=$ matched optimizer settings & Thm.~2, Cor.~3 & float64; bit-identical 20-step loop; VeRL check; H1 (registered, 5 seeds): R4 $-$ R5 $=+8.5$ points late, 90\% CI $[-7.5, 24.4]$ & exact equivalence established; H1 in RL inconclusive\\
+UAQ $=$ matched optimizer settings & Thm.~2, Cor.~3 & float64; bit-identical 20-step loop; VeRL check; H1 (registered, 5 seeds): R4 $-$ R5 $=+8.5$ points late, 90\% CI $[-7.5, 24.4]$; X4 and X5 registered (\cref{sec:rev}) & exact equivalence established; H1 in RL inconclusive\\
 Rounding phase is uniform & Assum.~U, Lem.~1 & E2 static, 21 cells (0.5B, 1.5B, 7B): boundary share within 1.1\% of uniform; bulk ($|c|\le15$) within 5\% in 20 (one at 5.2\%, BF16 storage); $\sigma/\Delta\ge1$ in every row. E2 run: U1, U2 hold at all 14 syncs & holds as registered but for one bulk cell; BF16 storage breaks it at the scale of one update\\
 Updates are captured & Props.~3--5 & float64; S3 pilot 0.21\% vs.\ 0.20\%. E2: capture slope 0.97--0.99 after the first update, 0.93 at it; policy-space slope 0.93, not frozen & established after the first update; P5's $\pm10\%$ band failed in 2 of 11\\
 Error is persistent; error feedback bounds it & Props.~6--7 & float64; E2: $\Corr(\varphi_k,\varphi_0)$ within 0.02 of $1-6a(1-a)$, 0.69 after 435 steps; error feedback bounded & established on a real run; P6 pending\\
 UAQ's effect is not quantization-specific & Cor.~3 & H2 (registered, 3 seeds): late accuracy $-0.1$ points, 90\% CI $[-4.5, 4.3]$; mismatch ratio of ratios 1.10, $[1.015, 1.20]$; final accuracy $+1.7$ (secondary) & accuracy inconclusive; mismatch supported\\
 A global learning rate is the wrong control & Thm.~2 & H3 (registered, 3 seeds): R6 $-$ R4 $=-0.5$ points late, $[-5.2, 4.2]$; inconclusive on every endpoint & inconclusive\\
 QuRL's Table~1 at $\eta=10^{-5}$ & --- & not reproduced & open (ask the authors)\\
-INT8 rollouts cost little accuracy (Table~1: 1.8 points) & --- & at $\eta=10^{-6}$: BF16 53.9--56.6\% late (6 runs), INT8 at most 53.0\% (16 runs); gap 4.9 points averaged over UAQ (95\% CI $[2.3, 7.6]$); INT8 scored on the INT8 engine & gap larger than the paper's; cause open (E3, P6)\\
+INT8 rollouts cost little accuracy (Table~1: 1.8 points) & --- & at $\eta=10^{-6}$: BF16 53.9--56.6\% late (6 runs), INT8 at most 53.0\% (16 runs); gap 4.9 points averaged over UAQ (95\% CI $[2.3, 7.6]$); INT8 scored on the INT8 engine & gap larger than the paper's; cause open (X1--X3 registered; E3, P6)\\
 \bottomrule
 \end{xltabular}}
 
