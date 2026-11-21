@@ -76,6 +76,7 @@ The paper states 200 steps, lr 1e-6, 512 prompts × 16 responses, clip 0.2/0.28 
 | B | full 7B R3 | UAQ's effect; M2 over the whole run; Table 4 |
 | C | full 7B R6 | the paper's control |
 | D | full 1.5B R4, R5 | H1 at 1.5B |
+| E | full 1.5B R3 | the whole-run M2 and UAQ's effect at 1.5B (added 2026-11-21 for the node's idle time after D; decided on timing alone, before any result of D was looked at) |
 
 What fits, from the queue's own dry run (`queue.sh` with `DRY_RUN=1` simulates its clock). Day 1 includes the 0.5 h node bootstrap; adding it changed no scenario's outcome.
 
@@ -245,6 +246,15 @@ bash ~/qurl/s4/queue.sh --list
     W=$(pgrep -f '[w]hile kill -0'); [ "$(echo $W | wc -w)" = 1 ] && kill "$W" && sleep 2; pgrep -af '[w]hile kill -0' || echo "old waiter stopped"
     ```
   - To change `queue.sh` itself while a queue runs, copy the new version to a temporary name and `mv` it into place. Bash reads a running script as it goes, so a file overwritten in place would run garbage.
+  - **A queue restarted by a waiter (`waiter.sh`, since 2026-11-21).** The waiter that restarted the queue may live on as the queue's parent. Its command line still contains `while kill -0`, so the guard above would refuse a new waiter. `waiter.sh` does the same job safely:
+    - it finds the one running queue, leaving waiters out. A queue appears as several processes, because bash runs its `while` loop in a subshell with the same command line; the queue is the root of that tree;
+    - it refuses if there is none, more than one, or already a waiter for that queue;
+    - it starts the waiter.
+
+    Block E was added this way: the new `queue.sh` was copied to a temporary name and moved into place, then `waiter.sh` was run.
+    ```bash
+    END='2026-11-23 01:00 UTC' BUFFER_H=10 bash ~/qurl/s4/waiter.sh
+    ```
 - **Copy back daily.** Results are small; checkpoints and merged models stay on the node.
   ```bash
   ssh <rental> "cp /var/log/qurl-gpu-monitor.csv qurl/s4/results/node/; tar czf s4_results.tgz --exclude='*.pt' -C qurl/s4 results queue.log gates.log setup.log env.txt"

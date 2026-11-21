@@ -9,7 +9,9 @@
 #   f  full run: the paper's 200 steps, validation and checkpoints every 20 steps, final evaluation (s4_<size>_<arm>_s<k>).
 # Order: M (mechanism runs 1.5B R4, R5, R6 and 7B R6, R4, R5) | A 7B R4/R5 (H1 at the paper's scale; their
 # first 20 steps give M1 at 7B, which the 7B R4/R5 mechanism runs give if the pair does not fit) | B 7B R3 (UAQ's
-# effect, M2 over training, Table 4) | C 7B R6 (the paper's control) | D 1.5B R4/R5.
+# effect, M2 over training, Table 4) | C 7B R6 (the paper's control) | D 1.5B R4/R5 | E 1.5B R3 (added 2026-11-21 for
+# the node's idle time after D; it gives the whole-run M2 and UAQ's effect at 1.5B; decided on timing alone, before any
+# result of D was looked at).
 # Whatever the 5 days allow is the most useful prefix.
 # Before the first run it requires results/gates/PASSED (gates.sh, gates G2-G4); FORCE=1 overrides.
 # Per run: run.sh (training, summary; for full runs finish.sh = merge + evaluation). A failed run is retried once (a
@@ -39,6 +41,7 @@ plan() {   # "kind size arm seed tag runs" in run order; runs = 2 for the first 
     echo "f 7b R3 1 1"                                                                     # B
     echo "f 7b R6 1 1"                                                                     # C
     echo "f 1.5b R4 1 2"; echo "f 1.5b R5 1 0"                                             # D
+    echo "f 1.5b R3 1 1"   # E, added 2026-11-21: the idle time after D (whole-run M2 and R4 - R3 at 1.5B)
   } | while read -r kind size arm seed runs; do
     if [ "$kind" = m ]; then tag=s4m_${size}_${arm}_s${seed}; else tag=s4_${size}_${arm}_s${seed}; fi
     echo "$kind $size $arm $seed $tag $runs"

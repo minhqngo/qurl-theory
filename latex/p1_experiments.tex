@@ -29,9 +29,9 @@
 \item \textbf{Revision experiments X1--X7} (\cref{sec:rev}) were pre-registered on 20 November, after the paper's blind reviews. They test whether S3's INT8 gap comes from INT8 training or from INT8 scoring, whether R4 and R5 stall equally often, and whether the rounding at $s=1.5$ acts like noise. First results (\cref{sec:rev-results}):
   \begin{itemize}
   \item Theorem~1's identity at $s=2$ holds on the RL runs' vLLM too (X7).
-  \item The scorer reproduces VeRL's BF16 validation.
-  \item On E2's INT8-trained weights, scoring in INT8 costs about 3 points late in training. Early in training, INT8 scores far above BF16.
-  \item The registered verdicts on the gap await X3's three seeds.
+  \item The scorer reproduces VeRL's validation in both formats, which validates it so far.
+  \item With two of X3's three seeds, S3's INT8 gap splits about evenly between the effect of INT8 training and the cost of INT8 scoring. The registered verdicts await the third seed.
+  \item One R3 rerun stalled for 145 steps, although S3's run with the same seed did not.
   \end{itemize}
 \item \textbf{Overall} (\cref{sec:assessment}), nothing in the experiments contradicts a theoretical result where its assumptions hold. E2's one registered weight-space failure, at the first update, is where BF16 storage breaks Assumption~U, by an exploratory analysis. The largest remaining gap is E3, what drives the mismatch rise, which is left to P4. The INT8 accuracy gap is what E3 and P6 would have to explain and close.
 \end{itemize}
@@ -59,7 +59,7 @@ S1 & Q1 on real kernels & step-0 identity test in vLLM, three model sizes & done
 S2 & Q2, exactly & deterministic 20-step QuRL loop, UAQ vs.\ Theorem~2 settings at $s=2$ & done\\
 S3 & Q5: H1--H3 & GSM8K PPO in VeRL: R1--R6 $\times$ 3 seeds ($+2$ for R4, R5); Table~1 reproduction & done (22 of 22)\\
 E2, E3 & Q3--Q4 on real runs & tracking diagnostics (E2) and mismatch attribution (E3) & E2 done; E3 left to P4\\
-X1--X7 & the reviews' concerns & S3's INT8 gap split into training and scoring (X1--X3); R4's and R5's stalls over 30 seeds (X5); the rounding at $s=1.5$ (X4, X6); S1 on vLLM 0.24 (X7) & registered 20 Nov.; running: X1, X2, X7 done\\
+X1--X7 & the reviews' concerns & S3's INT8 gap split into training and scoring (X1--X3); R4's and R5's stalls over 30 seeds (X5); the rounding at $s=1.5$ (X4, X6); S1 on vLLM 0.24 (X7) & registered 20 Nov.; running: X1, X2, X7 done, X3 at 4 of 6 runs\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -810,12 +810,12 @@ P5$'$: slope $>0.5$, the same 11 slopes & 0.8985--1.169 & \textbf{holds}, 11 of 
 \end{itemize}
 
 \subsection{Revision experiments: first results (21 November)}\label{sec:rev-results}
-The queue (\cref{sec:rev}) started on 20 November at 14:16 UTC, after checking the frozen analyses' hashes. These results come from the first copy, taken at 21:43 UTC.
+The queue (\cref{sec:rev}) started on 20 November at 14:16 UTC, after checking the frozen analyses' hashes. These results come from two copies, taken at 21:43 UTC on 20 November and at 11:41 UTC on 21 November.
 \begin{itemize}
-\item \textbf{Done:} X1, X7, X2, and X3's first run, R1 seed~1. R3 seed~1 has started.
-\item \textbf{Health:} every job ran at its first attempt, every INT8 scoring used the CUTLASS INT8 kernel, and all 29 merged checkpoints were FP32.
-\item \textbf{Pace:} X3's first run took 5.4 hours, within the budget.
-\item \textbf{Analyses:} \texttt{x3\_analysis.py} and \texttt{x7\_analysis.py} ran unchanged on the copy.
+\item \textbf{Done:} X1, X7, X2, and four of X3's six runs: R1 and R3 for seeds 1 and 2. R1 seed~3 started at 11:32 UTC.
+\item \textbf{Health:} every job ran at its first attempt, every INT8 scoring used the CUTLASS INT8 kernel, and all 74 merged checkpoints were FP32.
+\item \textbf{Pace:} X3's R1 runs took 5.4 hours each and its R3 runs 4.9--5.0 hours, within the budget.
+\item \textbf{Analyses:} \texttt{x3\_analysis.py} and \texttt{x7\_analysis.py} ran unchanged on the copies.
 \end{itemize}
 
 \paragraph{X7: Theorem~1 holds on the RL runs' vLLM (registered readings).}
@@ -830,11 +830,18 @@ The queue (\cref{sec:rev}) started on 20 November at 14:16 UTC, after checking t
 
 \paragraph{X1: step 0.} The base model scores 0.08\% (one problem of 1{,}319) in both formats: before training it rarely uses the strict ``\#\#\#\# answer'' format. S3's UAQ checkpoint scores the same in BF16, with 100\% of problems scored alike. In INT8 it scores 0.30\%, with 99.8\% alike: three more problems.
 
-\paragraph{The scorer gate, so far.}
-\begin{itemize}
-\item \textbf{BF16 half: passes} on R1 seed~1. Over its 16 validations (steps 0--435), the scorer differs from VeRL's own validation by $-0.06$ points on average, 0.43 in absolute value, and 1.06 at most, against limits of 0.5, 1.0 and 3.0.
-\item \textbf{INT8 half: waits for X3's R3 runs.} One comparison outside X3 exists. On E2's final weights (sync 436), the scorer's INT8 accuracy is 48.98\%, against 49.73\% from VeRL's INT8 validation at step 435 ($-0.75$).
-\end{itemize}
+\paragraph{The scorer gate: passed so far, in both formats.} On the four finished runs, the scorer reproduces VeRL's own validation in each run's own format, at all 16 validations per run (steps 0--435). The limits are 0.5, 1.0 and 3.0 points.
+\begin{center}\small
+\begin{tabular}{@{}l c c c c@{}}
+\toprule
+Format (runs) & Pairs & Mean signed & Mean absolute & Largest\\
+\midrule
+BF16 (R1, seeds 1--2) & 32 & $+0.05$ & 0.43 & 1.52\\
+INT8 (R3, seeds 1--2) & 32 & $+0.10$ & 0.56 & 1.97\\
+\bottomrule
+\end{tabular}
+\end{center}
+The registered gate is applied to all six runs at the end. Outside X3, the scorer's INT8 accuracy on E2's final weights is 48.98\%, against 49.73\% from VeRL's own validation at step 435.
 
 \paragraph{X2: INT8 scoring along E2's INT8-trained run (descriptive).}
 \begin{center}\small\setlength{\tabcolsep}{3pt}
@@ -853,13 +860,13 @@ BF16 $-$ INT8 & 0.0 & $-0.9$ & $-0.1$ & $-3.0$ & $-9.3$ & $-32.2$ & $-17.2$ & $-
   \begin{itemize}
   \item At sync 17 (after step 16), INT8 scores 38.6\% and BF16 6.4\%. INT8 alone solves 461 problems, BF16 alone 36.
   \item INT8's answers there are also longer: 49\% are cut at 512 tokens, against 5\% in BF16.
-  \item Trained on INT8 rollouts, the policy thus first learns to answer in its INT8 form. Its BF16 form catches up by sync 65.
+  \item In this run the policy first learned to answer in its INT8 form, and its BF16 form caught up by sync 65. This is not general: in X3's R3 seed~1 the order was reversed at step 29 (BF16 33.7\%, INT8 25.5\%).
   \item VeRL validates R3 runs on the INT8 engine, so S3's R3 accuracies were INT8 scores throughout.
   \end{itemize}
 \item \textbf{From sync 129 on, BF16 leads by 2.7--3.6 points.} So late in the run, INT8 scoring costs about 3 points on INT8-trained weights. Over the same run, E2's policy-space mismatch rose 3.5-fold (\cref{sec:e2-dyn}).
 \end{itemize}
 
-\paragraph{X3: the first run (R1, seed 1).}
+\paragraph{X3: R1 seed 1, step by step.}
 \begin{center}\small\setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}l *{15}{c}@{}}
 \toprule
@@ -874,7 +881,34 @@ $C_1$ & $+6.7$ & $+4.9$ & $+4.5$ & $+2.7$ & $+1.9$ & $+3.7$ & $+0.8$ & $+3.0$ & 
 \end{center}
 \begin{itemize}
 \item \textbf{INT8 scoring of BF16-trained weights costs 6.7 points at step 29 and 1.1 over the late steps} (BF16 53.9\%, INT8 52.8\%). Early INT8 answers run long here too: at step 29, 19\% are cut at 512 tokens, against 2\% in BF16.
-\item \textbf{Same-seed reruns differ.} The run's late accuracy, 53.8\% by VeRL's validation, is 2.1 points below S3's run with the same seed (55.9\%). That is about the spread of S3's three R1 seeds (54.8--56.6\%). VeRL's runs are not bit-reproducible.
+\end{itemize}
+
+\paragraph{X3: two of the three seeds.} Late accuracy (steps 319--435) in points, and the registered quantities per seed:
+\begin{center}\small
+\begin{tabular}{@{}l c c c c c c c c c@{}}
+\toprule
+Seed & R1 BF16 & R1 INT8 & R3 BF16 & R3 INT8 & $T$ & $C_3$ & $C_1$ & $D$ & $G$\\
+\midrule
+1 & 53.9 & 52.8 & 49.5 & 45.7 & $+4.5$ & $+3.7$ & $+1.1$ & $+2.6$ & $+8.2$\\
+2 & 54.2 & 51.4 & 52.7 & 51.5 & $+1.5$ & $+1.2$ & $+2.8$ & $-1.6$ & $+2.7$\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item \textbf{No verdicts yet:} the registered contrasts need all three seeds. In both seeds so far, the gap splits roughly evenly between the training effect $T$ and the INT8 scoring cost $C_3$. Over the two seeds, $C_3$ is 45\% of $G$.
+\item \textbf{R3 seed~2 stalled for 145 steps.}
+  \begin{itemize}
+  \item VeRL's validation read 0.0\% from step 29 to step 116 and 0.3\% at step 145, then 45.5\% at step 174. The training reward was zero for 133 consecutive steps.
+  \item The scorer's BF16 accuracy was 0.0\% as well, so the stall is in the weights, not in INT8 scoring.
+  \item S3's R3 seed~2 did not stall, so the seed does not decide a stall. After recovering, the run reached S3's late accuracy (51.4\%).
+  \end{itemize}
+\item \textbf{Same-seed reruns differ.} By VeRL's validation, late accuracy is:
+  \begin{itemize}
+  \item R1 seed~1: 53.8\% (S3: 55.9\%);
+  \item R1 seed~2: 54.5\% (S3: 54.8\%);
+  \item R3 seed~1: 45.8\% (S3: 50.2\%; E2: 50.6\%).
+  \end{itemize}
+  VeRL's runs are not bit-reproducible.
 \end{itemize}
 
 \paragraph{Seen before X3's verdicts (exploratory).}
@@ -882,10 +916,11 @@ $C_1$ & $+6.7$ & $+4.9$ & $+4.5$ & $+2.7$ & $+1.9$ & $+3.7$ & $+0.8$ & $+3.0$ & 
 \item \textbf{A first look at the decomposition,} from one seed: E2's syncs 257--436 combined with R1 seed~1's late scores.
   \begin{itemize}
   \item \emph{The gap:} $G\approx4.1$ points. It splits into $C_3\approx3.1$, the scoring cost on E2's weights, and $T\approx1.0$, R1's late BF16 accuracy against E2's in BF16. With syncs 435 and 436 alone, $G\approx4.6$, $C_3\approx3.1$ and $T\approx1.5$.
-  \item \emph{Reading:} if X3 confirms this, most of the INT8 gap is the cost of scoring with INT8, not of training with INT8 rollouts.
+  \item \emph{Reading at the time:} most of the INT8 gap would be the cost of scoring with INT8, not of training with INT8 rollouts.
   \item \emph{The two scoring costs:} $C_3\approx3.1$ against $C_1\approx1.1$, so INT8 training would also raise what INT8 scoring costs ($D\approx+2$).
   \end{itemize}
-\item \textbf{Limits.} This look stands in E2's run for X3's own R3 runs, and uses E2's last syncs in place of late means. With one seed, it decides nothing. The registered contrasts need all three seeds.
+\item \textbf{Limits.} This look stood in E2's run for X3's own R3 runs, and used E2's last syncs in place of late means. With one seed, it decided nothing.
+\item \textbf{X3's own runs do not bear it out so far.} With seeds 1--2, $C_3$ is 45\% of the gap rather than three quarters, and $D$ is $+2.6$ and $-1.6$.
 \end{itemize}
 
 % =====================================================================================
@@ -970,7 +1005,7 @@ Error is persistent; error feedback bounds it & Props.~6--7 & float64; E2: $\Cor
 UAQ's effect is not quantization-specific & Cor.~3 & H2 (registered, 3 seeds): late accuracy $-0.1$ points, 90\% CI $[-4.5, 4.3]$; mismatch ratio of ratios 1.10, $[1.015, 1.20]$; final accuracy $+1.7$ (secondary) & accuracy inconclusive; mismatch supported\\
 A global learning rate is the wrong control & Thm.~2 & H3 (registered, 3 seeds): R6 $-$ R4 $=-0.5$ points late, $[-5.2, 4.2]$; inconclusive on every endpoint & inconclusive\\
 QuRL's Table~1 at $\eta=10^{-5}$ & --- & not reproduced & open (ask the authors)\\
-INT8 rollouts cost little accuracy (Table~1: 1.8 points) & --- & at $\eta=10^{-6}$: BF16 53.9--56.6\% late (6 runs), INT8 at most 53.0\% (16 runs); gap 4.9 points averaged over UAQ (95\% CI $[2.3, 7.6]$); INT8 scored on the INT8 engine; X2 (one run): INT8 scoring itself costs about 3 points late & gap larger than the paper's; X3 running (E3, P6)\\
+INT8 rollouts cost little accuracy (Table~1: 1.8 points) & --- & at $\eta=10^{-6}$: BF16 53.9--56.6\% late (6 runs), INT8 at most 53.0\% (16 runs); gap 4.9 points averaged over UAQ (95\% CI $[2.3, 7.6]$); INT8 scored on the INT8 engine; X3 (2 of 3 seeds): the gap splits about evenly between INT8 training and INT8 scoring & gap larger than the paper's; X3 running (E3, P6)\\
 \bottomrule
 \end{xltabular}}
 

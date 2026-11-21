@@ -4,7 +4,7 @@
 
 \title{P1 Experiment S4:\\UAQ in QuRL's DAPO Setting at 7B}
 \author{S4 report for research problem P1 (in progress)}
-\date{20 November 2026}
+\date{21 November 2026}
 
 \begin{document}
 \maketitle
@@ -13,11 +13,11 @@
 
 \section*{In short}\addcontentsline{toc}{section}{In short}
 \begin{itemize}
-\item \textbf{Status.} The gates passed on 16 November. All eight mechanism runs (25 steps each, at 1.5B and 7B) and the full 7B R4, R5 and R3 runs have finished, each at its first attempt. On 20 November the full 7B R6 run (block~C) was at step 134 of 200, with block~D to follow. The rental was extended twice, now to 23 November at 01:00 UTC.
+\item \textbf{Status.} The gates passed on 16 November. All eight mechanism runs (25 steps each, at 1.5B and 7B) and all four full 7B runs have finished, each at its first attempt. Block~D, the full 1.5B R4/R5 pair, started on 20 November at 23:45 UTC, and its first run took 10.7 hours. Block~E, a full 1.5B R3 run, was added for the node's idle time after D. The rental was extended twice, now to 23 November at 01:00 UTC.
 \item \textbf{M1 holds at both sizes} (\cref{sec:mblock,sec:full7b}). All 16 registered ratios are ``consistent'', the 7B ones now final, from the full runs. R4 (UAQ) and R5, which never touches the quantizer, change the same number of INT8 codes: R4/R5 is 1.00 at both sizes. So UAQ's extra code changes are a learning-rate effect.
 \item \textbf{M2: no meaningful change.} The mismatch ratio R4/R3 is 0.88 at 1.5B and 0.92 at 7B over steps 1--20, and 0.85 over the whole 7B run, all inside $[0.80,1.25]$.
-\item \textbf{Table~4 reproduced at 7B.} AIME 2024 Avg@32 is 30.3\% for R3 (the paper: 30.6\%) and 32.2\% for R4 (31.3\%); R5 reaches 34.8\%. With one run per arm, the differences between arms are descriptive.
-\item \textbf{An instability in R3 and R4 (exploratory).} Within a few steps the mismatch rose up to 20-fold, together with entropy and response length: in R3 from step 117, in R4 from step 160. R3's validation then fell by 11 points. R5 showed no such episode, nor R6 through step 134. The episodes dominate the whole-run mismatch.
+\item \textbf{Table~4 at 7B: R3 and R4 reproduced, R6 not.} AIME 2024 Avg@32 is 30.3\% for R3 (the paper: 30.6\%) and 32.2\% for R4 (31.3\%), but 37.1\% for R6 (29.1\%). R5 reaches 34.8\%. With one run per arm, the differences between arms are descriptive.
+\item \textbf{An instability in three of the four 7B runs (exploratory).} The mismatch rose up to 20-fold, together with entropy and response length: in R3 from step 117, in R6 from about step 100, and in R4 from step 160. R3's validation then fell by 11 points. Only R5 showed no such episode, although it is the same training as R4 in exact arithmetic. The episodes dominate the whole-run mismatch.
 \item \textbf{Questions.} Two registered tests: M1, UAQ's mechanism, seen in the INT8 codes the rollout uses; and M2, QuRL's claim that UAQ reduces the rollout--trainer mismatch. H1 at 7B and the paper's Table~4 are descriptive.
 \item \textbf{Pre-registration.} The analysis plan was frozen on 11 November, before any S4 run. An addendum, M1 without the BF16 checkpoint's ties, was registered on 16 November, also before any run on the rental, and its expected effect was corrected the same day.
 \item \textbf{Shake-out.} Three runs on a single H100 found two problems before the rental: the UAQ checkpoint check's tolerance was too tight, and BF16 storage distorts the first updates' code flips. The third run passed all 9 checks.
@@ -35,7 +35,7 @@
   \item Each share counts every INT8 code of every layer, tens to hundreds of millions per sync, so one seed suffices.
   \item The decisive comparison is R5 against R4. R5 never touches the quantizer, so if it matches R4, UAQ's effect is a learning-rate effect, not better rollout fidelity.
   \end{itemize}
-\item \textbf{M2, QuRL's mechanism claim (registered).} Does UAQ reduce the rollout--trainer mismatch ($k_3$), as QuRL says? It is measured over steps 1--20 at both sizes, and over the whole run at 7B when the full R3 and R4 runs both finish.
+\item \textbf{M2, QuRL's mechanism claim (registered).} Does UAQ reduce the rollout--trainer mismatch ($k_3$), as QuRL says? It is measured over steps 1--20 at both sizes. It is measured over the whole run at 7B when the full R3 and R4 runs both finish, and at 1.5B if block~E, added on 21 November, finishes.
 \item \textbf{H1 at the paper's scale (descriptive).} One full 7B R4/R5 pair at the paper's settings. A single pair supports no seed-based test, so differences are reported with evaluation-noise intervals. The full R3 and R6 runs, when they fit, give UAQ's effect and the paper's Table~4 comparison.
 \end{itemize}
 
@@ -121,6 +121,7 @@ A & full 7B R4, R5 & H1 at the paper's scale; their first 20 steps give M1 at 7B
 B & full 7B R3 & UAQ's effect; M2 over the whole run; Table~4\\
 C & full 7B R6 & the paper's control\\
 D & full 1.5B R4, R5 & H1 at 1.5B\\
+E (added 21 November) & full 1.5B R3 & the whole-run M2 and UAQ's effect at 1.5B, in the node's idle time after D\\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -298,7 +299,7 @@ Size & R3 & R4 & R5 & R6 & R4/R3 (registered)\\
 
 % =====================================================================================
 \section{The full 7B runs: M1, M2 and the evaluations (20 November)}\label{sec:full7b}
-The full 7B runs of block~A (R4, R5) and block~B (R3) finished, each at its first attempt. R4 took 22.0 hours (17 November 05:14 to 18 November 03:16 UTC), R5 19.4 hours and R3 26.8 hours. Block~C, the full R6 run, started on 20 November at 01:29 UTC and was at step 134 of 200 when the results were copied back at 14:14 UTC. \texttt{s4\_analysis.py} and \texttt{s4\_m1\_ties.py} ran unchanged on that copy, their hashes checked. R6's first 20 steps are complete, so all four 7B sources of M1 are now full runs, as the plan prescribes.
+The full 7B runs of blocks A (R4, R5), B (R3) and C (R6) finished, each at its first attempt. R4 took 22.0 hours (17 November 05:14 to 18 November 03:16 UTC), R5 19.4 hours, R3 26.8 hours and R6 22.3 hours (to 20 November 23:45 UTC). \texttt{s4\_analysis.py} and \texttt{s4\_m1\_ties.py} ran unchanged on the copies of 20 and 21 November, their hashes checked. All four 7B sources of M1 are full runs, as the plan prescribes. The copy of 21 November was analysed without block~D's runs, whose results had not yet been looked at.
 \begin{center}\small
 \begin{tabular}{@{}l l c c c c@{}}
 \toprule
@@ -326,7 +327,7 @@ R4/R5 & other & 1 & 0.999 & 0.997 & 0.970\\
 $k_3$ ($\times10^{-3}$) & R3 & R4 & R5 & R6 & R4/R3 (registered)\\
 \midrule
 Steps 1--20 & 8.88 & 8.14 & 9.12 & 8.34 & 0.916\\
-Steps 1--200 & 25.07 & 21.39 & 11.47 & --- & 0.853\\
+Steps 1--200 & 25.07 & 21.39 & 11.47 & 18.10 & 0.853\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -336,7 +337,9 @@ Steps 1--200 & 25.07 & 21.39 & 11.47 & --- & 0.853\\
   \begin{itemize}
   \item \emph{R3}, from step 117: between steps 114 and 123 the mismatch rose 20-fold, from $1.0\times10^{-2}$ to $2.0\times10^{-1}$. Over the same steps entropy went from 0.35 to 1.5, responses from about 920 to 1{,}790 tokens, and truncated responses from none to 7.6\%. Its AIME validation fell from 34.4\% at step 100 to 23.5\% at step 160.
   \item \emph{R4}, from step 160: a similar episode. The mismatch reached $7\times10^{-2}$, entropy 2.4, and responses about 1{,}900 tokens. Its validation went from 33.6\% at step 140 to 28.9\% at step 200, with 33.1\% in between.
-  \item \emph{R5} had no such episode: over steps 151--200, its mismatch was $1.3\times10^{-2}$ and its responses about 1{,}100 tokens. Nor did \emph{R6}, through step 134.
+  \item \emph{R6}, from about step 100: entropy rose from 0.36 to 1.13, averaged over steps 51--100 and 101--150. Over steps 151--200 the mismatch averaged $4.4\times10^{-2}$, with a peak of 0.31 at step 198. Responses averaged about 1{,}580 tokens, and 8.8\% were truncated. Its validation stayed at 32--35\%.
+  \item \emph{R5} had no such episode: over steps 151--200, its mismatch was $1.3\times10^{-2}$ and its responses about 1{,}100 tokens.
+  \item R4 and R5 are the same training in exact arithmetic (Theorem~2), yet only R4 had an episode. So the episodes look like run-to-run variation rather than an effect of an arm.
   \item Steps take about twice as long once responses lengthen, which is why R3 took 26.8 hours.
   \item The whole-run $k_3$ is dominated by these episodes. The whole-run ratio therefore mostly reflects that R3's came about 40 steps before R4's. With one run per arm, the episodes cannot be attributed to an arm. How the mismatch rises is research problem P4's question.
   \end{itemize}
@@ -352,43 +355,50 @@ Base model (G6) & 13.33 & --- & 44.00 & --- & ---\\
 R3 & 30.31 & 30.00 & 60.90 & 61.00 & 30.63\\
 R4 (UAQ) & 32.19 & 16.67 & 65.05 & 62.80 & 31.25\\
 R5 & 34.79 & 26.67 & 68.60 & 68.80 & ---\\
-R6 & \multicolumn{4}{c}{(block C, running)} & 29.06\\
+R6 & 37.08 & 36.67 & 59.05 & 59.20 & 29.06\\
 \bottomrule
 \end{tabular}
 \end{center}
 \begin{itemize}
-\item \textbf{Table~4 is reproduced:} AIME 2024 Avg@32 of 30.3\% for R3 against the paper's 30.6\%, and 32.2\% for R4 against 31.3\%.
+\item \textbf{Table~4: R3 and R4 reproduced, R6 not.}
+  \begin{itemize}
+  \item AIME 2024 Avg@32 is 30.3\% for R3 against the paper's 30.6\%, and 32.2\% for R4 against 31.3\%.
+  \item R6 reaches 37.1\% against the paper's 29.1\%. Here it scores highest of the four arms on AIME and lowest on MATH-500 (59.1\%).
+  \item With 30 AIME problems and one run per arm, neither ordering is established.
+  \end{itemize}
 \item \textbf{Descriptive differences}, one run per arm, with 95\% intervals from a paired bootstrap over problems:
   \begin{itemize}
   \item R4 $-$ R5 (H1): MATH-500 $-3.6$ points $[-5.5,-1.7]$; AIME $-2.6$ $[-8.3,+2.7]$.
   \item R4 $-$ R3 (UAQ's effect): MATH-500 $+4.2$ $[+2.2,+6.2]$; AIME $+1.9$ $[-6.7,+10.5]$.
+  \item R6 $-$ R3 (the paper's control): MATH-500 $-1.9$ $[-4.3,+0.6]$; AIME $+6.8$ $[-2.9,+17.1]$.
   \end{itemize}
   The intervals cover evaluation noise only, not run-to-run variation, which here includes the instability episodes. So neither difference can be attributed to the arm. Greedy AIME counts 30 problems, one problem being 3.3 points.
-\item \textbf{No stalls.} By the exploratory rule fixed in advance, none of the three runs stalled: each run's mean training score over steps 181--200 is above its mean over steps 1--10.
+\item \textbf{No stalls.} By the exploratory rule fixed in advance, none of the four runs stalled: each run's mean training score over steps 181--200 is above its mean over steps 1--10.
 \end{itemize}
 
 % =====================================================================================
 \section{Status}\label{sec:status}
 \begin{itemize}
-\item \textbf{20 November, 14:14 UTC.} Blocks M, A and B are done. C, the full 7B R6 run, is at step 134 of 200.
+\item \textbf{21 November, 11:41 UTC.} Blocks M, A, B and C are done, and so is D's first run (1.5B R4). D's second run (1.5B R5) started at 10:29 UTC. D's results have not been looked at yet.
 \item \textbf{The rental was extended twice:} on 17 November by 21 hours, to 22 November at 06:27 UTC, and on 18 November by 18.5 hours more, to 23 November at 01:00 UTC.
   \begin{itemize}
-  \item The running queue keeps the end it started with, 21 November at 09:30 UTC, and its 6-hour reserve. The first three full 7B runs averaged 22.7 hours, under the 23.3 that let it run C itself, and it started C at 01:29 UTC on 20 November.
-  \item When it exits, a waiting process restarts the queue with the new end, which then runs whatever is left.
-  \item The restarted queue keeps a 10-hour reserve, so its runs end by 15:00 UTC on 22 November. That leaves time to copy the results back before the rental ends.
+  \item The first queue kept its original end and 6-hour reserve. The first three full 7B runs averaged 22.7 hours, under the 23.3 that let it run C itself. C ran from 01:29 to 23:45 UTC on 20 November.
+  \item The first queue then skipped D, which could not end within its reserve, and exited.
+  \item A waiting process restarted the queue at 23:45 UTC with the new end and a 10-hour reserve, so its runs end by 15:00 UTC on 22 November.
   \end{itemize}
-\item \textbf{The remaining schedule.}
+\item \textbf{The remaining schedule.} D's first run took 10.7 hours, against 14.5 projected, so its second should end at about 21:15 UTC on 21 November. That leaves about 18 hours before the 15:00 UTC limit.
+\item \textbf{Block E, added on 21 November for that time: a full 1.5B R3 run.}
   \begin{itemize}
-  \item C should end between about 21:00 UTC on 20 November and 01:30 UTC on 21 November. Its last 20 steps took 380\,s each, but steps doubled in R3 and R4 once their responses lengthened.
-  \item The running queue then exits, since D, two 1.5B runs projected at 14.5 hours each, cannot end 6 hours before its end.
-  \item Restarted with the new end, the queue runs D, which ends between about 02:00 and 06:30 UTC on 22 November, before the 15:00 UTC limit.
-  \item The waiting process carries the new end and the 10-hour reserve (checked on 20 November).
+  \item \emph{Why:} with D's R4, it gives the whole-run M2 at 1.5B, by the plan's rule for each size, and UAQ's effect R4 $-$ R3 at 1.5B.
+  \item \emph{Decided on timing alone,} before any of D's results had been looked at.
+  \item \emph{How:} the restarted queue ends after D, so a second waiting process, started on 21 November, reruns it with the new \texttt{queue.sh}, whose plan ends with E.
+  \item \emph{When:} by the queue's projection, E starts if D ends by 00:30 UTC on 22 November. At D's pace it would end at about 08:00 UTC.
   \end{itemize}
 \item \textbf{What is final.}
   \begin{itemize}
-  \item At 7B: M1, the early M2, and the whole-run M2.
-  \item At 1.5B: M1 and the early M2 for R3 and R6. If D runs, its full runs replace the mechanism runs as R4's and R5's sources.
-  \item Still to come: R6 $-$ R3 and Table~4's R6, from C; H1 at 1.5B, from D.
+  \item At 7B, everything: M1, the early and whole-run M2, and the descriptive comparisons, Table~4 included.
+  \item At 1.5B: M1 and the early M2 for R3 and R6. D's full runs replace the mechanism runs as R4's and R5's sources.
+  \item Still to come: D, with H1 at 1.5B; and E, with the whole-run M2 and R4 $-$ R3 at 1.5B.
   \end{itemize}
 \end{itemize}
 
